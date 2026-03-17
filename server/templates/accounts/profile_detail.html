@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Profil | LexWheels{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>{{ profile_user.public_name }}</h1>
+  <p class="meta">{{ profile_user.email }}</p>
+  {% if profile_user.bio %}<p>{{ profile_user.bio }}</p>{% endif %}
+  <p><a class="button" href="{% url 'accounts:profile-edit' %}">Edytuj profil</a></p>
+</section>
+{% endblock %}

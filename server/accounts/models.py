@@ -32,6 +32,8 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
+    display_name = models.CharField(max_length=80, blank=True)
+    bio = models.TextField(blank=True)
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
@@ -39,3 +41,7 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return self.email
+
+    @property
+    def public_name(self) -> str:
+        return self.display_name or self.get_full_name() or self.email

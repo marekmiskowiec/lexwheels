@@ -6,6 +6,12 @@ from catalog.models import HotWheelsModel
 
 
 class Collection(models.Model):
+    KIND_OWNED = 'owned'
+    KIND_WISHLIST = 'wishlist'
+    KIND_CHOICES = (
+        (KIND_OWNED, 'Kolekcja'),
+        (KIND_WISHLIST, 'Wishlist'),
+    )
     VISIBILITY_PRIVATE = 'private'
     VISIBILITY_PUBLIC = 'public'
     VISIBILITY_CHOICES = (
@@ -16,6 +22,7 @@ class Collection(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='collections')
     name = models.CharField(max_length=120)
     description = models.TextField(blank=True)
+    kind = models.CharField(max_length=12, choices=KIND_CHOICES, default=KIND_OWNED)
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default=VISIBILITY_PRIVATE)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -32,6 +39,10 @@ class Collection(models.Model):
     @property
     def is_public(self) -> bool:
         return self.visibility == self.VISIBILITY_PUBLIC
+
+    @property
+    def is_wishlist(self) -> bool:
+        return self.kind == self.KIND_WISHLIST
 
 
 class CollectionItem(models.Model):

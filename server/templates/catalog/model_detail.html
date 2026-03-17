@@ -16,7 +16,7 @@
             {% if collections %}
               <span class="meta" style="display:block; margin-top:10px;">Dodaj bezpośrednio do:</span>
               {% for collection in collections %}
-                <a class="button secondary" style="margin:6px 6px 0 0;" href="{% url 'collections:item-create' collection.pk %}?model={{ model_obj.pk }}">{{ collection.name }}</a>
+                <a class="button secondary" style="margin:6px 6px 0 0;" href="{% url 'collections:item-create' collection.pk %}?model={{ model_obj.pk }}">{{ collection.name }}{% if collection.is_wishlist %} (wishlist){% endif %}</a>
               {% endfor %}
             {% endif %}
           {% endwith %}

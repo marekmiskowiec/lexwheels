@@ -21,10 +21,10 @@ class CollectionTests(TestCase):
             photo_url='https://example.com/car.jpg',
         )
         self.public_collection = Collection.objects.create(
-            owner=self.owner, name='Publiczna', visibility=Collection.VISIBILITY_PUBLIC
+            owner=self.owner, name='Publiczna', kind=Collection.KIND_OWNED, visibility=Collection.VISIBILITY_PUBLIC
         )
         self.private_collection = Collection.objects.create(
-            owner=self.owner, name='Prywatna', visibility=Collection.VISIBILITY_PRIVATE
+            owner=self.owner, name='Prywatna', kind=Collection.KIND_OWNED, visibility=Collection.VISIBILITY_PRIVATE
         )
 
     def test_public_collection_visible(self):
@@ -56,13 +56,20 @@ class CollectionTests(TestCase):
         self.client.force_login(self.owner)
         response = self.client.post(
             reverse('collections:collection-update', args=[self.private_collection.pk]),
-            {'name': 'Nowa nazwa', 'description': 'Opis', 'visibility': Collection.VISIBILITY_PUBLIC},
+            {'name': 'Nowa nazwa', 'description': 'Opis', 'kind': Collection.KIND_WISHLIST, 'visibility': Collection.VISIBILITY_PUBLIC},
         )
         self.assertRedirects(response, self.private_collection.get_absolute_url())
         self.private_collection.refresh_from_db()
         self.assertEqual(self.private_collection.name, 'Nowa nazwa')
+        self.assertEqual(self.private_collection.kind, Collection.KIND_WISHLIST)
 
     def test_other_user_cannot_edit_collection(self):
         self.client.force_login(self.other)
         response = self.client.get(reverse('collections:collection-update', args=[self.private_collection.pk]))
         self.assertEqual(response.status_code, 403)
+
+    def test_dashboard_shows_stats(self):
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=3, is_favorite=True)
+        self.client.force_login(self.owner)
+        response = self.client.get(reverse('collections:dashboard'))
+        self.assertContains(response, '3')

@@ -3,6 +3,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.db.models import Count, Q, Sum
 
 from catalog.models import HotWheelsModel
 
@@ -15,7 +16,32 @@ class DashboardView(LoginRequiredMixin, ListView):
     context_object_name = 'collections'
 
     def get_queryset(self):
-        return Collection.objects.filter(owner=self.request.user)
+        return Collection.objects.filter(owner=self.request.user).prefetch_related('items')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        owned = []
+        wishlist = []
+        for collection in context['collections']:
+            if collection.is_wishlist:
+                wishlist.append(collection)
+            else:
+                owned.append(collection)
+
+        stats = CollectionItem.objects.filter(collection__owner=self.request.user).aggregate(
+            total_quantity=Sum('quantity'),
+            favorite_count=Count('id', filter=Q(is_favorite=True)),
+        )
+        context['owned_collections'] = owned
+        context['wishlist_collections'] = wishlist
+        context['stats'] = {
+            'collection_count': len(owned),
+            'wishlist_count': len(wishlist),
+            'item_count': CollectionItem.objects.filter(collection__owner=self.request.user).count(),
+            'total_quantity': stats['total_quantity'] or 0,
+            'favorite_count': stats['favorite_count'] or 0,
+        }
+        return context
 
 
 class CollectionCreateView(LoginRequiredMixin, CreateView):
