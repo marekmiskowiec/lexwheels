@@ -8,10 +8,33 @@
     <div style="flex: 1 1 220px;"><label for="series">Seria</label><select id="series" name="series"><option value="">Wszystkie serie</option>{% for series in series_options %}<option value="{{ series }}" {% if selected_series == series %}selected{% endif %}>{{ series }}</option>{% endfor %}</select></div>
     <div><button type="submit">Filtruj</button></div>
   </form>
+  {% if user.is_authenticated %}
+    {% if batch_add_form.fields.collection.queryset %}
+      <form method="post" action="{% url 'collections:batch-add' %}" id="batch-add-form" style="margin-top:18px;">
+        {% csrf_token %}
+        {{ batch_add_form.next }}
+        <div class="filters">
+          <div style="flex: 1 1 320px;">{{ batch_add_form.collection.label_tag }} {{ batch_add_form.collection }}</div>
+          <div><button type="submit">Dodaj zaznaczone</button></div>
+          <div><button type="button" class="secondary" id="select-all-models">Zaznacz wszystko na stronie</button></div>
+          <div><button type="button" class="secondary" id="clear-all-models">Wyczyść zaznaczenie</button></div>
+        </div>
+        <p class="meta" style="margin-top:10px;">Zaznaczasz modele na bieżącej stronie wyników. Istniejące pozycje w tej kolekcji zostaną pominięte.</p>
+      </form>
+    {% else %}
+      <p class="meta" style="margin-top:18px;">Najpierw utwórz kolekcję, aby dodawać modele hurtem.</p>
+    {% endif %}
+  {% endif %}
 </section>
 <section class="grid">
   {% for item in models %}
     <article class="card">
+      {% if user.is_authenticated and batch_add_form.fields.collection.queryset %}
+        <label class="meta" style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+          <input type="checkbox" name="model_ids" value="{{ item.pk }}" form="batch-add-form" style="width:auto;">
+          Mam ten model
+        </label>
+      {% endif %}
       {% if item.image_src %}<a href="{{ item.get_absolute_url }}"><img class="thumb" src="{{ item.image_src }}" alt="{{ item.model_name }}"></a>{% endif %}
       <h3><a href="{{ item.get_absolute_url }}">{{ item.model_name }}</a></h3>
       <p class="meta">Toy: {{ item.toy }} | Number: {{ item.number }}</p>
@@ -21,6 +44,29 @@
     <div class="panel"><p>Brak modeli dla podanego filtra.</p></div>
   {% endfor %}
 </section>
+{% if user.is_authenticated and batch_add_form.fields.collection.queryset %}
+  <script>
+    const modelCheckboxes = document.querySelectorAll('input[name="model_ids"]');
+    const selectAllButton = document.getElementById('select-all-models');
+    const clearAllButton = document.getElementById('clear-all-models');
+
+    if (selectAllButton) {
+      selectAllButton.addEventListener('click', () => {
+        modelCheckboxes.forEach((checkbox) => {
+          checkbox.checked = true;
+        });
+      });
+    }
+
+    if (clearAllButton) {
+      clearAllButton.addEventListener('click', () => {
+        modelCheckboxes.forEach((checkbox) => {
+          checkbox.checked = false;
+        });
+      });
+    }
+  </script>
+{% endif %}
 {% if is_paginated %}
   <div class="pagination">
     {% if page_obj.has_previous %}<a class="button secondary" href="?q={{ query }}&series={{ selected_series }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}

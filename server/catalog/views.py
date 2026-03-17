@@ -1,6 +1,8 @@
 from django.db.models import Q
 from django.views.generic import DetailView, ListView
 
+from collections_app.forms import CollectionBatchAddForm
+
 from .models import HotWheelsModel
 
 
@@ -30,12 +32,15 @@ class ModelListView(ListView):
         context = super().get_context_data(**kwargs)
         context['query'] = self.request.GET.get('q', '').strip()
         context['selected_series'] = self.request.GET.get('series', '').strip()
+        context['current_path'] = self.request.get_full_path()
         context['series_options'] = (
             HotWheelsModel.objects.exclude(series='')
             .values_list('series', flat=True)
             .distinct()
             .order_by('series')
         )
+        if self.request.user.is_authenticated:
+            context['batch_add_form'] = CollectionBatchAddForm(owner=self.request.user, initial={'next': self.request.get_full_path()})
         return context
 
 

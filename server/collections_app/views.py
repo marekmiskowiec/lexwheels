@@ -1,9 +1,10 @@
 import csv
 import json
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import Http404, HttpResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
@@ -11,7 +12,7 @@ from django.db.models import Count, Q, Sum
 
 from catalog.models import HotWheelsModel
 
-from .forms import CollectionForm, CollectionItemForm
+from .forms import CollectionBatchAddForm, CollectionForm, CollectionItemForm
 from .models import Collection, CollectionItem
 
 
@@ -189,6 +190,38 @@ class CollectionExportView(LoginRequiredMixin, View):
             return response
 
         raise Http404
+
+
+class CollectionBatchAddView(LoginRequiredMixin, View):
+    def post(self, request):
+        form = CollectionBatchAddForm(request.POST, owner=request.user)
+        selected_ids = [int(model_id) for model_id in request.POST.getlist('model_ids') if model_id.isdigit()]
+        next_url = request.POST.get('next') or reverse_lazy('catalog:model-list')
+
+        if not form.is_valid():
+            messages.error(request, 'Wybierz kolekcję docelową.')
+            return redirect(next_url)
+
+        if not selected_ids:
+            messages.error(request, 'Nie zaznaczono żadnych modeli.')
+            return redirect(next_url)
+
+        collection = form.cleaned_data['collection']
+        existing_model_ids = set(collection.items.filter(model_id__in=selected_ids).values_list('model_id', flat=True))
+        added_count = 0
+
+        for model in HotWheelsModel.objects.filter(pk__in=selected_ids):
+            if model.pk in existing_model_ids:
+                continue
+            CollectionItem.objects.create(collection=collection, model=model)
+            added_count += 1
+
+        skipped_count = len(selected_ids) - added_count
+        if added_count:
+            messages.success(request, f'Dodano {added_count} modeli do kolekcji "{collection.name}".')
+        if skipped_count:
+            messages.info(request, f'Pominięto {skipped_count} modeli, które były już w tej kolekcji.')
+        return redirect(next_url)
 
 
 class CollectionItemCreateView(LoginRequiredMixin, CreateView):

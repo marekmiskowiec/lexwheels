@@ -105,3 +105,39 @@ class CollectionTests(TestCase):
         self.client.force_login(self.other)
         response = self.client.get(reverse('collections:collection-export', args=[self.private_collection.pk, 'csv']))
         self.assertEqual(response.status_code, 404)
+
+    def test_owner_can_batch_add_models_from_catalog(self):
+        second_model = HotWheelsModel.objects.create(
+            app_id='def456',
+            toy='HCT06',
+            number='002',
+            model_name='Custom Mustang',
+            series='HW Dream Garage',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            reverse('collections:batch-add'),
+            {
+                'collection': self.private_collection.pk,
+                'model_ids': [self.model_obj.pk, second_model.pk],
+                'next': reverse('catalog:model-list'),
+            },
+        )
+        self.assertRedirects(response, reverse('catalog:model-list'))
+        self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection).count(), 2)
+
+    def test_batch_add_skips_existing_models(self):
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj)
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            reverse('collections:batch-add'),
+            {
+                'collection': self.private_collection.pk,
+                'model_ids': [self.model_obj.pk],
+                'next': reverse('catalog:model-list'),
+            },
+        )
+        self.assertRedirects(response, reverse('catalog:model-list'))
+        self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 1)

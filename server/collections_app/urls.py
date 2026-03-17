@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    CollectionBatchAddView,
     CollectionCreateView,
     CollectionDeleteView,
     CollectionDetailView,
@@ -18,6 +19,7 @@ app_name = 'collections'
 urlpatterns = [
     path('', DashboardView.as_view(), name='dashboard'),
     path('public/', PublicCollectionListView.as_view(), name='public-collections'),
+    path('batch-add/', CollectionBatchAddView.as_view(), name='batch-add'),
     path('new/', CollectionCreateView.as_view(), name='collection-create'),
     path('<int:pk>/', CollectionDetailView.as_view(), name='collection-detail'),
     path('<int:pk>/export/<str:fmt>/', CollectionExportView.as_view(), name='collection-export'),
