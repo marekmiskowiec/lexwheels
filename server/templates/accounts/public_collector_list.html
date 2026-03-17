@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Kolekcjonerzy | LexWheels{% endblock %}
 {% block content %}
 <section class="panel hero">
@@ -8,9 +9,14 @@
 <section class="list">
   {% for collector in collectors %}
     <div class="list-item">
-      <h3><a href="{% url 'accounts:public-profile' collector.pk %}">{{ collector.public_name }}</a></h3>
-      <p class="meta">{{ collector.email }}</p>
-      {% if collector.bio %}<p>{{ collector.bio }}</p>{% endif %}
+      <div class="collector-row">
+        <img class="avatar small" src="{% static collector.avatar_static_path %}" alt="Avatar {{ collector.public_name }}">
+        <div>
+          <h3><a href="{% url 'accounts:public-profile' collector.pk %}">{{ collector.public_name }}</a></h3>
+          <p class="meta">{{ collector.email }}</p>
+          {% if collector.bio %}<p>{{ collector.bio }}</p>{% endif %}
+        </div>
+      </div>
     </div>
   {% empty %}
     <div class="panel"><p>Brak kolekcjonerów z publicznymi kolekcjami.</p></div>

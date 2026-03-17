@@ -1,11 +1,37 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Edytuj profil | LexWheels{% endblock %}
 {% block content %}
 <section class="panel" style="max-width: 720px;">
   <h1>Edytuj profil</h1>
   <form method="post" class="list">
     {% csrf_token %}
-    {{ form.as_p }}
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+    {% for field in form.visible_fields %}
+      {% if field.name == 'avatar_key' %}
+        <div>
+          <label>{{ field.label }}</label>
+          <div class="avatar-options">
+            {% for radio in field %}
+              <label class="avatar-option{% if radio.data.selected %} selected{% endif %}">
+                {{ radio.tag }}
+                <img class="avatar small" src="{% static 'accounts/avatars/'|add:radio.data.value|add:'.svg' %}" alt="{{ radio.choice_label }}">
+                <span>{{ radio.choice_label }}</span>
+              </label>
+            {% endfor %}
+          </div>
+          {% if field.errors %}<p class="meta">{{ field.errors|join:', ' }}</p>{% endif %}
+        </div>
+      {% else %}
+        <p>
+          {{ field.label_tag }}
+          {{ field }}
+          {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
+          {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
+        </p>
+      {% endif %}
+    {% endfor %}
     <button type="submit">Zapisz profil</button>
   </form>
 </section>

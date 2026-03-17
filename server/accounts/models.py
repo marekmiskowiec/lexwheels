@@ -2,6 +2,20 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
 
+AVATAR_CHOICES = (
+    ('flame-red', 'Flame Red'),
+    ('track-orange', 'Track Orange'),
+    ('garage-blue', 'Garage Blue'),
+    ('mint-green', 'Mint Green'),
+    ('sunburst-yellow', 'Sunburst Yellow'),
+    ('midnight-black', 'Midnight Black'),
+    ('chrome-silver', 'Chrome Silver'),
+    ('purple-rush', 'Purple Rush'),
+    ('teal-speed', 'Teal Speed'),
+    ('sand-racer', 'Sand Racer'),
+)
+
+
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
@@ -34,6 +48,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     display_name = models.CharField(max_length=80, blank=True)
     bio = models.TextField(blank=True)
+    avatar_key = models.CharField(max_length=32, choices=AVATAR_CHOICES, default='flame-red')
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
@@ -45,3 +60,7 @@ class User(AbstractUser):
     @property
     def public_name(self) -> str:
         return self.display_name or self.get_full_name() or self.email
+
+    @property
+    def avatar_static_path(self) -> str:
+        return f'accounts/avatars/{self.avatar_key}.svg'

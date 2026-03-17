@@ -17,6 +17,8 @@
     .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
     .card { border: 1px solid #eadcc3; border-radius: 16px; background: #fff; padding: 16px; }
     .thumb { width: 100%; height: 150px; object-fit: contain; background: #faf6ef; border-radius: 12px; border: 1px solid #eadcc3; }
+    .avatar { width: 84px; height: 84px; object-fit: cover; border-radius: 20px; border: 1px solid #d9c7ab; background: #fff; }
+    .avatar.small { width: 54px; height: 54px; border-radius: 16px; }
     .meta { color: var(--muted); font-size: .95rem; }
     .hero { margin-bottom: 22px; }
     h1,h2,h3 { margin-top: 0; }
@@ -32,6 +34,13 @@
     .message { padding: 12px 14px; border-radius: 12px; background: #f0e4cf; }
     .pagination { display: flex; gap: 12px; margin-top: 20px; }
     .danger-zone { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+    .profile-head { display: flex; gap: 18px; align-items: center; }
+    .avatar-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 10px; }
+    .avatar-option { position: relative; border: 1px solid #eadcc3; border-radius: 16px; background: #fff; padding: 12px; text-align: center; }
+    .avatar-option input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .avatar-option.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(181, 73, 32, 0.15); }
+    .avatar-option span { display: block; margin-top: 8px; font-size: .92rem; color: var(--muted); }
+    .collector-row { display: flex; gap: 14px; align-items: center; }
   </style>
 </head>
 <body>

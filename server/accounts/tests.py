@@ -25,10 +25,12 @@ class AccountTests(TestCase):
             'first_name': 'Test',
             'last_name': 'User',
             'bio': 'Collector profile',
+            'avatar_key': 'garage-blue',
         })
         self.assertRedirects(response, reverse('accounts:profile'))
         user.refresh_from_db()
         self.assertEqual(user.display_name, 'Lex')
+        self.assertEqual(user.avatar_key, 'garage-blue')
 
     def test_public_profile_visible(self):
         user = User.objects.create_user(email='test@example.com', password='ComplexPass123', display_name='Lex')
@@ -46,3 +48,14 @@ class AccountTests(TestCase):
         )
         response = self.client.get(reverse('accounts:collector-list'))
         self.assertContains(response, 'Lex')
+
+    def test_profile_renders_selected_avatar(self):
+        user = User.objects.create_user(
+            email='test@example.com',
+            password='ComplexPass123',
+            display_name='Lex',
+            avatar_key='teal-speed',
+        )
+        self.client.force_login(user)
+        response = self.client.get(reverse('accounts:profile'))
+        self.assertContains(response, 'accounts/avatars/teal-speed.svg')
