@@ -26,6 +26,7 @@ lexwheels/
 - `web/` contains the static HTML preview.
 - `.env.example` contains the environment variables for local Django/PostgreSQL setup.
 - `docker-compose.yml` starts the Django app and PostgreSQL for development.
+- `Procfile` contains generic release and web commands for platforms that support process files.
 
 ## What The Scraper Saves
 
@@ -122,11 +123,33 @@ Supported variables:
 - `DJANGO_SECRET_KEY`
 - `DJANGO_DEBUG`
 - `DJANGO_ALLOWED_HOSTS`
+- `DJANGO_CSRF_TRUSTED_ORIGINS`
+- `DJANGO_SECURE_SSL_REDIRECT`
+- `DJANGO_SESSION_COOKIE_SECURE`
+- `DJANGO_CSRF_COOKIE_SECURE`
+- `DJANGO_SECURE_HSTS_SECONDS`
+- `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS`
+- `DJANGO_SECURE_HSTS_PRELOAD`
+- `DJANGO_USE_X_FORWARDED_HOST`
+- `DJANGO_EMAIL_BACKEND`
+- `DJANGO_EMAIL_HOST`
+- `DJANGO_EMAIL_PORT`
+- `DJANGO_EMAIL_HOST_USER`
+- `DJANGO_EMAIL_HOST_PASSWORD`
+- `DJANGO_EMAIL_USE_TLS`
+- `DJANGO_EMAIL_USE_SSL`
+- `DJANGO_DEFAULT_FROM_EMAIL`
 - `POSTGRES_DB`
 - `POSTGRES_USER`
 - `POSTGRES_PASSWORD`
 - `POSTGRES_HOST`
 - `POSTGRES_PORT`
+- `POSTGRES_CONN_MAX_AGE`
+- `POSTGRES_SSLMODE`
+- `PORT`
+- `GUNICORN_WORKERS`
+- `GUNICORN_TIMEOUT`
+- `LEXWHEELS_IMPORT_MODELS_ON_BOOT`
 
 If `POSTGRES_DB` is not set, the app falls back to local SQLite.
 
@@ -144,6 +167,47 @@ This starts:
 - Django on `http://127.0.0.1:8000/`
 
 The web container runs migrations and imports `data/hot_wheels_data.json` on startup.
+
+## Production Deployment
+
+The repo now includes the pieces needed for a production-style deployment:
+
+- `gunicorn` as the WSGI server
+- `whitenoise` for serving static files
+- `healthz/` endpoint for liveness checks
+- `Procfile` for platforms that support release/web process definitions
+- Docker image startup through `server/entrypoint.sh`
+
+Minimal production environment:
+
+```bash
+DJANGO_DEBUG=0
+DJANGO_SECRET_KEY=replace-this
+DJANGO_ALLOWED_HOSTS=your-domain.com
+DJANGO_CSRF_TRUSTED_ORIGINS=https://your-domain.com
+POSTGRES_DB=lexwheels
+POSTGRES_USER=lexwheels
+POSTGRES_PASSWORD=replace-this
+POSTGRES_HOST=your-postgres-host
+POSTGRES_PORT=5432
+POSTGRES_SSLMODE=require
+```
+
+Recommended production flow:
+
+```bash
+cd server
+python manage.py migrate --noinput
+python manage.py collectstatic --noinput
+python manage.py import_models
+gunicorn server.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60
+```
+
+Healthcheck URL:
+
+```text
+/healthz/
+```
 
 ## Run The Static Preview
 
@@ -166,5 +230,6 @@ The preview page loads data from `data/hot_wheels_data.json` and displays the mo
 - Fandom may block direct frontend requests with `403`, which is why the scraper includes API fallback logic.
 - Images are stored locally so the preview does not depend on external hotlinked assets.
 - The Django app supports PostgreSQL through `.env` or shell environment variables and falls back to SQLite locally.
+- For production, set `DJANGO_DEBUG=0`, a real `DJANGO_SECRET_KEY`, real hosts in `DJANGO_ALLOWED_HOSTS`, and trusted origins in `DJANGO_CSRF_TRUSTED_ORIGINS`.
 - The web preview expects `data/hot_wheels_data.json` and the local `images/` folder to exist.
 - The current dataset is based on the 2022 Hot Wheels list page.

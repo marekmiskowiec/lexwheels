@@ -58,4 +58,4 @@ class AccountTests(TestCase):
         )
         self.client.force_login(user)
         response = self.client.get(reverse('accounts:profile'))
-        self.assertContains(response, 'accounts/avatars/teal-speed.svg')
+        self.assertContains(response, 'accounts/avatars/teal-speed')

@@ -5,9 +5,11 @@ from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
 from accounts.forms import EmailAuthenticationForm
+from .views import healthcheck
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('healthz/', healthcheck, name='healthcheck'),
     path('', include('catalog.urls')),
     path('collections/', include('collections_app.urls')),
     path('accounts/', include('accounts.urls')),

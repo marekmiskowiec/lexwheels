@@ -49,3 +49,8 @@ class CatalogViewTests(TestCase):
     def test_model_detail(self):
         response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
         self.assertContains(response, 'HCT05')
+
+    def test_healthcheck(self):
+        response = self.client.get(reverse('healthcheck'))
+        self.assertEqual(response.status_code, 200)
+        self.assertJSONEqual(response.content, {'status': 'ok'})
