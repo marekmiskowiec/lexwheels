@@ -12,8 +12,6 @@ class AccountTests(TestCase):
             'email': 'test@example.com',
             'login': 'tester',
             'display_name': 'Tester',
-            'first_name': 'Test',
-            'last_name': 'User',
             'password1': 'ComplexPass123',
             'password2': 'ComplexPass123',
         })
@@ -27,8 +25,6 @@ class AccountTests(TestCase):
         response = self.client.post(reverse('accounts:profile-edit'), {
             'login': 'lex',
             'display_name': 'Lex',
-            'first_name': 'Test',
-            'last_name': 'User',
             'bio': 'Collector profile',
             'avatar_key': 'garage-blue',
         })

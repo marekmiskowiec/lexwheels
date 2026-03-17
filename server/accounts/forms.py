@@ -19,7 +19,7 @@ class EmailAuthenticationForm(AuthenticationForm):
 class UserRegistrationForm(LoginNormalizationMixin, UserCreationForm):
     class Meta:
         model = User
-        fields = ('email', 'login', 'display_name', 'first_name', 'last_name')
+        fields = ('email', 'login', 'display_name')
 
 
 class ProfileForm(LoginNormalizationMixin, forms.ModelForm):
@@ -31,4 +31,4 @@ class ProfileForm(LoginNormalizationMixin, forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('login', 'display_name', 'first_name', 'last_name', 'bio', 'avatar_key')
+        fields = ('login', 'display_name', 'bio', 'avatar_key')

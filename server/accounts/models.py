@@ -61,6 +61,8 @@ class UserManager(BaseUserManager):
 
 class User(AbstractUser):
     username = None
+    first_name = None
+    last_name = None
     email = models.EmailField(unique=True)
     login = models.CharField(max_length=80, unique=True)
     display_name = models.CharField(max_length=80, blank=True)
@@ -72,11 +74,11 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     def __str__(self) -> str:
-        return self.email
+        return self.public_name
 
     @property
     def public_name(self) -> str:
-        return self.display_name or self.get_full_name() or self.email
+        return self.display_name or self.login or self.email
 
     @property
     def avatar_static_path(self) -> str:
