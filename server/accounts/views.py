@@ -3,7 +3,7 @@ from django.contrib.auth import login
 from django.db.models import Count, Q, Sum
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView, UpdateView
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from .forms import ProfileForm, UserRegistrationForm
 from .models import User
@@ -58,6 +58,20 @@ class PublicProfileView(DetailView):
         context.update(build_profile_context(self.object, public_only=True))
         context['is_own_profile'] = self.request.user.is_authenticated and self.request.user == self.object
         return context
+
+
+class PublicCollectorListView(ListView):
+    model = User
+    template_name = 'accounts/public_collector_list.html'
+    context_object_name = 'collectors'
+    paginate_by = 24
+
+    def get_queryset(self):
+        return (
+            User.objects.filter(collections__visibility='public')
+            .distinct()
+            .order_by('display_name', 'email')
+        )
 
 
 def build_profile_context(user: User, public_only: bool) -> dict:

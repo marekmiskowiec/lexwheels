@@ -9,12 +9,14 @@ from .views import (
     CollectionItemUpdateView,
     CollectionUpdateView,
     DashboardView,
+    PublicCollectionListView,
 )
 
 app_name = 'collections'
 
 urlpatterns = [
     path('', DashboardView.as_view(), name='dashboard'),
+    path('public/', PublicCollectionListView.as_view(), name='public-collections'),
     path('new/', CollectionCreateView.as_view(), name='collection-create'),
     path('<int:pk>/', CollectionDetailView.as_view(), name='collection-detail'),
     path('<int:pk>/edit/', CollectionUpdateView.as_view(), name='collection-update'),

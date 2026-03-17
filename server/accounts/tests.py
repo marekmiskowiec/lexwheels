@@ -34,3 +34,15 @@ class AccountTests(TestCase):
         user = User.objects.create_user(email='test@example.com', password='ComplexPass123', display_name='Lex')
         response = self.client.get(reverse('accounts:public-profile', args=[user.pk]))
         self.assertContains(response, 'Lex')
+
+    def test_public_collectors_list_shows_collectors_with_public_content(self):
+        user = User.objects.create_user(email='test@example.com', password='ComplexPass123', display_name='Lex')
+        from collections_app.models import Collection
+        Collection.objects.create(
+            owner=user,
+            name='Publiczna',
+            kind=Collection.KIND_OWNED,
+            visibility=Collection.VISIBILITY_PUBLIC,
+        )
+        response = self.client.get(reverse('accounts:collector-list'))
+        self.assertContains(response, 'Lex')

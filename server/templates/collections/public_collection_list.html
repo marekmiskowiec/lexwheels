@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Publiczne kolekcje | LexWheels{% endblock %}
+{% block content %}
+<section class="panel hero">
+  <h1>Publiczne kolekcje</h1>
+  <form method="get" class="filters">
+    <div style="max-width:260px;">
+      <label for="kind">Typ</label>
+      <select id="kind" name="kind">
+        <option value="">Wszystkie</option>
+        <option value="owned" {% if selected_kind == 'owned' %}selected{% endif %}>Kolekcje</option>
+        <option value="wishlist" {% if selected_kind == 'wishlist' %}selected{% endif %}>Wishlisty</option>
+      </select>
+    </div>
+    <div><button type="submit">Filtruj</button></div>
+  </form>
+</section>
+<section class="list">
+  {% for collection in collections %}
+    <div class="list-item">
+      <h3><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>
+      <p class="meta">{{ collection.get_kind_display }} | właściciel: <a href="{% url 'accounts:public-profile' collection.owner.pk %}">{{ collection.owner.public_name }}</a></p>
+      <p class="meta">{{ collection.items.count }} modeli</p>
+      {% if collection.description %}<p>{{ collection.description }}</p>{% endif %}
+    </div>
+  {% empty %}
+    <div class="panel"><p>Brak publicznych kolekcji dla tego filtra.</p></div>
+  {% endfor %}
+</section>
+{% endblock %}

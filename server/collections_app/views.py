@@ -44,6 +44,25 @@ class DashboardView(LoginRequiredMixin, ListView):
         return context
 
 
+class PublicCollectionListView(ListView):
+    model = Collection
+    template_name = 'collections/public_collection_list.html'
+    context_object_name = 'collections'
+    paginate_by = 24
+
+    def get_queryset(self):
+        kind = self.request.GET.get('kind', '').strip()
+        queryset = Collection.objects.filter(visibility=Collection.VISIBILITY_PUBLIC).select_related('owner')
+        if kind in {Collection.KIND_OWNED, Collection.KIND_WISHLIST}:
+            queryset = queryset.filter(kind=kind)
+        return queryset.order_by('owner__display_name', 'name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['selected_kind'] = self.request.GET.get('kind', '').strip()
+        return context
+
+
 class CollectionCreateView(LoginRequiredMixin, CreateView):
     model = Collection
     form_class = CollectionForm

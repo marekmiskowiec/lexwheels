@@ -77,3 +77,8 @@ class CollectionTests(TestCase):
     def test_collection_detail_shows_owner_profile_link(self):
         response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
         self.assertContains(response, reverse('accounts:public-profile', args=[self.owner.pk]))
+
+    def test_public_collection_list_shows_public_collections(self):
+        response = self.client.get(reverse('collections:public-collections'))
+        self.assertContains(response, 'Publiczna')
+        self.assertNotContains(response, 'Prywatna')
