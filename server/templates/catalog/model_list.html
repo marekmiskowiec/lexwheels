@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Katalog modeli | LexWheels{% endblock %}
+{% block content %}
+<section class="panel hero">
+  <h1>Katalog modeli Hot Wheels</h1>
+  <form method="get" class="filters">
+    <div style="flex: 2 1 300px;"><label for="q">Szukaj</label><input id="q" type="search" name="q" value="{{ query }}" placeholder="Toy, Number, nazwa modelu, seria"></div>
+    <div style="flex: 1 1 220px;"><label for="series">Seria</label><select id="series" name="series"><option value="">Wszystkie serie</option>{% for series in series_options %}<option value="{{ series }}" {% if selected_series == series %}selected{% endif %}>{{ series }}</option>{% endfor %}</select></div>
+    <div><button type="submit">Filtruj</button></div>
+  </form>
+</section>
+<section class="grid">
+  {% for item in models %}
+    <article class="card">
+      {% if item.image_src %}<a href="{{ item.get_absolute_url }}"><img class="thumb" src="{{ item.image_src }}" alt="{{ item.model_name }}"></a>{% endif %}
+      <h3><a href="{{ item.get_absolute_url }}">{{ item.model_name }}</a></h3>
+      <p class="meta">Toy: {{ item.toy }} | Number: {{ item.number }}</p>
+      <p class="meta">{{ item.series }} {% if item.series_number %}| {{ item.series_number }}{% endif %}</p>
+    </article>
+  {% empty %}
+    <div class="panel"><p>Brak modeli dla podanego filtra.</p></div>
+  {% endfor %}
+</section>
+{% if is_paginated %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}<a class="button secondary" href="?q={{ query }}&series={{ selected_series }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+    {% if page_obj.has_next %}<a class="button secondary" href="?q={{ query }}&series={{ selected_series }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Moje kolekcje | LexWheels{% endblock %}
+{% block content %}
+<section class="panel hero"><h1>Moje kolekcje</h1><p><a class="button" href="{% url 'collections:collection-create' %}">Nowa kolekcja</a></p></section>
+<section class="list">
+  {% for collection in collections %}
+    <div class="list-item">
+      <h3><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>
+      <p class="meta">{{ collection.get_visibility_display }} | {{ collection.items.count }} modeli</p>
+      {% if collection.description %}<p>{{ collection.description }}</p>{% endif %}
+    </div>
+  {% empty %}
+    <div class="panel"><p>Nie masz jeszcze żadnej kolekcji.</p></div>
+  {% endfor %}
+</section>
+{% endblock %}

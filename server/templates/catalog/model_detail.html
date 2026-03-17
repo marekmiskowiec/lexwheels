@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ model_obj.model_name }} | LexWheels{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="grid" style="grid-template-columns: minmax(260px, 360px) 1fr;">
+    <div>{% if model_obj.image_src %}<img class="thumb" style="height: 240px;" src="{{ model_obj.image_src }}" alt="{{ model_obj.model_name }}">{% endif %}</div>
+    <div>
+      <h1>{{ model_obj.model_name }}</h1>
+      <p><span class="badge">Toy {{ model_obj.toy }}</span> <span class="badge">Number {{ model_obj.number }}</span></p>
+      <p><strong>Seria:</strong> {{ model_obj.series|default:"-" }}</p>
+      <p><strong>Numer serii:</strong> {{ model_obj.series_number|default:"-" }}</p>
+      {% if user.is_authenticated %}<p><a class="button" href="{% url 'collections:dashboard' %}">Przejdź do swoich kolekcji</a></p>{% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

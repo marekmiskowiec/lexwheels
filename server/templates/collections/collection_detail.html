@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ collection_obj.name }} | LexWheels{% endblock %}
+{% block content %}
+<section class="panel hero">
+  <h1>{{ collection_obj.name }}</h1>
+  <p class="meta">{{ collection_obj.get_visibility_display }} | właściciel: {{ collection_obj.owner.email }}</p>
+  {% if collection_obj.description %}<p>{{ collection_obj.description }}</p>{% endif %}
+  {% if user == collection_obj.owner %}<p><a class="button" href="{% url 'collections:item-create' collection_obj.pk %}">Dodaj model</a></p>{% endif %}
+</section>
+<section class="list">
+  {% for item in collection_obj.items.all %}
+    <div class="list-item">
+      <h3><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h3>
+      <p class="meta">Ilość: {{ item.quantity }} | Stan: {{ item.get_condition_display }} | Opakowanie: {{ item.get_packaging_state_display }}</p>
+      {% if item.notes %}<p>{{ item.notes }}</p>{% endif %}
+      {% if user == collection_obj.owner %}<div class="danger-zone"><a href="{% url 'collections:item-update' item.pk %}">Edytuj</a><a href="{% url 'collections:item-delete' item.pk %}">Usuń</a></div>{% endif %}
+    </div>
+  {% empty %}
+    <div class="panel"><p>Ta kolekcja jest jeszcze pusta.</p></div>
+  {% endfor %}
+</section>
+{% endblock %}

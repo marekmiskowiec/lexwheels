@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel" style="max-width: 720px;">
+  <h1>Nowa kolekcja</h1>
+  <form method="post" class="list">{% csrf_token %}{{ form.as_p }}<button type="submit">Zapisz kolekcję</button></form>
+</section>
+{% endblock %}

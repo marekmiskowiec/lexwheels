@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Rejestracja | LexWheels{% endblock %}
+{% block content %}
+<section class="panel" style="max-width: 640px;">
+  <h1>Załóż konto</h1>
+  <form method="post" class="list">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Utwórz konto</button>
+  </form>
+</section>
+{% endblock %}

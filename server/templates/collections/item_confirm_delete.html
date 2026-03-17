@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel" style="max-width: 640px;">
+  <h1>Usuń pozycję</h1>
+  <p>Czy na pewno chcesz usunąć {{ object.model.model_name }} z kolekcji?</p>
+  <form method="post">{% csrf_token %}<button type="submit">Usuń</button></form>
+</section>
+{% endblock %}
