@@ -7,7 +7,7 @@
     <img class="avatar" src="{% static profile_user.avatar_static_path %}" alt="Avatar {{ profile_user.public_name }}">
     <div>
       <h1>{{ profile_user.public_name }}</h1>
-      <p class="meta">{{ profile_user.email }}</p>
+      <p class="meta">Dołączył: {{ profile_user.date_joined|date:"j E Y" }}</p>
       {% if profile_user.bio %}<p>{{ profile_user.bio }}</p>{% endif %}
     </div>
   </div>

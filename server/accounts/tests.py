@@ -1,5 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.formats import date_format
+from django.utils import timezone
 
 from .models import User
 
@@ -63,6 +65,15 @@ class AccountTests(TestCase):
         self.client.force_login(user)
         response = self.client.get(reverse('accounts:profile'))
         self.assertContains(response, 'accounts/avatars/teal-speed')
+
+    def test_profile_shows_registration_date_instead_of_email(self):
+        user = User.objects.create_user(email='test@example.com', login='tester', password='ComplexPass123')
+        self.client.force_login(user)
+        joined_label = date_format(timezone.localtime(user.date_joined), 'j E Y', use_l10n=True)
+
+        response = self.client.get(reverse('accounts:profile'))
+
+        self.assertContains(response, f'Dołączył: {joined_label}')
 
     def test_user_can_log_in_with_email(self):
         user = User.objects.create_user(email='test@example.com', login='tester', password='ComplexPass123')
