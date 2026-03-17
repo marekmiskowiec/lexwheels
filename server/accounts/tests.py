@@ -10,29 +10,42 @@ class AccountTests(TestCase):
     def test_register_creates_user(self):
         response = self.client.post(reverse('accounts:register'), {
             'email': 'test@example.com',
-            'login': 'tester',
             'display_name': 'Tester',
             'password1': 'ComplexPass123',
             'password2': 'ComplexPass123',
         })
         self.assertRedirects(response, reverse('collections:dashboard'))
         self.assertTrue(User.objects.filter(email='test@example.com').exists())
-        self.assertTrue(User.objects.filter(login='tester').exists())
+        self.assertTrue(User.objects.filter(login='Tester', display_name='Tester').exists())
 
     def test_profile_update(self):
         user = User.objects.create_user(email='test@example.com', password='ComplexPass123')
         self.client.force_login(user)
         response = self.client.post(reverse('accounts:profile-edit'), {
-            'login': 'lex',
             'display_name': 'Lex',
             'bio': 'Collector profile',
             'avatar_key': 'garage-blue',
         })
         self.assertRedirects(response, reverse('accounts:profile'))
         user.refresh_from_db()
-        self.assertEqual(user.login, 'lex')
+        self.assertEqual(user.login, 'Lex')
         self.assertEqual(user.display_name, 'Lex')
         self.assertEqual(user.avatar_key, 'garage-blue')
+
+    def test_profile_update_keeps_display_name_and_login_in_sync(self):
+        user = User.objects.create_user(email='test@example.com', login='Start', password='ComplexPass123')
+        self.client.force_login(user)
+
+        response = self.client.post(reverse('accounts:profile-edit'), {
+            'display_name': 'NowyLogin',
+            'bio': 'Collector profile',
+            'avatar_key': 'garage-blue',
+        })
+
+        self.assertRedirects(response, reverse('accounts:profile'))
+        user.refresh_from_db()
+        self.assertEqual(user.display_name, 'NowyLogin')
+        self.assertEqual(user.login, 'NowyLogin')
 
     def test_public_profile_visible(self):
         user = User.objects.create_user(email='test@example.com', password='ComplexPass123', display_name='Lex')

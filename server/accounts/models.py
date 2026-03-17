@@ -20,7 +20,7 @@ class UserManager(BaseUserManager):
     use_in_migrations = True
 
     def normalize_login(self, login):
-        return (login or '').strip().lower()
+        return (login or '').strip()
 
     def generate_login(self, email):
         base = self.normalize_login(email.partition('@')[0]) or 'user'
@@ -37,9 +37,11 @@ class UserManager(BaseUserManager):
         if not email:
             raise ValueError('The given email must be set')
         email = self.normalize_email(email)
-        login = self.normalize_login(extra_fields.pop('login', '')) or self.generate_login(email)
+        provided_name = extra_fields.pop('display_name', '')
+        login = self.normalize_login(extra_fields.pop('login', '') or provided_name) or self.generate_login(email)
         user = self.model(email=email, **extra_fields)
         user.login = login
+        user.display_name = login
         user.set_password(password)
         user.save(using=self._db)
         return user
