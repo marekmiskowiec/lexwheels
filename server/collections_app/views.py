@@ -64,6 +64,16 @@ class CollectionDetailView(DetailView):
             return obj
         raise Http404
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        items = self.object.items.all()
+        context['stats'] = {
+            'item_count': items.count(),
+            'total_quantity': sum(item.quantity for item in items),
+            'favorite_count': sum(1 for item in items if item.is_favorite),
+        }
+        return context
+
 
 class OwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     def test_func(self):

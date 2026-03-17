@@ -29,3 +29,8 @@ class AccountTests(TestCase):
         self.assertRedirects(response, reverse('accounts:profile'))
         user.refresh_from_db()
         self.assertEqual(user.display_name, 'Lex')
+
+    def test_public_profile_visible(self):
+        user = User.objects.create_user(email='test@example.com', password='ComplexPass123', display_name='Lex')
+        response = self.client.get(reverse('accounts:public-profile', args=[user.pk]))
+        self.assertContains(response, 'Lex')

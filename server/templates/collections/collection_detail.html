@@ -3,8 +3,13 @@
 {% block content %}
 <section class="panel hero">
   <h1>{{ collection_obj.name }}</h1>
-  <p class="meta">{{ collection_obj.get_kind_display }} | {{ collection_obj.get_visibility_display }} | właściciel: {{ collection_obj.owner.public_name }}</p>
+  <p class="meta">{{ collection_obj.get_kind_display }} | {{ collection_obj.get_visibility_display }} | właściciel: <a href="{% url 'accounts:public-profile' collection_obj.owner.pk %}">{{ collection_obj.owner.public_name }}</a></p>
   {% if collection_obj.description %}<p>{{ collection_obj.description }}</p>{% endif %}
+  <div class="grid" style="margin-top:18px;">
+    <div class="card"><strong>{{ stats.item_count }}</strong><div class="meta">pozycje</div></div>
+    <div class="card"><strong>{{ stats.total_quantity }}</strong><div class="meta">sztuk łącznie</div></div>
+    <div class="card"><strong>{{ stats.favorite_count }}</strong><div class="meta">ulubione</div></div>
+  </div>
   {% if user == collection_obj.owner %}<p><a class="button" href="{% url 'collections:item-create' collection_obj.pk %}">Dodaj model</a></p>{% endif %}
 </section>
 <section class="list">

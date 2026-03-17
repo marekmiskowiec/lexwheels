@@ -73,3 +73,7 @@ class CollectionTests(TestCase):
         self.client.force_login(self.owner)
         response = self.client.get(reverse('collections:dashboard'))
         self.assertContains(response, '3')
+
+    def test_collection_detail_shows_owner_profile_link(self):
+        response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
+        self.assertContains(response, reverse('accounts:public-profile', args=[self.owner.pk]))

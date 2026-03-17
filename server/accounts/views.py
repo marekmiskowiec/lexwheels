@@ -1,10 +1,13 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login
+from django.db.models import Count, Q, Sum
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, UpdateView
 
 from .forms import ProfileForm, UserRegistrationForm
 from .models import User
+from collections_app.models import CollectionItem
 
 
 class RegisterView(CreateView):
@@ -26,6 +29,12 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
     def get_object(self, queryset=None):
         return self.request.user
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(build_profile_context(self.request.user, public_only=False))
+        context['is_own_profile'] = True
+        return context
+
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     form_class = ProfileForm
@@ -34,3 +43,42 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         return self.request.user
+
+
+class PublicProfileView(DetailView):
+    model = User
+    template_name = 'accounts/profile_detail.html'
+    context_object_name = 'profile_user'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(User, pk=self.kwargs['pk'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(build_profile_context(self.object, public_only=True))
+        context['is_own_profile'] = self.request.user.is_authenticated and self.request.user == self.object
+        return context
+
+
+def build_profile_context(user: User, public_only: bool) -> dict:
+    collections = user.collections.all()
+    if public_only:
+        collections = collections.filter(visibility='public')
+
+    items = CollectionItem.objects.filter(collection__owner=user)
+    if public_only:
+        items = items.filter(collection__visibility='public')
+
+    stats = items.aggregate(
+        total_quantity=Sum('quantity'),
+        favorite_count=Count('id', filter=Q(is_favorite=True)),
+    )
+    return {
+        'collections_list': collections.order_by('name'),
+        'stats': {
+            'collection_count': collections.count(),
+            'item_count': items.count(),
+            'total_quantity': stats['total_quantity'] or 0,
+            'favorite_count': stats['favorite_count'] or 0,
+        },
+    }

@@ -5,6 +5,27 @@
   <h1>{{ profile_user.public_name }}</h1>
   <p class="meta">{{ profile_user.email }}</p>
   {% if profile_user.bio %}<p>{{ profile_user.bio }}</p>{% endif %}
-  <p><a class="button" href="{% url 'accounts:profile-edit' %}">Edytuj profil</a></p>
+  <div class="grid" style="margin-top:18px;">
+    <div class="card"><strong>{{ stats.collection_count }}</strong><div class="meta">kolekcje publiczne{% if is_own_profile %} / własne{% endif %}</div></div>
+    <div class="card"><strong>{{ stats.item_count }}</strong><div class="meta">pozycje</div></div>
+    <div class="card"><strong>{{ stats.total_quantity }}</strong><div class="meta">sztuk łącznie</div></div>
+    <div class="card"><strong>{{ stats.favorite_count }}</strong><div class="meta">ulubione</div></div>
+  </div>
+  {% if is_own_profile %}<p><a class="button" href="{% url 'accounts:profile-edit' %}">Edytuj profil</a></p>{% endif %}
+</section>
+
+<section class="panel" style="margin-top:18px;">
+  <h2>{% if is_own_profile %}Twoje kolekcje{% else %}Publiczne kolekcje{% endif %}</h2>
+  <section class="list">
+    {% for collection in collections_list %}
+      <div class="list-item">
+        <h3><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>
+        <p class="meta">{{ collection.get_kind_display }} | {{ collection.get_visibility_display }} | {{ collection.items.count }} modeli</p>
+        {% if collection.description %}<p>{{ collection.description }}</p>{% endif %}
+      </div>
+    {% empty %}
+      <p>Brak kolekcji do wyświetlenia.</p>
+    {% endfor %}
+  </section>
 </section>
 {% endblock %}
