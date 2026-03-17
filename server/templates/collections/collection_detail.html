@@ -19,7 +19,20 @@
   {% endif %}
 </section>
 <section class="list">
-  {% for item in collection_obj.items.all %}
+  <div class="panel">
+    <form method="get" class="filters">
+      <div style="flex: 1 1 320px;">
+        <label for="q">Szukaj w kolekcji</label>
+        <input id="q" type="search" name="q" value="{{ query }}" placeholder="Nazwa modelu, Toy, Number, seria">
+      </div>
+      <div><button type="submit">Szukaj</button></div>
+      {% if query %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Wyczyść</a></div>{% endif %}
+    </form>
+    {% if query %}
+      <p class="meta" style="margin:12px 0 0;">Znaleziono {{ filtered_count }} pozycji dla frazy "{{ query }}".</p>
+    {% endif %}
+  </div>
+  {% for item in items %}
     <div class="list-item">
       <h3><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h3>
       <p class="meta">Ilość: {{ item.quantity }} | Stan: {{ item.get_condition_display }} | Opakowanie: {{ item.get_packaging_state_display }}</p>
@@ -27,7 +40,9 @@
       {% if user == collection_obj.owner %}<div class="danger-zone"><a href="{% url 'collections:item-update' item.pk %}">Edytuj</a><a href="{% url 'collections:item-delete' item.pk %}">Usuń</a></div>{% endif %}
     </div>
   {% empty %}
-    <div class="panel"><p>Ta kolekcja jest jeszcze pusta.</p></div>
+    <div class="panel">
+      <p>{% if query %}Brak modeli pasujących do wyszukiwania.{% else %}Ta kolekcja jest jeszcze pusta.{% endif %}</p>
+    </div>
   {% endfor %}
 </section>
 {% endblock %}

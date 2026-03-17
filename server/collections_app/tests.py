@@ -84,6 +84,40 @@ class CollectionTests(TestCase):
         self.assertContains(response, 'Publiczna')
         self.assertNotContains(response, 'Prywatna')
 
+    def test_collection_detail_can_filter_items_by_search_query(self):
+        second_model = HotWheelsModel.objects.create(
+            app_id='def456',
+            toy='HCT06',
+            number='002',
+            model_name='Custom Mustang',
+            series='HW Dream Garage',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+        CollectionItem.objects.create(collection=self.public_collection, model=self.model_obj)
+        CollectionItem.objects.create(collection=self.public_collection, model=second_model)
+
+        response = self.client.get(
+            reverse('collections:collection-detail', args=[self.public_collection.pk]),
+            {'q': 'Mustang'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Custom Mustang')
+        self.assertNotContains(response, '1970 Pontiac Firebird')
+        self.assertContains(response, 'Znaleziono 1 pozycji')
+
+    def test_collection_detail_search_checks_series_and_toy_fields(self):
+        CollectionItem.objects.create(collection=self.public_collection, model=self.model_obj)
+
+        response = self.client.get(
+            reverse('collections:collection-detail', args=[self.public_collection.pk]),
+            {'q': 'HCT05'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '1970 Pontiac Firebird')
+
     def test_owner_can_export_collection_as_csv(self):
         CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=2, is_favorite=True)
         self.client.force_login(self.owner)

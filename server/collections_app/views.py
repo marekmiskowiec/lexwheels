@@ -90,12 +90,25 @@ class CollectionDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        items = self.object.items.all()
+        items = self.object.items.select_related('model')
+        query = self.request.GET.get('q', '').strip()
+
+        if query:
+            items = items.filter(
+                Q(model__model_name__icontains=query)
+                | Q(model__toy__icontains=query)
+                | Q(model__number__icontains=query)
+                | Q(model__series__icontains=query)
+            )
+
         context['stats'] = {
-            'item_count': items.count(),
-            'total_quantity': sum(item.quantity for item in items),
-            'favorite_count': sum(1 for item in items if item.is_favorite),
+            'item_count': self.object.items.count(),
+            'total_quantity': sum(item.quantity for item in self.object.items.all()),
+            'favorite_count': sum(1 for item in self.object.items.all() if item.is_favorite),
         }
+        context['items'] = items
+        context['query'] = query
+        context['filtered_count'] = items.count()
         return context
 
 
