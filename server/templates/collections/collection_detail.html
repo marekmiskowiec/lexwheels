@@ -10,7 +10,13 @@
     <div class="card"><strong>{{ stats.total_quantity }}</strong><div class="meta">sztuk łącznie</div></div>
     <div class="card"><strong>{{ stats.favorite_count }}</strong><div class="meta">ulubione</div></div>
   </div>
-  {% if user == collection_obj.owner %}<p><a class="button" href="{% url 'collections:item-create' collection_obj.pk %}">Dodaj model</a></p>{% endif %}
+  {% if user == collection_obj.owner %}
+    <p>
+      <a class="button" href="{% url 'collections:item-create' collection_obj.pk %}">Dodaj model</a>
+      <a class="button secondary" href="{% url 'collections:collection-export' collection_obj.pk 'csv' %}">Eksport CSV</a>
+      <a class="button secondary" href="{% url 'collections:collection-export' collection_obj.pk 'json' %}">Eksport JSON</a>
+    </p>
+  {% endif %}
 </section>
 <section class="list">
   {% for item in collection_obj.items.all %}

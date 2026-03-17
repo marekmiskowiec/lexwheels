@@ -1,6 +1,6 @@
 # LexWheels
 
-LexWheels is a Hot Wheels data scraper plus a simple web preview for browsing the 2022 lineup from Fandom.
+LexWheels is a Hot Wheels scraper plus a Django web app for collectors. The repo contains the data ingestion flow, a Django MVP with accounts and collections, and the older static preview.
 
 ## Project Structure
 
@@ -24,6 +24,8 @@ lexwheels/
 - `images/` contains locally downloaded model images.
 - `server/` contains the Django web application.
 - `web/` contains the static HTML preview.
+- `.env.example` contains the environment variables for local Django/PostgreSQL setup.
+- `docker-compose.yml` starts the Django app and PostgreSQL for development.
 
 ## What The Scraper Saves
 
@@ -107,6 +109,42 @@ If you want admin access, create a superuser:
 python3 server/manage.py createsuperuser
 ```
 
+## Environment Variables
+
+Copy the example file and adjust values if needed:
+
+```bash
+cp .env.example .env
+```
+
+Supported variables:
+
+- `DJANGO_SECRET_KEY`
+- `DJANGO_DEBUG`
+- `DJANGO_ALLOWED_HOSTS`
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_HOST`
+- `POSTGRES_PORT`
+
+If `POSTGRES_DB` is not set, the app falls back to local SQLite.
+
+## Run With Docker Compose
+
+Create `.env` first, then start the stack:
+
+```bash
+docker compose up --build
+```
+
+This starts:
+
+- PostgreSQL 16
+- Django on `http://127.0.0.1:8000/`
+
+The web container runs migrations and imports `data/hot_wheels_data.json` on startup.
+
 ## Run The Static Preview
 
 Start a simple local server in the project root:
@@ -127,14 +165,6 @@ The preview page loads data from `data/hot_wheels_data.json` and displays the mo
 
 - Fandom may block direct frontend requests with `403`, which is why the scraper includes API fallback logic.
 - Images are stored locally so the preview does not depend on external hotlinked assets.
-- The Django app supports PostgreSQL through `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT`, and falls back to SQLite locally.
+- The Django app supports PostgreSQL through `.env` or shell environment variables and falls back to SQLite locally.
 - The web preview expects `data/hot_wheels_data.json` and the local `images/` folder to exist.
 - The current dataset is based on the 2022 Hot Wheels list page.
-
-## Next Steps
-
-If this project grows into a collector web app, a good next direction is:
-
-- move model data into a database,
-- add users and collections,
-- keep the scraper as a separate data-ingestion part inside the same repo.

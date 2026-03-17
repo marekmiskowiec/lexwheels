@@ -1,7 +1,11 @@
+import csv
+import json
+
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from django.db.models import Count, Q, Sum
 
@@ -112,6 +116,79 @@ class CollectionDeleteView(OwnerRequiredMixin, DeleteView):
     model = Collection
     template_name = 'collections/collection_confirm_delete.html'
     success_url = reverse_lazy('collections:dashboard')
+
+
+class CollectionExportView(LoginRequiredMixin, View):
+    def get(self, request, pk, fmt):
+        collection = get_object_or_404(Collection, pk=pk, owner=request.user)
+        items = collection.items.select_related('model').all()
+
+        if fmt == 'csv':
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename="{collection.name.lower().replace(" ", "_")}.csv"'
+            writer = csv.writer(response)
+            writer.writerow([
+                'Toy',
+                'Number',
+                'Model Name',
+                'Series',
+                'Series Number',
+                'Quantity',
+                'Condition',
+                'Packaging State',
+                'Acquired At',
+                'Is Favorite',
+                'Notes',
+            ])
+            for item in items:
+                writer.writerow([
+                    item.model.toy,
+                    item.model.number,
+                    item.model.model_name,
+                    item.model.series,
+                    item.model.series_number,
+                    item.quantity,
+                    item.condition,
+                    item.packaging_state,
+                    item.acquired_at.isoformat() if item.acquired_at else '',
+                    item.is_favorite,
+                    item.notes,
+                ])
+            return response
+
+        if fmt == 'json':
+            payload = {
+                'collection': {
+                    'name': collection.name,
+                    'description': collection.description,
+                    'kind': collection.kind,
+                    'visibility': collection.visibility,
+                },
+                'items': [
+                    {
+                        'toy': item.model.toy,
+                        'number': item.model.number,
+                        'model_name': item.model.model_name,
+                        'series': item.model.series,
+                        'series_number': item.model.series_number,
+                        'quantity': item.quantity,
+                        'condition': item.condition,
+                        'packaging_state': item.packaging_state,
+                        'acquired_at': item.acquired_at.isoformat() if item.acquired_at else None,
+                        'is_favorite': item.is_favorite,
+                        'notes': item.notes,
+                    }
+                    for item in items
+                ],
+            }
+            response = HttpResponse(
+                json.dumps(payload, ensure_ascii=False, indent=2),
+                content_type='application/json',
+            )
+            response['Content-Disposition'] = f'attachment; filename="{collection.name.lower().replace(" ", "_")}.json"'
+            return response
+
+        raise Http404
 
 
 class CollectionItemCreateView(LoginRequiredMixin, CreateView):

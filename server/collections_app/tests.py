@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.urls import reverse
+import json
 
 from accounts.models import User
 from catalog.models import HotWheelsModel
@@ -82,3 +83,25 @@ class CollectionTests(TestCase):
         response = self.client.get(reverse('collections:public-collections'))
         self.assertContains(response, 'Publiczna')
         self.assertNotContains(response, 'Prywatna')
+
+    def test_owner_can_export_collection_as_csv(self):
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=2, is_favorite=True)
+        self.client.force_login(self.owner)
+        response = self.client.get(reverse('collections:collection-export', args=[self.private_collection.pk, 'csv']))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv')
+        self.assertIn('1970 Pontiac Firebird', response.content.decode())
+
+    def test_owner_can_export_collection_as_json(self):
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=2, is_favorite=True)
+        self.client.force_login(self.owner)
+        response = self.client.get(reverse('collections:collection-export', args=[self.private_collection.pk, 'json']))
+        self.assertEqual(response.status_code, 200)
+        payload = json.loads(response.content.decode())
+        self.assertEqual(payload['collection']['name'], 'Prywatna')
+        self.assertEqual(payload['items'][0]['model_name'], '1970 Pontiac Firebird')
+
+    def test_other_user_cannot_export_collection(self):
+        self.client.force_login(self.other)
+        response = self.client.get(reverse('collections:collection-export', args=[self.private_collection.pk, 'csv']))
+        self.assertEqual(response.status_code, 404)
