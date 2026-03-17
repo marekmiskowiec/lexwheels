@@ -9,7 +9,19 @@
       <p><span class="badge">Toy {{ model_obj.toy }}</span> <span class="badge">Number {{ model_obj.number }}</span></p>
       <p><strong>Seria:</strong> {{ model_obj.series|default:"-" }}</p>
       <p><strong>Numer serii:</strong> {{ model_obj.series_number|default:"-" }}</p>
-      {% if user.is_authenticated %}<p><a class="button" href="{% url 'collections:dashboard' %}">Przejdź do swoich kolekcji</a></p>{% endif %}
+      {% if user.is_authenticated %}
+        <p>
+          <a class="button" href="{% url 'collections:dashboard' %}">Przejdź do swoich kolekcji</a>
+          {% with collections=user.collections.all %}
+            {% if collections %}
+              <span class="meta" style="display:block; margin-top:10px;">Dodaj bezpośrednio do:</span>
+              {% for collection in collections %}
+                <a class="button secondary" style="margin:6px 6px 0 0;" href="{% url 'collections:item-create' collection.pk %}?model={{ model_obj.pk }}">{{ collection.name }}</a>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        </p>
+      {% endif %}
     </div>
   </div>
 </section>

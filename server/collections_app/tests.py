@@ -51,3 +51,18 @@ class CollectionTests(TestCase):
         )
         self.assertRedirects(response, self.private_collection.get_absolute_url())
         self.assertTrue(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).exists())
+
+    def test_owner_can_update_collection(self):
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            reverse('collections:collection-update', args=[self.private_collection.pk]),
+            {'name': 'Nowa nazwa', 'description': 'Opis', 'visibility': Collection.VISIBILITY_PUBLIC},
+        )
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        self.private_collection.refresh_from_db()
+        self.assertEqual(self.private_collection.name, 'Nowa nazwa')
+
+    def test_other_user_cannot_edit_collection(self):
+        self.client.force_login(self.other)
+        response = self.client.get(reverse('collections:collection-update', args=[self.private_collection.pk]))
+        self.assertEqual(response.status_code, 403)

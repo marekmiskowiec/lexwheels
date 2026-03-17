@@ -8,6 +8,10 @@
       <h3><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>
       <p class="meta">{{ collection.get_visibility_display }} | {{ collection.items.count }} modeli</p>
       {% if collection.description %}<p>{{ collection.description }}</p>{% endif %}
+      <div class="danger-zone">
+        <a href="{% url 'collections:collection-update' collection.pk %}">Edytuj</a>
+        <a href="{% url 'collections:collection-delete' collection.pk %}">Usuń</a>
+      </div>
     </div>
   {% empty %}
     <div class="panel"><p>Nie masz jeszcze żadnej kolekcji.</p></div>

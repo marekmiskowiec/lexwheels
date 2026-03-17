@@ -91,5 +91,6 @@ LOGIN_REDIRECT_URL = 'collections:dashboard'
 LOGOUT_REDIRECT_URL = 'catalog:model-list'
 LOGIN_URL = 'login'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+TEST_RUNNER = 'server.test_runner.AppAwareDiscoverRunner'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

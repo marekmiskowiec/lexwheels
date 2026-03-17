@@ -1,6 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from catalog.models import HotWheelsModel
@@ -26,7 +27,6 @@ class CollectionCreateView(LoginRequiredMixin, CreateView):
         form.instance.owner = self.request.user
         return super().form_valid(form)
 
-
 class CollectionDetailView(DetailView):
     model = Collection
     template_name = 'collections/collection_detail.html'
@@ -47,6 +47,18 @@ class OwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return obj.collection.owner == self.request.user
 
 
+class CollectionUpdateView(OwnerRequiredMixin, UpdateView):
+    model = Collection
+    form_class = CollectionForm
+    template_name = 'collections/collection_form.html'
+
+
+class CollectionDeleteView(OwnerRequiredMixin, DeleteView):
+    model = Collection
+    template_name = 'collections/collection_confirm_delete.html'
+    success_url = reverse_lazy('collections:dashboard')
+
+
 class CollectionItemCreateView(LoginRequiredMixin, CreateView):
     model = CollectionItem
     form_class = CollectionItemForm
@@ -59,6 +71,9 @@ class CollectionItemCreateView(LoginRequiredMixin, CreateView):
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
         form.fields['model'].queryset = HotWheelsModel.objects.all()
+        initial_model = self.request.GET.get('model')
+        if initial_model and initial_model.isdigit():
+            form.initial['model'] = initial_model
         return form
 
     def form_valid(self, form):

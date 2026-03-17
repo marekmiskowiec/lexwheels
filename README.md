@@ -12,6 +12,9 @@ lexwheels/
   scraper/
     main.py
     requirements.txt
+  server/
+    manage.py
+    requirements.txt
   web/
     index.html
 ```
@@ -19,6 +22,7 @@ lexwheels/
 - `scraper/` contains the Python scraper.
 - `data/` contains the generated JSON dataset.
 - `images/` contains locally downloaded model images.
+- `server/` contains the Django web application.
 - `web/` contains the static HTML preview.
 
 ## What The Scraper Saves
@@ -69,7 +73,41 @@ The scraper:
 
 If `images/` is empty, running the scraper will recreate the local image cache.
 
-## Run The Web Preview
+## Run The Django App
+
+Install backend dependencies:
+
+```bash
+pip install -r server/requirements.txt
+```
+
+Run the app from the project root:
+
+```bash
+python3 server/manage.py migrate
+python3 server/manage.py import_models
+python3 server/manage.py runserver
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8000/
+```
+
+Useful routes:
+
+- catalog: `http://127.0.0.1:8000/`
+- registration: `http://127.0.0.1:8000/accounts/register/`
+- admin: `http://127.0.0.1:8000/admin/`
+
+If you want admin access, create a superuser:
+
+```bash
+python3 server/manage.py createsuperuser
+```
+
+## Run The Static Preview
 
 Start a simple local server in the project root:
 
@@ -89,6 +127,7 @@ The preview page loads data from `data/hot_wheels_data.json` and displays the mo
 
 - Fandom may block direct frontend requests with `403`, which is why the scraper includes API fallback logic.
 - Images are stored locally so the preview does not depend on external hotlinked assets.
+- The Django app supports PostgreSQL through `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT`, and falls back to SQLite locally.
 - The web preview expects `data/hot_wheels_data.json` and the local `images/` folder to exist.
 - The current dataset is based on the 2022 Hot Wheels list page.
 
