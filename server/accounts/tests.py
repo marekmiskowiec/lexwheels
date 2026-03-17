@@ -8,6 +8,7 @@ class AccountTests(TestCase):
     def test_register_creates_user(self):
         response = self.client.post(reverse('accounts:register'), {
             'email': 'test@example.com',
+            'login': 'tester',
             'display_name': 'Tester',
             'first_name': 'Test',
             'last_name': 'User',
@@ -16,11 +17,13 @@ class AccountTests(TestCase):
         })
         self.assertRedirects(response, reverse('collections:dashboard'))
         self.assertTrue(User.objects.filter(email='test@example.com').exists())
+        self.assertTrue(User.objects.filter(login='tester').exists())
 
     def test_profile_update(self):
         user = User.objects.create_user(email='test@example.com', password='ComplexPass123')
         self.client.force_login(user)
         response = self.client.post(reverse('accounts:profile-edit'), {
+            'login': 'lex',
             'display_name': 'Lex',
             'first_name': 'Test',
             'last_name': 'User',
@@ -29,6 +32,7 @@ class AccountTests(TestCase):
         })
         self.assertRedirects(response, reverse('accounts:profile'))
         user.refresh_from_db()
+        self.assertEqual(user.login, 'lex')
         self.assertEqual(user.display_name, 'Lex')
         self.assertEqual(user.avatar_key, 'garage-blue')
 
@@ -59,3 +63,19 @@ class AccountTests(TestCase):
         self.client.force_login(user)
         response = self.client.get(reverse('accounts:profile'))
         self.assertContains(response, 'accounts/avatars/teal-speed')
+
+    def test_user_can_log_in_with_email(self):
+        user = User.objects.create_user(email='test@example.com', login='tester', password='ComplexPass123')
+        response = self.client.post(reverse('login'), {
+            'username': user.email,
+            'password': 'ComplexPass123',
+        })
+        self.assertRedirects(response, reverse('collections:dashboard'))
+
+    def test_user_can_log_in_with_login(self):
+        user = User.objects.create_user(email='test@example.com', login='tester', password='ComplexPass123')
+        response = self.client.post(reverse('login'), {
+            'username': user.login,
+            'password': 'ComplexPass123',
+        })
+        self.assertRedirects(response, reverse('collections:dashboard'))

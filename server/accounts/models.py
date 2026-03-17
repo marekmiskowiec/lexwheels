@@ -19,11 +19,27 @@ AVATAR_CHOICES = (
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
+    def normalize_login(self, login):
+        return (login or '').strip().lower()
+
+    def generate_login(self, email):
+        base = self.normalize_login(email.partition('@')[0]) or 'user'
+        candidate = base
+        suffix = 1
+
+        while self.model.objects.filter(login__iexact=candidate).exists():
+            suffix += 1
+            candidate = f'{base}{suffix}'
+
+        return candidate
+
     def _create_user(self, email, password, **extra_fields):
         if not email:
             raise ValueError('The given email must be set')
         email = self.normalize_email(email)
+        login = self.normalize_login(extra_fields.pop('login', '')) or self.generate_login(email)
         user = self.model(email=email, **extra_fields)
+        user.login = login
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -46,6 +62,7 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
+    login = models.CharField(max_length=80, unique=True)
     display_name = models.CharField(max_length=80, blank=True)
     bio = models.TextField(blank=True)
     avatar_key = models.CharField(max_length=32, choices=AVATAR_CHOICES, default='flame-red')

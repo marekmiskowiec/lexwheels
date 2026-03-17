@@ -3,6 +3,7 @@
 {% block content %}
 <section class="panel" style="max-width: 640px;">
   <h1>Zaloguj się</h1>
+  <p class="meta">Użyj adresu email albo loginu.</p>
   <form method="post" class="list">
     {% csrf_token %}
     {{ form.as_p }}
