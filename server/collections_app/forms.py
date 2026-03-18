@@ -18,9 +18,10 @@ class CollectionForm(forms.ModelForm):
 
 
 class VariantSectionsMixin:
-    def build_variant_sections(self):
+    def build_variant_sections(self, packaging_choices=None):
+        self.packaging_choices = tuple(packaging_choices or CollectionItem.PACKAGING_CHOICES)
         self.variant_sections = []
-        for packaging_value, packaging_label in CollectionItem.PACKAGING_CHOICES:
+        for packaging_value, packaging_label in self.packaging_choices:
             enabled_name = f'enabled_{packaging_value}'
             quantity_name = f'quantity_{packaging_value}'
             condition_name = f'condition_{packaging_value}'
@@ -46,7 +47,7 @@ class VariantSectionsMixin:
     def collect_selected_variants(self):
         selected_variants = []
 
-        for packaging_value, _ in CollectionItem.PACKAGING_CHOICES:
+        for packaging_value, _ in getattr(self, 'packaging_choices', CollectionItem.PACKAGING_CHOICES):
             if not self.cleaned_data.get(f'enabled_{packaging_value}'):
                 continue
 
@@ -78,6 +79,12 @@ class CollectionItemForm(forms.ModelForm):
             'is_favorite',
         )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        model = getattr(self.instance, 'model', None) or self.initial.get('model')
+        if model and hasattr(model, 'available_packaging_choices'):
+            self.fields['packaging_state'].choices = model.available_packaging_choices
+
     def clean(self):
         cleaned_data = super().clean()
         model = cleaned_data.get('model')
@@ -85,6 +92,9 @@ class CollectionItemForm(forms.ModelForm):
         condition = cleaned_data.get('condition')
         if not all([model, packaging_state, condition]):
             return cleaned_data
+
+        if packaging_state not in model.available_packaging_states:
+            raise forms.ValidationError('Ten model nie występuje w wybranym typie opakowania.')
 
         collection = getattr(self.instance, 'collection', None) or getattr(self, 'collection', None)
         if collection is None:
@@ -137,7 +147,7 @@ class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
 
         self.fields['model'].queryset = queryset
         self.fields['model'].empty_label = 'Wybierz model z wyników wyszukiwania'
-        self.build_variant_sections()
+        self.build_variant_sections(selected_model.available_packaging_choices if selected_model else None)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -149,6 +159,9 @@ class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
 
         if model:
             for packaging_value, _, condition in selected_variants:
+                if packaging_value not in model.available_packaging_states:
+                    self.add_error(None, 'Ten model nie występuje w wybranym typie opakowania.')
+                    continue
                 if CollectionItem.objects.filter(
                     collection=self.collection,
                     model=model,
@@ -189,6 +202,7 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
         super().__init__(*args, **kwargs)
         self.fields['collection'].queryset = Collection.objects.filter(owner=owner).order_by('kind', 'name')
         self.fields['model'].queryset = HotWheelsModel.objects.all()
+        self.condition_choices = CollectionItem.CONDITION_CHOICES
         self.build_variant_sections()
 
     def clean(self):
@@ -202,6 +216,12 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
 
         if collection and model:
             for packaging_value, _, condition in selected_variants:
+                if packaging_value not in model.available_packaging_states:
+                    self.add_error(
+                        None,
+                        f'Model "{model.model_name}" nie występuje w wariancie "{dict(CollectionItem.PACKAGING_CHOICES)[packaging_value]}".',
+                    )
+                    continue
                 if CollectionItem.objects.filter(
                     collection=collection,
                     model=model,
@@ -273,6 +293,9 @@ class CollectionBulkEditForm(forms.Form):
             new_quantity = self.cleaned_data.get('quantity') or item.quantity
             new_condition = self.cleaned_data.get('condition') or item.condition
             new_packaging = self.cleaned_data.get('packaging_state') or item.packaging_state
+
+            if new_packaging not in item.model.available_packaging_states:
+                continue
 
             duplicate_exists = CollectionItem.objects.filter(
                 collection=self.collection,

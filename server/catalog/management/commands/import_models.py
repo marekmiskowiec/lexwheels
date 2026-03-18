@@ -68,19 +68,23 @@ class Command(BaseCommand):
                 app_id = self.build_app_id(row)
                 local_photo = self.clean_optional_text(row.get('Local Photo'))
                 photo_url = self.clean_optional_text(row.get('Photo'))
-                short_card_photo_url = self.clean_optional_text(row.get('Short Card Photo')) or photo_url
+                category = self.extract_category(row, metadata)
+                short_card_photo_url = self.clean_optional_text(row.get('Short Card Photo'))
                 long_card_photo_url = self.clean_optional_text(row.get('Long Card Photo')) or photo_url
                 loose_photo_url = self.clean_optional_text(row.get('Loose Photo')) or photo_url
-                short_card_local_photo = self.clean_optional_text(row.get('Short Card Local Photo')) or local_photo
+                short_card_local_photo = self.clean_optional_text(row.get('Short Card Local Photo'))
                 long_card_local_photo = self.clean_optional_text(row.get('Long Card Local Photo')) or local_photo
                 loose_local_photo = self.clean_optional_text(row.get('Loose Local Photo')) or local_photo
+                if category.lower() != 'semi premium':
+                    short_card_photo_url = short_card_photo_url or photo_url
+                    short_card_local_photo = short_card_local_photo or local_photo
                 defaults = {
                     'brand': self.extract_brand(row, metadata),
                     'toy': row.get('Toy', ''),
                     'number': row.get('Number', ''),
                     'model_name': row.get('Model Name', ''),
                     'year': self.extract_year(row, metadata),
-                    'category': self.extract_category(row, metadata),
+                    'category': category,
                     'series': self.clean_series(row.get('Series', '')),
                     'series_number': row.get('Series Number', ''),
                     'photo_url': photo_url,

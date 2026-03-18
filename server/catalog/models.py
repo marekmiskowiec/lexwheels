@@ -35,6 +35,33 @@ class HotWheelsModel(models.Model):
     def __str__(self) -> str:
         return f'{self.number} {self.model_name}'
 
+    @property
+    def packaging_labels(self) -> dict[str, str]:
+        return dict(self.PACKAGING_LABELS)
+
+    @property
+    def excluded_packaging_states(self) -> set[str]:
+        category = (self.category or '').strip().lower()
+        if category == 'semi premium':
+            return {'short_card'}
+        return set()
+
+    @property
+    def available_packaging_states(self) -> list[str]:
+        return [
+            packaging_state
+            for packaging_state, _ in self.PACKAGING_LABELS
+            if packaging_state not in self.excluded_packaging_states
+        ]
+
+    @property
+    def available_packaging_choices(self) -> list[tuple[str, str]]:
+        return [
+            (packaging_state, label)
+            for packaging_state, label in self.PACKAGING_LABELS
+            if packaging_state in self.available_packaging_states
+        ]
+
     def get_absolute_url(self):
         return reverse('catalog:model-detail', args=[self.pk])
 
@@ -65,6 +92,9 @@ class HotWheelsModel(models.Model):
         return self.photo_url
 
     def image_src_for_packaging(self, packaging_state: str) -> str:
+        if packaging_state not in self.available_packaging_states:
+            return ''
+
         path_attr = {
             'short_card': 'short_card_local_photo_path',
             'long_card': 'long_card_local_photo_path',
@@ -97,6 +127,9 @@ class HotWheelsModel(models.Model):
         return self.image_src_for_packaging('loose')
 
     def has_packaging_image(self, packaging_state: str) -> bool:
+        if packaging_state not in self.available_packaging_states:
+            return False
+
         path_attr = {
             'short_card': 'short_card_local_photo_path',
             'long_card': 'long_card_local_photo_path',
@@ -114,7 +147,7 @@ class HotWheelsModel(models.Model):
     @property
     def catalog_image_variants(self) -> list[dict]:
         variants = []
-        for packaging_state, label in self.PACKAGING_LABELS:
+        for packaging_state, label in self.available_packaging_choices:
             if not self.has_packaging_image(packaging_state):
                 continue
             variants.append(
@@ -139,3 +172,15 @@ class HotWheelsModel(models.Model):
         if variants:
             return variants[0]['src']
         return ''
+
+    @property
+    def packaging_image_panels(self) -> list[dict]:
+        return [
+            {
+                'key': packaging_state,
+                'label': label,
+                'src': self.image_src_for_packaging(packaging_state),
+            }
+            for packaging_state, label in self.available_packaging_choices
+            if self.image_src_for_packaging(packaging_state)
+        ]

@@ -79,6 +79,38 @@ class ImportModelsCommandTests(TestCase):
         self.assertEqual(model.long_card_local_photo_path, 'images/car.jpg')
         self.assertEqual(model.loose_local_photo_path, 'images/car.jpg')
 
+    def test_import_does_not_backfill_short_card_for_semi_premium(self):
+        payload = [{
+            'Brand': 'Hot Wheels',
+            'Category': 'Semi Premium',
+            'Year': 2025,
+            'Toy': 'HWFF01',
+            'Number': '1/5',
+            'Model Name': 'Toyota Supra',
+            'Series': "Fast & Furious: Brian O'Conner Series",
+            'Series Number': '1/5',
+            'Photo': 'https://example.com/carded.jpg',
+            'Local Photo': 'images/carded.jpg',
+            'Short Card Photo': '',
+            'Short Card Local Photo': '',
+            'Long Card Photo': 'https://example.com/carded.jpg',
+            'Long Card Local Photo': 'images/carded.jpg',
+            'Loose Photo': 'https://example.com/loose.jpg',
+            'Loose Local Photo': 'images/loose.jpg',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / 'hot-wheels' / 'semi-premium' / '2025' / 'brian.json'
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(payload))
+            call_command('import_models', path=str(path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.short_card_photo_url, '')
+        self.assertEqual(model.short_card_local_photo_path, '')
+        self.assertEqual(model.long_card_photo_url, 'https://example.com/carded.jpg')
+        self.assertEqual(model.loose_photo_url, 'https://example.com/loose.jpg')
+
     def test_import_handles_null_local_photo_paths(self):
         payload = [{
             'Toy': 'ABC',
@@ -321,6 +353,18 @@ class CatalogViewTests(TestCase):
         self.assertEqual([variant['key'] for variant in variants], ['short_card', 'long_card'])
         self.assertEqual(self.model_obj.catalog_primary_image_src, 'https://example.com/short.jpg')
 
+    def test_semi_premium_model_hides_short_card_variant(self):
+        self.model_obj.category = 'Semi Premium'
+        self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.save(update_fields=['category', 'short_card_photo_url', 'long_card_photo_url', 'loose_photo_url'])
+
+        variants = self.model_obj.catalog_image_variants
+
+        self.assertEqual([variant['key'] for variant in variants], ['long_card', 'loose'])
+        self.assertEqual(self.model_obj.short_card_image_src, '')
+
     def test_catalog_search(self):
         response = self.client.get(reverse('catalog:model-list'), {'q': 'Firebird'})
         self.assertContains(response, '1970 Pontiac Firebird')
@@ -404,6 +448,19 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, '2022')
         self.assertContains(response, 'Mainline')
         self.assertContains(response, 'Krótka karta')
+        self.assertContains(response, 'Długa karta')
+        self.assertContains(response, 'Luzak')
+
+    def test_semi_premium_model_detail_hides_short_card(self):
+        self.model_obj.category = 'Semi Premium'
+        self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.save(update_fields=['category', 'short_card_photo_url', 'long_card_photo_url', 'loose_photo_url'])
+
+        response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
+
+        self.assertNotContains(response, 'Krótka karta')
         self.assertContains(response, 'Długa karta')
         self.assertContains(response, 'Luzak')
 

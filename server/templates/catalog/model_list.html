@@ -104,21 +104,21 @@
               {{ quick_add_form.collection.label_tag }}
               {{ quick_add_form.collection }}
             </div>
-            {% for section in quick_add_form.variant_sections %}
+            {% for packaging_value, packaging_label in item.available_packaging_choices %}
               <div class="card compact-card">
                 <label style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                  <input type="checkbox" name="enabled_{{ section.packaging_value }}" style="width:auto;">
-                  <strong>{{ section.packaging_label }}</strong>
+                  <input type="checkbox" name="enabled_{{ packaging_value }}" style="width:auto;">
+                  <strong>{{ packaging_label }}</strong>
                 </label>
                 <div class="filters">
                   <div style="flex:1 1 110px;">
-                    <label for="quantity_{{ section.packaging_value }}_{{ item.pk }}">Ilość</label>
-                    <input id="quantity_{{ section.packaging_value }}_{{ item.pk }}" type="number" name="quantity_{{ section.packaging_value }}" min="1" value="1">
+                    <label for="quantity_{{ packaging_value }}_{{ item.pk }}">Ilość</label>
+                    <input id="quantity_{{ packaging_value }}_{{ item.pk }}" type="number" name="quantity_{{ packaging_value }}" min="1" value="1">
                   </div>
                   <div style="flex:1 1 180px;">
-                    <label for="condition_{{ section.packaging_value }}_{{ item.pk }}">Stan</label>
-                    <select id="condition_{{ section.packaging_value }}_{{ item.pk }}" name="condition_{{ section.packaging_value }}">
-                      {% for value, label in section.condition.field.choices %}
+                    <label for="condition_{{ packaging_value }}_{{ item.pk }}">Stan</label>
+                    <select id="condition_{{ packaging_value }}_{{ item.pk }}" name="condition_{{ packaging_value }}">
+                      {% for value, label in quick_add_form.condition_choices %}
                         <option value="{{ value }}" {% if value == 'good' %}selected{% endif %}>{{ label }}</option>
                       {% endfor %}
                     </select>

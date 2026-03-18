@@ -201,6 +201,64 @@ class CollectionTests(TestCase):
         self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 3)
         self.assertTrue(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj, packaging_state='long_card').exists())
 
+    def test_semi_premium_item_form_hides_short_card_option(self):
+        semi_premium_model = HotWheelsModel.objects.create(
+            app_id='semi123',
+            toy='JBY30',
+            number='2/5',
+            model_name='Toyota Supra',
+            brand='Hot Wheels',
+            year=2025,
+            category='Semi Premium',
+            series="Fast & Furious: Brian O'Conner Series",
+            series_number='2/5',
+            photo_url='https://example.com/supra.jpg',
+            long_card_photo_url='https://example.com/supra-carded.jpg',
+            loose_photo_url='https://example.com/supra-loose.jpg',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.get(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {'model': semi_premium_model.pk},
+        )
+
+        self.assertNotContains(response, 'Krótka karta')
+        self.assertContains(response, 'Długa')
+        self.assertContains(response, 'Luzak')
+
+    def test_owner_cannot_add_semi_premium_as_short_card(self):
+        semi_premium_model = HotWheelsModel.objects.create(
+            app_id='semi124',
+            toy='JBY30',
+            number='2/5',
+            model_name='Toyota Supra',
+            brand='Hot Wheels',
+            year=2025,
+            category='Semi Premium',
+            series="Fast & Furious: Brian O'Conner Series",
+            series_number='2/5',
+            photo_url='https://example.com/supra.jpg',
+            long_card_photo_url='https://example.com/supra-carded.jpg',
+            loose_photo_url='https://example.com/supra-loose.jpg',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {
+                'model': semi_premium_model.pk,
+                'enabled_short_card': 'on',
+                'quantity_short_card': 1,
+                'condition_short_card': 'mint',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Zaznacz przynajmniej jeden wariant modelu do dodania.')
+        self.assertNotContains(response, 'Krótka karta')
+        self.assertFalse(CollectionItem.objects.filter(collection=self.private_collection, model=semi_premium_model).exists())
+
     def test_owner_can_update_collection(self):
         self.client.force_login(self.owner)
         response = self.client.post(

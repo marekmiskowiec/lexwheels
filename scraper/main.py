@@ -195,9 +195,11 @@ def attach_local_images(rows: list[dict], download_images: bool = True) -> list[
         default_image_url = row.get('Photo')
         carded_image_url = row.get('Carded Photo') or default_image_url
         loose_image_url = row.get('Loose Photo') or default_image_url
+        category = str(row.get('Category') or '').strip().lower()
+        short_card_image_url = carded_image_url if category != 'semi premium' else None
         row['Photo'] = default_image_url
         row['Local Photo'] = None
-        row['Short Card Photo'] = carded_image_url
+        row['Short Card Photo'] = short_card_image_url
         row['Long Card Photo'] = carded_image_url
         row['Loose Photo'] = loose_image_url
         row['Short Card Local Photo'] = None
@@ -208,7 +210,7 @@ def attach_local_images(rows: list[dict], download_images: bool = True) -> list[
             continue
 
         packaging_sources = (
-            ('Short Card Local Photo', carded_image_url),
+            ('Short Card Local Photo', short_card_image_url),
             ('Long Card Local Photo', carded_image_url),
             ('Loose Local Photo', loose_image_url),
         )

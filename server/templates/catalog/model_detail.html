@@ -4,18 +4,12 @@
 <section class="panel">
   <div class="grid" style="grid-template-columns: minmax(260px, 360px) 1fr;">
     <div class="list">
-      <div class="card compact-card">
-        <p class="meta" style="margin-bottom:10px;">Krótka karta</p>
-        {% if model_obj.short_card_image_src %}<img class="thumb" style="height: 220px;" src="{{ model_obj.short_card_image_src }}" alt="{{ model_obj.model_name }} - krótka karta">{% endif %}
-      </div>
-      <div class="card compact-card">
-        <p class="meta" style="margin-bottom:10px;">Długa karta</p>
-        {% if model_obj.long_card_image_src %}<img class="thumb" style="height: 220px;" src="{{ model_obj.long_card_image_src }}" alt="{{ model_obj.model_name }} - długa karta">{% endif %}
-      </div>
-      <div class="card compact-card">
-        <p class="meta" style="margin-bottom:10px;">Luzak</p>
-        {% if model_obj.loose_image_src %}<img class="thumb" style="height: 220px;" src="{{ model_obj.loose_image_src }}" alt="{{ model_obj.model_name }} - luzak">{% endif %}
-      </div>
+      {% for panel in model_obj.packaging_image_panels %}
+        <div class="card compact-card">
+          <p class="meta" style="margin-bottom:10px;">{% if panel.key == 'loose' %}Luzak{% else %}{{ panel.label }} karta{% endif %}</p>
+          <img class="thumb" style="height: 220px;" src="{{ panel.src }}" alt="{{ model_obj.model_name }} - {{ panel.label|lower }}">
+        </div>
+      {% endfor %}
     </div>
     <div>
       <h1>{{ model_obj.model_name }}</h1>
