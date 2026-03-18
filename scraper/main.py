@@ -1,4 +1,5 @@
 import argparse
+import json
 from pathlib import Path
 import hashlib
 import re
@@ -67,6 +68,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--page-title', help='Override the MediaWiki page title.')
     parser.add_argument('--output', help='Override the destination JSON path.')
     parser.add_argument('--set-name', help='Optional set name used for nested dataset paths like <line>/<year>/<set>.json.')
+    parser.add_argument(
+        '--update-existing-line',
+        action='store_true',
+        help='Merge the new scrape into the existing dataset file instead of overwriting it.',
+    )
     parser.add_argument('--skip-image-downloads', action='store_true', help='Do not download local images, keep only remote URLs.')
     return parser.parse_args()
 
@@ -194,6 +200,51 @@ def download_image(image_url: str, destination: Path) -> str | None:
     return destination.relative_to(PROJECT_ROOT).as_posix()
 
 
+def build_row_key(row: dict) -> str:
+    parts = [
+        str(row.get('Toy', '') or '').strip(),
+        str(row.get('Number', '') or '').strip(),
+        str(row.get('Model Name', '') or '').strip(),
+        str(row.get('Series', '') or '').strip(),
+        str(row.get('Series Number', '') or '').strip(),
+    ]
+    return '|'.join(parts)
+
+
+def read_existing_rows(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    try:
+        payload = json.loads(path.read_text())
+    except json.JSONDecodeError:
+        return []
+    return payload if isinstance(payload, list) else []
+
+
+def merge_rows(scraped_rows: list[dict], existing_rows: list[dict]) -> list[dict]:
+    existing_by_key = {build_row_key(row): row for row in existing_rows}
+    merged_rows = []
+    used_keys = set()
+
+    for row in scraped_rows:
+        key = build_row_key(row)
+        existing_row = existing_by_key.get(key, {})
+        merged_row = dict(existing_row)
+        for field, value in row.items():
+            if value not in (None, ''):
+                merged_row[field] = value
+            else:
+                merged_row.setdefault(field, value)
+        merged_rows.append(merged_row)
+        used_keys.add(key)
+
+    for key, row in existing_by_key.items():
+        if key not in used_keys:
+            merged_rows.append(row)
+
+    return merged_rows
+
+
 def attach_local_images(rows: list[dict], download_images: bool = True) -> list[dict]:
     for row in rows:
         default_image_url = row.get('Photo')
@@ -202,13 +253,13 @@ def attach_local_images(rows: list[dict], download_images: bool = True) -> list[
         category = str(row.get('Category') or '').strip().lower()
         short_card_image_url = carded_image_url if category not in {'semi premium', 'xl'} else None
         row['Photo'] = default_image_url
-        row['Local Photo'] = None
+        row['Local Photo'] = row.get('Local Photo')
         row['Short Card Photo'] = short_card_image_url
         row['Long Card Photo'] = carded_image_url
         row['Loose Photo'] = loose_image_url
-        row['Short Card Local Photo'] = None
-        row['Long Card Local Photo'] = None
-        row['Loose Local Photo'] = None
+        row['Short Card Local Photo'] = row.get('Short Card Local Photo')
+        row['Long Card Local Photo'] = row.get('Long Card Local Photo')
+        row['Loose Local Photo'] = row.get('Loose Local Photo')
 
         if not download_images:
             continue
@@ -221,6 +272,9 @@ def attach_local_images(rows: list[dict], download_images: bool = True) -> list[
         downloaded_paths = {}
         for local_key, image_url in packaging_sources:
             if not image_url:
+                continue
+            existing_local_path = row.get(local_key)
+            if existing_local_path and (PROJECT_ROOT / existing_local_path).exists():
                 continue
             if image_url not in downloaded_paths:
                 image_path = build_image_path(row, image_url)
@@ -321,6 +375,8 @@ def main() -> None:
         raise SystemExit(1)
 
     rows = parse_rows(table, url, args.brand, args.line, args.year, args.set_name or '')
+    if args.update_existing_line:
+        rows = merge_rows(rows, read_existing_rows(output_file))
     rows = attach_local_images(rows, download_images=not args.skip_image_downloads)
     df = pd.DataFrame(rows)
     output_file.parent.mkdir(parents=True, exist_ok=True)

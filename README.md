@@ -82,6 +82,19 @@ The scraper:
 - downloads images locally,
 - writes the output JSON to `data/catalog/hot-wheels/mainline/2022.json`.
 
+For lines that are still growing, you can update the existing dataset in place:
+
+```bash
+python3 scraper/main.py --brand "Hot Wheels" --line "Mainline" --year 2026 --update-existing-line
+python3 scraper/main.py --brand "Hot Wheels" --line "XL" --year 2026 --url "https://hotwheels.fandom.com/wiki/Hot_Wheels_XL" --page-title "Hot Wheels XL" --output data/catalog/hot-wheels/xl/2026.json --update-existing-line
+```
+
+`--update-existing-line` merges the new scrape into the current JSON file:
+
+- matching records are updated with newly available data,
+- existing local image paths are kept if the source still has no better image,
+- records missing from the latest scrape are preserved, which is useful for developing lines.
+
 Suggested dataset layout for future imports:
 
 ```text
