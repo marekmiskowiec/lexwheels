@@ -42,7 +42,30 @@
           Mam ten model
         </label>
       {% endif %}
-      {% if item.image_src %}<a href="{{ item.get_absolute_url }}"><img class="thumb" src="{{ item.image_src }}" alt="{{ item.model_name }}"></a>{% endif %}
+      {% if item.catalog_primary_image_src %}
+        <a href="{{ item.get_absolute_url }}">
+          <img
+            class="thumb catalog-card-image"
+            src="{{ item.catalog_primary_image_src }}"
+            alt="{{ item.model_name }}"
+            data-default-src="{{ item.catalog_primary_image_src }}"
+          >
+        </a>
+      {% endif %}
+      {% if item.catalog_image_variants|length > 1 %}
+        <div class="catalog-image-switcher" data-image-switcher>
+          {% for variant in item.catalog_image_variants %}
+            <button
+              type="button"
+              class="catalog-image-tab{% if forloop.first %} is-active{% endif %}"
+              data-image-src="{{ variant.src }}"
+              data-image-label="{{ variant.label }}"
+            >
+              {{ variant.label }}
+            </button>
+          {% endfor %}
+        </div>
+      {% endif %}
       <h3><a href="{{ item.get_absolute_url }}">{{ item.model_name }}</a></h3>
       <p class="meta">Marka: {{ item.brand|default:"-" }}</p>
       <p class="meta">Toy: {{ item.toy }} | Number: {{ item.number }}</p>
@@ -113,6 +136,25 @@
     }
   </script>
 {% endif %}
+<script>
+  document.querySelectorAll('[data-image-switcher]').forEach((switcher) => {
+    const card = switcher.closest('.card');
+    const image = card ? card.querySelector('.catalog-card-image') : null;
+    if (!image) {
+      return;
+    }
+
+    switcher.querySelectorAll('.catalog-image-tab').forEach((button) => {
+      button.addEventListener('click', () => {
+        image.src = button.dataset.imageSrc;
+        switcher.querySelectorAll('.catalog-image-tab').forEach((tab) => {
+          tab.classList.remove('is-active');
+        });
+        button.classList.add('is-active');
+      });
+    });
+  });
+</script>
 {% if is_paginated %}
   <div class="pagination">
     {% if page_obj.has_previous %}<a class="button secondary" href="?q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}

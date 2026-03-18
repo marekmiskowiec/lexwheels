@@ -134,6 +134,29 @@ class CatalogViewTests(TestCase):
             photo_url='https://example.com/car.jpg',
         )
 
+    def test_catalog_uses_packaging_variant_order_for_card_image(self):
+        self.model_obj.short_card_photo_url = ''
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.save(update_fields=['short_card_photo_url', 'long_card_photo_url', 'loose_photo_url'])
+
+        response = self.client.get(reverse('catalog:model-list'))
+
+        self.assertContains(response, 'https://example.com/long.jpg')
+        self.assertContains(response, 'data-image-label="Długa"')
+        self.assertContains(response, 'data-image-label="Luzak"')
+
+    def test_catalog_model_exposes_packaging_variants(self):
+        self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = ''
+        self.model_obj.save(update_fields=['short_card_photo_url', 'long_card_photo_url', 'loose_photo_url'])
+
+        variants = self.model_obj.catalog_image_variants
+
+        self.assertEqual([variant['key'] for variant in variants], ['short_card', 'long_card'])
+        self.assertEqual(self.model_obj.catalog_primary_image_src, 'https://example.com/short.jpg')
+
     def test_catalog_search(self):
         response = self.client.get(reverse('catalog:model-list'), {'q': 'Firebird'})
         self.assertContains(response, '1970 Pontiac Firebird')

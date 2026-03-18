@@ -4,6 +4,11 @@ from django.urls import reverse
 
 
 class HotWheelsModel(models.Model):
+    PACKAGING_LABELS = (
+        ('short_card', 'Krótka'),
+        ('long_card', 'Długa'),
+        ('loose', 'Luzak'),
+    )
     app_id = models.CharField(max_length=64, unique=True)
     brand = models.CharField(max_length=64, default='Hot Wheels')
     toy = models.CharField(max_length=32)
@@ -90,3 +95,47 @@ class HotWheelsModel(models.Model):
     @property
     def loose_image_src(self) -> str:
         return self.image_src_for_packaging('loose')
+
+    def has_packaging_image(self, packaging_state: str) -> bool:
+        path_attr = {
+            'short_card': 'short_card_local_photo_path',
+            'long_card': 'long_card_local_photo_path',
+            'loose': 'loose_local_photo_path',
+        }.get(packaging_state)
+        url_attr = {
+            'short_card': 'short_card_photo_url',
+            'long_card': 'long_card_photo_url',
+            'loose': 'loose_photo_url',
+        }.get(packaging_state)
+        if not path_attr or not url_attr:
+            return False
+        return bool(getattr(self, path_attr) or getattr(self, url_attr))
+
+    @property
+    def catalog_image_variants(self) -> list[dict]:
+        variants = []
+        for packaging_state, label in self.PACKAGING_LABELS:
+            if not self.has_packaging_image(packaging_state):
+                continue
+            variants.append(
+                {
+                    'key': packaging_state,
+                    'label': label,
+                    'src': self.image_src_for_packaging(packaging_state),
+                }
+            )
+
+        if variants:
+            return variants
+
+        if self.image_src:
+            return [{'key': 'default', 'label': 'Zdjęcie', 'src': self.image_src}]
+
+        return []
+
+    @property
+    def catalog_primary_image_src(self) -> str:
+        variants = self.catalog_image_variants
+        if variants:
+            return variants[0]['src']
+        return ''
