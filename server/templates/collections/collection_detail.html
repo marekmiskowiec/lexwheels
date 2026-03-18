@@ -20,6 +20,17 @@
   {% endif %}
 </section>
 <section class="list">
+  {% if user == collection_obj.owner %}
+    <form method="post" action="{% url 'collections:item-batch-delete' collection_obj.pk %}" id="batch-delete-form" class="panel">
+      {% csrf_token %}
+      <div class="filters">
+        <div><button type="submit" class="secondary">Usuń zaznaczone</button></div>
+        <div><button type="button" class="secondary" id="select-all-items">Zaznacz wszystko</button></div>
+        <div><button type="button" class="secondary" id="clear-all-items">Wyczyść zaznaczenie</button></div>
+      </div>
+      <p class="meta" style="margin:12px 0 0;">Zaznaczenie przy modelu usuwa wszystkie jego warianty. Możesz też zaznaczyć pojedyncze warianty poniżej.</p>
+    </form>
+  {% endif %}
   <div class="panel">
     <form method="get" class="filters">
       <div style="flex: 1 1 320px;">
@@ -35,12 +46,24 @@
   </div>
   {% for item in items %}
     <div class="list-item">
+      {% if user == collection_obj.owner %}
+        <label class="meta" style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+          <input type="checkbox" name="model_ids" value="{{ item.model.pk }}" form="batch-delete-form" class="batch-delete-checkbox" style="width:auto;">
+          Usuń cały model
+        </label>
+      {% endif %}
       <h3><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h3>
       <p class="meta">Rok: {{ item.model.year|default:"-" }} | Kategoria: {{ item.model.category|default:"-" }}</p>
       <p class="meta">Łącznie: {{ item.total_quantity }} szt. | Warianty: {{ item.variants|length }}</p>
       <section class="list" style="margin-top:12px;">
         {% for variant in item.variants %}
           <div class="card">
+            {% if user == collection_obj.owner %}
+              <label class="meta" style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <input type="checkbox" name="item_ids" value="{{ variant.pk }}" form="batch-delete-form" class="batch-delete-checkbox" style="width:auto;">
+                Usuń ten wariant
+              </label>
+            {% endif %}
             <p class="meta">{{ variant.get_packaging_state_display }} | stan: {{ variant.get_condition_display }} | ilość: {{ variant.quantity }}</p>
             {% if variant.notes %}<p>{{ variant.notes }}</p>{% endif %}
             {% if user == collection_obj.owner %}<div class="danger-zone"><a href="{% url 'collections:item-update' variant.pk %}">Edytuj</a><a href="{% url 'collections:item-delete' variant.pk %}">Usuń</a></div>{% endif %}
@@ -54,4 +77,27 @@
     </div>
   {% endfor %}
 </section>
+{% if user == collection_obj.owner %}
+  <script>
+    const batchDeleteCheckboxes = document.querySelectorAll('.batch-delete-checkbox');
+    const selectAllItemsButton = document.getElementById('select-all-items');
+    const clearAllItemsButton = document.getElementById('clear-all-items');
+
+    if (selectAllItemsButton) {
+      selectAllItemsButton.addEventListener('click', () => {
+        batchDeleteCheckboxes.forEach((checkbox) => {
+          checkbox.checked = true;
+        });
+      });
+    }
+
+    if (clearAllItemsButton) {
+      clearAllItemsButton.addEventListener('click', () => {
+        batchDeleteCheckboxes.forEach((checkbox) => {
+          checkbox.checked = false;
+        });
+      });
+    }
+  </script>
+{% endif %}
 {% endblock %}

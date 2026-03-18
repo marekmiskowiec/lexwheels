@@ -280,3 +280,53 @@ class CollectionTests(TestCase):
         )
         self.assertRedirects(response, reverse('catalog:model-list'))
         self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 1)
+
+    def test_owner_can_batch_delete_selected_variants(self):
+        short_card = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=2,
+            condition='good',
+            packaging_state='loose',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-batch-delete', args=[self.private_collection.pk]),
+            {'item_ids': [short_card.pk]},
+        )
+
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 1)
+
+    def test_owner_can_batch_delete_all_variants_for_selected_model(self):
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=2,
+            condition='good',
+            packaging_state='loose',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-batch-delete', args=[self.private_collection.pk]),
+            {'model_ids': [self.model_obj.pk]},
+        )
+
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        self.assertFalse(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).exists())

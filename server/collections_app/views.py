@@ -253,6 +253,34 @@ class CollectionBatchAddView(LoginRequiredMixin, View):
         return redirect(next_url)
 
 
+class CollectionBatchDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        collection = get_object_or_404(Collection, pk=pk, owner=request.user)
+        selected_variant_ids = {int(item_id) for item_id in request.POST.getlist('item_ids') if item_id.isdigit()}
+        selected_model_ids = {int(model_id) for model_id in request.POST.getlist('model_ids') if model_id.isdigit()}
+
+        queryset = collection.items.all()
+        if selected_model_ids:
+            queryset = queryset.filter(Q(pk__in=selected_variant_ids) | Q(model_id__in=selected_model_ids))
+        else:
+            queryset = queryset.filter(pk__in=selected_variant_ids)
+
+        deleted_variants = queryset.count()
+        deleted_models = queryset.values('model_id').distinct().count()
+
+        if not deleted_variants:
+            messages.error(request, 'Nie zaznaczono żadnych modeli ani wariantów do usunięcia.')
+            return redirect(collection.get_absolute_url())
+
+        queryset.delete()
+        if deleted_models and deleted_variants:
+            messages.success(
+                request,
+                f'Usunięto {deleted_variants} wariantów dla {deleted_models} modeli z kolekcji "{collection.name}".',
+            )
+        return redirect(collection.get_absolute_url())
+
+
 class CollectionItemCreateView(LoginRequiredMixin, FormView):
     form_class = CollectionItemMultiVariantForm
     template_name = 'collections/item_form.html'
