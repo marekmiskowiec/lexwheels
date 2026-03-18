@@ -19,6 +19,66 @@
     </p>
   {% endif %}
 </section>
+<section class="panel" style="margin-bottom:18px;">
+  <h2>Statystyki i wykresy</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Marki</h3>
+      {% for row in charts.brands %}
+        <div style="margin-bottom:10px;">
+          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
+          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:var(--accent);"></div></div>
+        </div>
+      {% empty %}
+        <p class="meta">Brak danych.</p>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <h3>Roczniki</h3>
+      {% for row in charts.years %}
+        <div style="margin-bottom:10px;">
+          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
+          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:#8f806a;"></div></div>
+        </div>
+      {% empty %}
+        <p class="meta">Brak danych.</p>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <h3>Kategorie</h3>
+      {% for row in charts.categories %}
+        <div style="margin-bottom:10px;">
+          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
+          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:#c47b38;"></div></div>
+        </div>
+      {% empty %}
+        <p class="meta">Brak danych.</p>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <h3>Opakowanie</h3>
+      {% for row in charts.packaging %}
+        <div style="margin-bottom:10px;">
+          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
+          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:#5b8c5a;"></div></div>
+        </div>
+      {% empty %}
+        <p class="meta">Brak danych.</p>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <h3>Stan modeli</h3>
+      {% for row in charts.conditions %}
+        <div style="margin-bottom:10px;">
+          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
+          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:#4d7298;"></div></div>
+        </div>
+      {% empty %}
+        <p class="meta">Brak danych.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
 <section class="list">
   {% if user == collection_obj.owner %}
     <form method="post" action="{% url 'collections:item-batch-delete' collection_obj.pk %}" id="batch-delete-form" class="panel">

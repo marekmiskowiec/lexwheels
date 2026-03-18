@@ -143,6 +143,9 @@ class CollectionTests(TestCase):
         self.client.force_login(self.owner)
         response = self.client.get(reverse('collections:dashboard'))
         self.assertContains(response, '3')
+        self.assertContains(response, 'Statystyki i wykresy')
+        self.assertContains(response, 'Marki')
+        self.assertContains(response, 'Hot Wheels')
 
     def test_collection_detail_shows_owner_profile_link(self):
         response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
@@ -185,6 +188,8 @@ class CollectionTests(TestCase):
 
         self.assertContains(response, 'Rok: 2022')
         self.assertContains(response, 'Kategoria: Mainline')
+        self.assertContains(response, 'Statystyki i wykresy')
+        self.assertContains(response, 'Roczniki')
 
     def test_collection_detail_groups_variants_for_same_model(self):
         CollectionItem.objects.create(
