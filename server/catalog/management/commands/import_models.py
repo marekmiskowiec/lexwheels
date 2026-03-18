@@ -13,6 +13,7 @@ class Command(BaseCommand):
     help = 'Import catalog models from one JSON file or from the full data/catalog tree.'
     SERIES_MARKERS = (
         'New for 2022!',
+        'New for 2023!',
     )
     DEFAULT_DATASET_PATH = settings.PROJECT_ROOT / 'data' / 'catalog' / 'hot-wheels' / 'mainline' / '2022.json'
     DEFAULT_DATASET_ROOT = settings.PROJECT_ROOT / 'data' / 'catalog'
@@ -65,6 +66,14 @@ class Command(BaseCommand):
 
             for row in rows:
                 app_id = self.build_app_id(row)
+                local_photo = self.clean_optional_text(row.get('Local Photo'))
+                photo_url = self.clean_optional_text(row.get('Photo'))
+                short_card_photo_url = self.clean_optional_text(row.get('Short Card Photo')) or photo_url
+                long_card_photo_url = self.clean_optional_text(row.get('Long Card Photo')) or photo_url
+                loose_photo_url = self.clean_optional_text(row.get('Loose Photo')) or photo_url
+                short_card_local_photo = self.clean_optional_text(row.get('Short Card Local Photo')) or local_photo
+                long_card_local_photo = self.clean_optional_text(row.get('Long Card Local Photo')) or local_photo
+                loose_local_photo = self.clean_optional_text(row.get('Loose Local Photo')) or local_photo
                 defaults = {
                     'brand': self.extract_brand(row, metadata),
                     'toy': row.get('Toy', ''),
@@ -74,14 +83,14 @@ class Command(BaseCommand):
                     'category': self.extract_category(row, metadata),
                     'series': self.clean_series(row.get('Series', '')),
                     'series_number': row.get('Series Number', ''),
-                    'photo_url': row.get('Photo', ''),
-                    'local_photo_path': row.get('Local Photo', ''),
-                    'short_card_photo_url': row.get('Short Card Photo') or row.get('Photo', ''),
-                    'short_card_local_photo_path': row.get('Short Card Local Photo') or row.get('Local Photo', ''),
-                    'long_card_photo_url': row.get('Long Card Photo') or row.get('Photo', ''),
-                    'long_card_local_photo_path': row.get('Long Card Local Photo') or row.get('Local Photo', ''),
-                    'loose_photo_url': row.get('Loose Photo') or row.get('Photo', ''),
-                    'loose_local_photo_path': row.get('Loose Local Photo') or row.get('Local Photo', ''),
+                    'photo_url': photo_url,
+                    'local_photo_path': local_photo,
+                    'short_card_photo_url': short_card_photo_url,
+                    'short_card_local_photo_path': short_card_local_photo,
+                    'long_card_photo_url': long_card_photo_url,
+                    'long_card_local_photo_path': long_card_local_photo,
+                    'loose_photo_url': loose_photo_url,
+                    'loose_local_photo_path': loose_local_photo,
                 }
                 _, was_created = HotWheelsModel.objects.update_or_create(app_id=app_id, defaults=defaults)
                 if was_created:
@@ -171,6 +180,12 @@ class Command(BaseCommand):
                 continue
             words.append(token.upper() if token in upper_tokens else token.capitalize())
         return ' '.join(words)
+
+    @staticmethod
+    def clean_optional_text(value) -> str:
+        if value is None:
+            return ''
+        return str(value).strip()
 
     @staticmethod
     def build_app_id(row: dict) -> str:

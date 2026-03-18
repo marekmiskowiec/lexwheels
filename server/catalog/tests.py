@@ -76,6 +76,38 @@ class ImportModelsCommandTests(TestCase):
         self.assertEqual(model.long_card_local_photo_path, 'images/car.jpg')
         self.assertEqual(model.loose_local_photo_path, 'images/car.jpg')
 
+    def test_import_handles_null_local_photo_paths(self):
+        payload = [{
+            'Toy': 'ABC',
+            'Number': '001',
+            'Model Name': 'Test Car',
+            'Series': 'Series A',
+            'Series Number': '1/5',
+            'Photo': None,
+            'Local Photo': None,
+            'Short Card Photo': None,
+            'Short Card Local Photo': None,
+            'Long Card Photo': None,
+            'Long Card Local Photo': None,
+            'Loose Photo': None,
+            'Loose Local Photo': None,
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / 'models.json'
+            path.write_text(json.dumps(payload))
+            call_command('import_models', path=str(path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.photo_url, '')
+        self.assertEqual(model.local_photo_path, '')
+        self.assertEqual(model.short_card_photo_url, '')
+        self.assertEqual(model.short_card_local_photo_path, '')
+        self.assertEqual(model.long_card_photo_url, '')
+        self.assertEqual(model.long_card_local_photo_path, '')
+        self.assertEqual(model.loose_photo_url, '')
+        self.assertEqual(model.loose_local_photo_path, '')
+
     def test_import_sets_year_and_category(self):
         payload = [{
             'Brand': 'Matchbox',
@@ -97,7 +129,7 @@ class ImportModelsCommandTests(TestCase):
         self.assertEqual(model.brand, 'Matchbox')
         self.assertEqual(model.year, 2023)
         self.assertEqual(model.category, 'Mainline')
-        self.assertEqual(model.series, 'Series A New for 2023!')
+        self.assertEqual(model.series, 'Series A')
 
     def test_import_can_read_brand_line_and_year_from_path_structure(self):
         payload = [{
@@ -206,6 +238,25 @@ class ImportModelsCommandTests(TestCase):
 
         model = HotWheelsModel.objects.get()
         self.assertEqual(model.series, "HW Metro Ryu's Rides")
+
+    def test_import_cleans_new_for_2023_marker_from_series(self):
+        payload = [{
+            'Toy': 'ABC',
+            'Number': '001',
+            'Model Name': 'Test Car',
+            'Series': 'HW Dream GarageNew for 2023!Target Exclusive',
+            'Series Number': '1/5',
+            'Photo': 'https://example.com/car.jpg',
+            'Local Photo': 'images/car.jpg',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / 'models.json'
+            path.write_text(json.dumps(payload))
+            call_command('import_models', path=str(path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.series, 'HW Dream Garage Target Exclusive')
 
 
 class CatalogViewTests(TestCase):

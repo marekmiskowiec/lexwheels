@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 import hashlib
 import re
@@ -14,14 +15,8 @@ pd.set_option('display.max_seq_items', None)
 pd.set_option('display.max_colwidth', 500)
 pd.set_option('expand_frame_repr', True)
 
-URL = 'https://hotwheels.fandom.com/wiki/List_of_2022_Hot_Wheels'
 API_URL = 'https://hotwheels.fandom.com/api.php'
-PAGE_TITLE = 'List_of_2022_Hot_Wheels'
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-BRAND = 'Hot Wheels'
-CATEGORY = 'Mainline'
-YEAR = 2022
-OUTPUT_FILE = PROJECT_ROOT / 'data' / 'catalog' / 'hot-wheels' / 'mainline' / '2022.json'
 IMAGE_DIR = PROJECT_ROOT / 'images'
 REQUEST_TIMEOUT = 15
 HEADERS = {
@@ -33,6 +28,35 @@ HEADERS = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.9',
 }
+
+
+def build_page_title(brand: str, year: int, line: str) -> str:
+    if brand == 'Hot Wheels' and line == 'Mainline':
+        return f'List_of_{year}_Hot_Wheels'
+    raise ValueError(f'Unsupported page mapping for brand={brand!r}, line={line!r}')
+
+
+def build_dataset_path(brand: str, line: str, year: int) -> Path:
+    return (
+        PROJECT_ROOT
+        / 'data'
+        / 'catalog'
+        / slugify(brand).replace('_', '-')
+        / slugify(line).replace('_', '-')
+        / f'{year}.json'
+    )
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description='Scrape Hot Wheels catalog data into structured JSON datasets.')
+    parser.add_argument('--brand', default='Hot Wheels', help='Brand label stored in the dataset.')
+    parser.add_argument('--line', default='Mainline', help='Line/category label stored in the dataset.')
+    parser.add_argument('--year', type=int, default=2022, help='Dataset year and fandom page year.')
+    parser.add_argument('--url', help='Override the source page URL.')
+    parser.add_argument('--page-title', help='Override the MediaWiki page title.')
+    parser.add_argument('--output', help='Override the destination JSON path.')
+    parser.add_argument('--skip-image-downloads', action='store_true', help='Do not download local images, keep only remote URLs.')
+    return parser.parse_args()
 
 
 def slugify(value: str) -> str:
@@ -57,10 +81,10 @@ def fetch_page_html(url: str) -> str:
     return response.text
 
 
-def fetch_page_via_api() -> str:
+def fetch_page_via_api(page_title: str) -> str:
     params = {
         'action': 'parse',
-        'page': PAGE_TITLE,
+        'page': page_title,
         'prop': 'text',
         'format': 'json',
         'formatversion': '2',
@@ -132,7 +156,7 @@ def download_image(image_url: str, destination: Path) -> str | None:
     return destination.relative_to(PROJECT_ROOT).as_posix()
 
 
-def attach_local_images(rows: list[dict]) -> list[dict]:
+def attach_local_images(rows: list[dict], download_images: bool = True) -> list[dict]:
     for row in rows:
         image_url = row.get('Photo')
         row['Local Photo'] = None
@@ -144,6 +168,9 @@ def attach_local_images(rows: list[dict]) -> list[dict]:
         row['Loose Local Photo'] = None
 
         if not image_url:
+            continue
+
+        if not download_images:
             continue
 
         image_path = build_image_path(row, image_url)
@@ -163,7 +190,7 @@ def attach_local_images(rows: list[dict]) -> list[dict]:
     return rows
 
 
-def parse_rows(table, base_url: str) -> list[dict]:
+def parse_rows(table, base_url: str, brand: str, category: str, year: int) -> list[dict]:
     body = table.find('tbody') or table
     rows = []
 
@@ -173,9 +200,9 @@ def parse_rows(table, base_url: str) -> list[dict]:
             continue
 
         rows.append({
-            'Brand': BRAND,
-            'Category': CATEGORY,
-            'Year': YEAR,
+            'Brand': brand,
+            'Category': category,
+            'Year': year,
             'Toy': columns[0].get_text(strip=True) if len(columns) > 0 else None,
             'Number': columns[1].get_text(strip=True) if len(columns) > 1 else None,
             'Model Name': columns[2].get_text(strip=True) if len(columns) > 2 else None,
@@ -188,11 +215,16 @@ def parse_rows(table, base_url: str) -> list[dict]:
 
 
 def main() -> None:
+    args = parse_args()
+    page_title = args.page_title or build_page_title(args.brand, args.year, args.line)
+    url = args.url or f'https://hotwheels.fandom.com/wiki/{page_title}'
+    output_file = Path(args.output) if args.output else build_dataset_path(args.brand, args.line, args.year)
+
     try:
-        html = fetch_page_html(URL)
+        html = fetch_page_html(url)
     except SystemExit:
         print('Falling back to the MediaWiki API.')
-        html = fetch_page_via_api()
+        html = fetch_page_via_api(page_title)
 
     soup = BeautifulSoup(html, 'html.parser')
 
@@ -201,12 +233,12 @@ def main() -> None:
         print("No table found with the class 'sortable wikitable'.")
         raise SystemExit(1)
 
-    rows = parse_rows(table, URL)
-    rows = attach_local_images(rows)
+    rows = parse_rows(table, url, args.brand, args.line, args.year)
+    rows = attach_local_images(rows, download_images=not args.skip_image_downloads)
     df = pd.DataFrame(rows)
-    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    df.to_json(OUTPUT_FILE, orient='records', force_ascii=False, indent=2)
-    print(f"Data saved to {OUTPUT_FILE}")
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    df.to_json(output_file, orient='records', force_ascii=False, indent=2)
+    print(f'Data saved to {output_file}')
 
 
 if __name__ == '__main__':
