@@ -6,6 +6,9 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
+from accounts.models import User
+from collections_app.models import Collection, CollectionItem
+
 from .management.commands.import_models import Command
 from .models import HotWheelsModel
 
@@ -363,3 +366,96 @@ class CatalogViewTests(TestCase):
         response = self.client.get(reverse('healthcheck'))
         self.assertEqual(response.status_code, 200)
         self.assertJSONEqual(response.content, {'status': 'ok'})
+
+
+class CatalogDedupeCommandTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='owner@example.com', password='ComplexPass123')
+        self.collection = Collection.objects.create(owner=self.user, name='Moja', kind=Collection.KIND_OWNED)
+
+    def test_dedupe_catalog_models_removes_duplicate_models(self):
+        canonical = HotWheelsModel.objects.create(
+            app_id='dup-1',
+            brand='Hot Wheels',
+            category='Mainline',
+            year=2023,
+            toy='ABC',
+            number='001',
+            model_name='Test Car',
+            series='Series A',
+            series_number='1/5',
+            photo_url='https://example.com/car.jpg',
+            local_photo_path='images/car.jpg',
+        )
+        HotWheelsModel.objects.create(
+            app_id='dup-2',
+            brand='Hot Wheels',
+            category='Mainline',
+            year=2023,
+            toy='ABC',
+            number='001',
+            model_name='Test Car',
+            series='Series A',
+            series_number='1/5',
+            photo_url='',
+            local_photo_path='',
+        )
+
+        call_command('dedupe_catalog_models', brand='Hot Wheels', category='Mainline', year=2023)
+
+        self.assertEqual(HotWheelsModel.objects.filter(year=2023).count(), 1)
+        self.assertTrue(HotWheelsModel.objects.filter(pk=canonical.pk).exists())
+
+    def test_dedupe_catalog_models_merges_collection_items(self):
+        canonical = HotWheelsModel.objects.create(
+            app_id='dup-1',
+            brand='Hot Wheels',
+            category='Mainline',
+            year=2023,
+            toy='ABC',
+            number='001',
+            model_name='Test Car',
+            series='Series A',
+            series_number='1/5',
+            photo_url='https://example.com/car.jpg',
+            local_photo_path='images/car.jpg',
+        )
+        duplicate = HotWheelsModel.objects.create(
+            app_id='dup-2',
+            brand='Hot Wheels',
+            category='Mainline',
+            year=2023,
+            toy='ABC',
+            number='001',
+            model_name='Test Car',
+            series='Series A',
+            series_number='1/5',
+            photo_url='',
+            local_photo_path='',
+        )
+        CollectionItem.objects.create(
+            collection=self.collection,
+            model=canonical,
+            quantity=1,
+            condition='good',
+            packaging_state='short_card',
+            notes='canon',
+        )
+        CollectionItem.objects.create(
+            collection=self.collection,
+            model=duplicate,
+            quantity=2,
+            condition='good',
+            packaging_state='short_card',
+            notes='dupe',
+            is_favorite=True,
+        )
+
+        call_command('dedupe_catalog_models', brand='Hot Wheels', category='Mainline', year=2023)
+
+        item = CollectionItem.objects.get(collection=self.collection, model=canonical, condition='good', packaging_state='short_card')
+        self.assertEqual(item.quantity, 3)
+        self.assertTrue(item.is_favorite)
+        self.assertIn('canon', item.notes)
+        self.assertIn('dupe', item.notes)
+        self.assertFalse(CollectionItem.objects.filter(model=duplicate).exists())
