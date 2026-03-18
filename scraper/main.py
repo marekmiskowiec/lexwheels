@@ -36,15 +36,17 @@ def build_page_title(brand: str, year: int, line: str) -> str:
     raise ValueError(f'Unsupported page mapping for brand={brand!r}, line={line!r}')
 
 
-def build_dataset_path(brand: str, line: str, year: int) -> Path:
-    return (
+def build_dataset_path(brand: str, line: str, year: int, set_name: str = '') -> Path:
+    base_path = (
         PROJECT_ROOT
         / 'data'
         / 'catalog'
         / slugify(brand).replace('_', '-')
         / slugify(line).replace('_', '-')
-        / f'{year}.json'
     )
+    if set_name:
+        return base_path / str(year) / f"{slugify(set_name).replace('_', '-')}.json"
+    return base_path / f'{year}.json'
 
 
 def build_image_dir(brand: str, line: str, year: int) -> Path:
@@ -64,6 +66,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--url', help='Override the source page URL.')
     parser.add_argument('--page-title', help='Override the MediaWiki page title.')
     parser.add_argument('--output', help='Override the destination JSON path.')
+    parser.add_argument('--set-name', help='Optional set name used for nested dataset paths like <line>/<year>/<set>.json.')
     parser.add_argument('--skip-image-downloads', action='store_true', help='Do not download local images, keep only remote URLs.')
     return parser.parse_args()
 
@@ -136,6 +139,24 @@ def extract_photo_url(cell, base_url: str) -> str | None:
     return urljoin(base_url, href) if href else None
 
 
+def extract_headers(table) -> list[str]:
+    body = table.find('tbody') or table
+    header_row = body.find('tr')
+    if not header_row:
+        return []
+    return [th.get_text(' ', strip=True) for th in header_row.find_all('th')]
+
+
+def find_catalog_table(soup):
+    for table in soup.find_all('table'):
+        headers = extract_headers(table)
+        if {'Toy', 'Number', 'Model Name'}.issubset(set(headers)):
+            return table
+        if {'Series #', 'Toy #', 'Casting Name'}.issubset(set(headers)):
+            return table
+    return None
+
+
 def build_image_path(row_data: dict, image_url: str) -> Path:
     parsed = urlparse(image_url)
     suffix = Path(parsed.path).suffix.lower() or '.jpg'
@@ -171,58 +192,84 @@ def download_image(image_url: str, destination: Path) -> str | None:
 
 def attach_local_images(rows: list[dict], download_images: bool = True) -> list[dict]:
     for row in rows:
-        image_url = row.get('Photo')
+        default_image_url = row.get('Photo')
+        carded_image_url = row.get('Carded Photo') or default_image_url
+        loose_image_url = row.get('Loose Photo') or default_image_url
+        row['Photo'] = default_image_url
         row['Local Photo'] = None
-        row['Short Card Photo'] = image_url
-        row['Long Card Photo'] = image_url
-        row['Loose Photo'] = image_url
+        row['Short Card Photo'] = carded_image_url
+        row['Long Card Photo'] = carded_image_url
+        row['Loose Photo'] = loose_image_url
         row['Short Card Local Photo'] = None
         row['Long Card Local Photo'] = None
         row['Loose Local Photo'] = None
 
-        if not image_url:
-            continue
-
         if not download_images:
             continue
 
-        image_path = build_image_path(row, image_url)
-        if not image_path.exists():
-            local_path = download_image(image_url, image_path)
-            row['Local Photo'] = local_path
-            row['Short Card Local Photo'] = local_path
-            row['Long Card Local Photo'] = local_path
-            row['Loose Local Photo'] = local_path
-            continue
+        packaging_sources = (
+            ('Short Card Local Photo', carded_image_url),
+            ('Long Card Local Photo', carded_image_url),
+            ('Loose Local Photo', loose_image_url),
+        )
+        downloaded_paths = {}
+        for local_key, image_url in packaging_sources:
+            if not image_url:
+                continue
+            if image_url not in downloaded_paths:
+                image_path = build_image_path(row, image_url)
+                if image_path.exists():
+                    downloaded_paths[image_url] = image_path.relative_to(PROJECT_ROOT).as_posix()
+                else:
+                    downloaded_paths[image_url] = download_image(image_url, image_path)
+            row[local_key] = downloaded_paths[image_url]
 
-        row['Local Photo'] = image_path.relative_to(PROJECT_ROOT).as_posix()
-        row['Short Card Local Photo'] = row['Local Photo']
-        row['Long Card Local Photo'] = row['Local Photo']
-        row['Loose Local Photo'] = row['Local Photo']
+        row['Local Photo'] = row.get('Short Card Local Photo') or row.get('Loose Local Photo')
 
     return rows
 
 
-def parse_rows(table, base_url: str, brand: str, category: str, year: int) -> list[dict]:
+def parse_rows(table, base_url: str, brand: str, category: str, year: int, series_label: str = '') -> list[dict]:
     body = table.find('tbody') or table
+    headers = extract_headers(table)
+    header_index = {header: idx for idx, header in enumerate(headers)}
     rows = []
 
-    for row in body.find_all('tr'):
+    for row in body.find_all('tr')[1:]:
         columns = row.find_all('td')
         if not columns:
             continue
 
-        rows.append({
-            'Brand': brand,
-            'Category': category,
-            'Year': year,
-            'Toy': columns[0].get_text(strip=True) if len(columns) > 0 else None,
-            'Number': columns[1].get_text(strip=True) if len(columns) > 1 else None,
-            'Model Name': columns[2].get_text(strip=True) if len(columns) > 2 else None,
-            'Series': columns[3].get_text(strip=True) if len(columns) > 3 else None,
-            'Series Number': columns[4].get_text(strip=True) if len(columns) > 4 else None,
-            'Photo': extract_photo_url(columns[5], base_url) if len(columns) > 5 else None
-        })
+        if {'Toy', 'Number', 'Model Name'}.issubset(set(headers)):
+            rows.append({
+                'Brand': brand,
+                'Category': category,
+                'Year': year,
+                'Toy': columns[header_index['Toy']].get_text(strip=True) if 'Toy' in header_index else None,
+                'Number': columns[header_index['Number']].get_text(strip=True) if 'Number' in header_index else None,
+                'Model Name': columns[header_index['Model Name']].get_text(strip=True) if 'Model Name' in header_index else None,
+                'Series': columns[header_index['Series']].get_text(strip=True) if 'Series' in header_index else series_label,
+                'Series Number': columns[header_index['Series Number']].get_text(strip=True) if 'Series Number' in header_index else '',
+                'Photo': extract_photo_url(columns[header_index['Photo']], base_url) if 'Photo' in header_index else None,
+            })
+            continue
+
+        if {'Series #', 'Toy #', 'Casting Name'}.issubset(set(headers)):
+            carded_photo = extract_photo_url(columns[header_index['Photo Carded']], base_url) if 'Photo Carded' in header_index else None
+            loose_photo = extract_photo_url(columns[header_index['Photo Loose']], base_url) if 'Photo Loose' in header_index else None
+            rows.append({
+                'Brand': brand,
+                'Category': category,
+                'Year': year,
+                'Toy': columns[header_index['Toy #']].get_text(strip=True) if 'Toy #' in header_index else None,
+                'Number': columns[header_index['Series #']].get_text(strip=True) if 'Series #' in header_index else None,
+                'Model Name': columns[header_index['Casting Name']].get_text(strip=True) if 'Casting Name' in header_index else None,
+                'Series': series_label,
+                'Series Number': columns[header_index['Series #']].get_text(strip=True) if 'Series #' in header_index else '',
+                'Photo': carded_photo or loose_photo,
+                'Carded Photo': carded_photo,
+                'Loose Photo': loose_photo,
+            })
 
     return rows
 
@@ -231,7 +278,7 @@ def main() -> None:
     args = parse_args()
     page_title = args.page_title or build_page_title(args.brand, args.year, args.line)
     url = args.url or f'https://hotwheels.fandom.com/wiki/{page_title}'
-    output_file = Path(args.output) if args.output else build_dataset_path(args.brand, args.line, args.year)
+    output_file = Path(args.output) if args.output else build_dataset_path(args.brand, args.line, args.year, args.set_name or '')
 
     try:
         html = fetch_page_html(url)
@@ -241,12 +288,12 @@ def main() -> None:
 
     soup = BeautifulSoup(html, 'html.parser')
 
-    table = soup.find('table', class_='sortable wikitable')
+    table = find_catalog_table(soup)
     if not table:
-        print("No table found with the class 'sortable wikitable'.")
+        print('No supported catalog table found on the page.')
         raise SystemExit(1)
 
-    rows = parse_rows(table, url, args.brand, args.line, args.year)
+    rows = parse_rows(table, url, args.brand, args.line, args.year, args.set_name or '')
     rows = attach_local_images(rows, download_images=not args.skip_image_downloads)
     df = pd.DataFrame(rows)
     output_file.parent.mkdir(parents=True, exist_ok=True)

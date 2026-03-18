@@ -223,6 +223,27 @@ class ImportModelsCommandTests(TestCase):
         self.assertEqual(model.category, 'Collectors')
         self.assertEqual(model.year, 2024)
 
+    def test_import_can_read_nested_set_path_structure(self):
+        payload = [{
+            'Toy': 'HWFF01',
+            'Number': '001',
+            'Model Name': 'Nissan Skyline GT-R',
+            'Series': "Fast & Furious: Brian O'Conner Series",
+            'Series Number': '1/5',
+            'Photo': 'https://example.com/skyline.jpg',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / 'hot-wheels' / 'semi-premium' / '2025' / 'fast-furious-brian-oconnor-series.json'
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(payload))
+            call_command('import_models', path=str(path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.brand, 'Hot Wheels')
+        self.assertEqual(model.category, 'Semi Premium')
+        self.assertEqual(model.year, 2025)
+
     def test_import_cleans_new_for_2022_marker_from_series(self):
         payload = [{
             'Toy': 'ABC',

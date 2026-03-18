@@ -119,7 +119,7 @@ class Command(BaseCommand):
             raise CommandError(f'Dataset root not found: {root}')
 
         dataset_files = []
-        for path in sorted(root.glob('*/*/*.json')):
+        for path in sorted(root.rglob('*.json')):
             metadata = self.extract_metadata_from_path(path)
             if options.get('brand') and metadata['brand_slug'] != options['brand'].strip().lower():
                 continue
@@ -156,13 +156,33 @@ class Command(BaseCommand):
                 'year': None,
             }
 
-        brand_slug = parts[-3]
-        line_slug = parts[-2]
         year = None
-        try:
-            year = int(path.stem)
-        except ValueError:
-            pass
+        brand_slug = ''
+        line_slug = ''
+        if re.fullmatch(r'\d{4}', path.stem):
+            brand_slug = parts[-3]
+            line_slug = parts[-2]
+            try:
+                year = int(path.stem)
+            except ValueError:
+                pass
+        elif len(parts) >= 4 and re.fullmatch(r'\d{4}', parts[-2]):
+            brand_slug = parts[-4]
+            line_slug = parts[-3]
+            try:
+                year = int(parts[-2])
+            except ValueError:
+                pass
+
+        if not brand_slug or not line_slug:
+            return {
+                'brand_slug': '',
+                'line_slug': '',
+                'brand': '',
+                'category': '',
+                'year': None,
+            }
+
         return {
             'brand_slug': brand_slug,
             'line_slug': line_slug,
