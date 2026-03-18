@@ -251,6 +251,31 @@ class CollectionTests(TestCase):
         self.assertContains(response, 'Luzak | stan: Good | ilość: 2')
         self.assertNotContains(response, 'Krótka karta | stan: Mint | ilość: 1')
 
+    def test_collection_detail_can_filter_by_brand(self):
+        second_model = HotWheelsModel.objects.create(
+            app_id='def456',
+            brand='Matchbox',
+            toy='MBX01',
+            number='002',
+            model_name='MBX Adventure',
+            year=2023,
+            category='Mainline',
+            series='Adventure Drivers',
+            series_number='2/5',
+            photo_url='https://example.com/matchbox.jpg',
+        )
+        CollectionItem.objects.create(collection=self.public_collection, model=self.model_obj)
+        CollectionItem.objects.create(collection=self.public_collection, model=second_model)
+
+        response = self.client.get(
+            reverse('collections:collection-detail', args=[self.public_collection.pk]),
+            {'brand': 'Hot Wheels'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertNotContains(response, 'MBX Adventure')
+
     def test_owner_can_export_collection_as_csv(self):
         CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=2, is_favorite=True)
         self.client.force_login(self.owner)

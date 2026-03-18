@@ -98,6 +98,15 @@
         <input id="q" type="search" name="q" value="{{ query }}" placeholder="Nazwa modelu, Toy, Number, seria">
       </div>
       <div style="flex: 1 1 220px;">
+        <label for="brand">Marka</label>
+        <select id="brand" name="brand">
+          <option value="">Wszystkie marki</option>
+          {% for brand in brand_options %}
+            <option value="{{ brand }}" {% if selected_brand == brand %}selected{% endif %}>{{ brand }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="flex: 1 1 220px;">
         <label for="condition">Stan</label>
         <select id="condition" name="condition">
           <option value="">Wszystkie stany</option>
@@ -116,7 +125,7 @@
         </select>
       </div>
       <div><button type="submit">Szukaj</button></div>
-      {% if query or selected_condition or selected_packaging %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Wyczyść</a></div>{% endif %}
+      {% if query or selected_brand or selected_condition or selected_packaging %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Usuń wszystkie filtry</a></div>{% endif %}
     </form>
     {% if query %}
       <p class="meta" style="margin:12px 0 0;">Znaleziono {{ filtered_count }} pozycji dla frazy "{{ query }}".</p>

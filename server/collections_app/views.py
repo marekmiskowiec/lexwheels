@@ -134,6 +134,7 @@ class CollectionDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         items = self.object.items.select_related('model')
         query = self.request.GET.get('q', '').strip()
+        selected_brand = self.request.GET.get('brand', '').strip()
         selected_condition = self.request.GET.get('condition', '').strip()
         selected_packaging = self.request.GET.get('packaging', '').strip()
 
@@ -142,8 +143,11 @@ class CollectionDetailView(DetailView):
                 Q(model__model_name__icontains=query)
                 | Q(model__toy__icontains=query)
                 | Q(model__number__icontains=query)
+                | Q(model__brand__icontains=query)
                 | Q(model__series__icontains=query)
             )
+        if selected_brand:
+            items = items.filter(model__brand=selected_brand)
         if selected_condition in dict(CollectionItem.CONDITION_CHOICES):
             items = items.filter(condition=selected_condition)
         if selected_packaging in dict(CollectionItem.PACKAGING_CHOICES):
@@ -191,8 +195,15 @@ class CollectionDetailView(DetailView):
         }
         context['items'] = grouped_items
         context['query'] = query
+        context['selected_brand'] = selected_brand
         context['selected_condition'] = selected_condition
         context['selected_packaging'] = selected_packaging
+        context['brand_options'] = (
+            self.object.items.exclude(model__brand='')
+            .values_list('model__brand', flat=True)
+            .distinct()
+            .order_by('model__brand')
+        )
         context['condition_options'] = CollectionItem.CONDITION_CHOICES
         context['packaging_options'] = CollectionItem.PACKAGING_CHOICES
         context['filtered_count'] = len(grouped_items)
