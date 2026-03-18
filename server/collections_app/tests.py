@@ -226,6 +226,31 @@ class CollectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '1970 Pontiac Firebird')
 
+    def test_collection_detail_can_filter_by_condition_and_packaging(self):
+        CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            quantity=2,
+            condition='good',
+            packaging_state='loose',
+        )
+
+        response = self.client.get(
+            reverse('collections:collection-detail', args=[self.public_collection.pk]),
+            {'condition': 'good', 'packaging': 'loose'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Luzak | stan: Good | ilość: 2')
+        self.assertNotContains(response, 'Krótka karta | stan: Mint | ilość: 1')
+
     def test_owner_can_export_collection_as_csv(self):
         CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=2, is_favorite=True)
         self.client.force_login(self.owner)

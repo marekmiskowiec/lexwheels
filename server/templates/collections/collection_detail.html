@@ -97,8 +97,26 @@
         <label for="q">Szukaj w kolekcji</label>
         <input id="q" type="search" name="q" value="{{ query }}" placeholder="Nazwa modelu, Toy, Number, seria">
       </div>
+      <div style="flex: 1 1 220px;">
+        <label for="condition">Stan</label>
+        <select id="condition" name="condition">
+          <option value="">Wszystkie stany</option>
+          {% for value, label in condition_options %}
+            <option value="{{ value }}" {% if selected_condition == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="flex: 1 1 220px;">
+        <label for="packaging">Opakowanie</label>
+        <select id="packaging" name="packaging">
+          <option value="">Wszystkie warianty</option>
+          {% for value, label in packaging_options %}
+            <option value="{{ value }}" {% if selected_packaging == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
       <div><button type="submit">Szukaj</button></div>
-      {% if query %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Wyczyść</a></div>{% endif %}
+      {% if query or selected_condition or selected_packaging %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Wyczyść</a></div>{% endif %}
     </form>
     {% if query %}
       <p class="meta" style="margin:12px 0 0;">Znaleziono {{ filtered_count }} pozycji dla frazy "{{ query }}".</p>
