@@ -52,23 +52,23 @@ class CollectionItem(models.Model):
         ('used', 'Used'),
     )
     PACKAGING_CHOICES = (
-        ('carded', 'Carded'),
-        ('loose', 'Loose'),
-        ('damaged', 'Damaged'),
+        ('short_card', 'Krótka karta'),
+        ('long_card', 'Długa karta'),
+        ('loose', 'Luzak'),
     )
 
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='items')
     model = models.ForeignKey(HotWheelsModel, on_delete=models.CASCADE, related_name='collection_items')
     quantity = models.PositiveIntegerField(default=1)
     condition = models.CharField(max_length=16, choices=CONDITION_CHOICES, default='good')
-    packaging_state = models.CharField(max_length=16, choices=PACKAGING_CHOICES, default='carded')
+    packaging_state = models.CharField(max_length=16, choices=PACKAGING_CHOICES, default='short_card')
     acquired_at = models.DateField(blank=True, null=True)
     notes = models.TextField(blank=True)
     is_favorite = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ('-is_favorite', 'model__number', 'model__model_name')
-        unique_together = ('collection', 'model')
+        ordering = ('-is_favorite', 'model__number', 'model__model_name', 'packaging_state', 'condition')
+        unique_together = ('collection', 'model', 'packaging_state', 'condition')
 
     def __str__(self) -> str:
         return f'{self.collection} - {self.model}'

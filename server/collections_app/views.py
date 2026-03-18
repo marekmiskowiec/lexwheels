@@ -1,5 +1,6 @@
 import csv
 import json
+from itertools import groupby
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -101,14 +102,28 @@ class CollectionDetailView(DetailView):
                 | Q(model__series__icontains=query)
             )
 
+        grouped_items = []
+        ordered_items = list(items.order_by('model__number', 'model__model_name', 'packaging_state', 'condition', 'pk'))
+        for model_id, group in groupby(ordered_items, key=lambda item: item.model_id):
+            variants = list(group)
+            grouped_items.append(
+                {
+                    'model': variants[0].model,
+                    'variants': variants,
+                    'total_quantity': sum(item.quantity for item in variants),
+                    'favorite_count': sum(1 for item in variants if item.is_favorite),
+                }
+            )
+
         context['stats'] = {
-            'item_count': self.object.items.count(),
+            'item_count': self.object.items.values('model_id').distinct().count(),
+            'variant_count': self.object.items.count(),
             'total_quantity': sum(item.quantity for item in self.object.items.all()),
             'favorite_count': sum(1 for item in self.object.items.all() if item.is_favorite),
         }
-        context['items'] = items
+        context['items'] = grouped_items
         context['query'] = query
-        context['filtered_count'] = items.count()
+        context['filtered_count'] = len(grouped_items)
         return context
 
 
@@ -248,6 +263,7 @@ class CollectionItemCreateView(LoginRequiredMixin, CreateView):
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
+        form.collection = self.collection
         form.fields['model'].queryset = HotWheelsModel.objects.all()
         initial_model = self.request.GET.get('model')
         if initial_model and initial_model.isdigit():
@@ -255,9 +271,6 @@ class CollectionItemCreateView(LoginRequiredMixin, CreateView):
         return form
 
     def form_valid(self, form):
-        if self.collection.items.filter(model=form.cleaned_data['model']).exists():
-            form.add_error('model', 'Ten model jest już w tej kolekcji.')
-            return self.form_invalid(form)
         form.instance.collection = self.collection
         return super().form_valid(form)
 
@@ -269,6 +282,11 @@ class CollectionItemUpdateView(OwnerRequiredMixin, UpdateView):
     model = CollectionItem
     form_class = CollectionItemForm
     template_name = 'collections/item_form.html'
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.collection = self.object.collection
+        return form
 
     def get_success_url(self):
         return self.object.collection.get_absolute_url()

@@ -7,6 +7,7 @@
   {% if collection_obj.description %}<p>{{ collection_obj.description }}</p>{% endif %}
   <div class="grid" style="margin-top:18px;">
     <div class="card"><strong>{{ stats.item_count }}</strong><div class="meta">pozycje</div></div>
+    <div class="card"><strong>{{ stats.variant_count }}</strong><div class="meta">warianty</div></div>
     <div class="card"><strong>{{ stats.total_quantity }}</strong><div class="meta">sztuk łącznie</div></div>
     <div class="card"><strong>{{ stats.favorite_count }}</strong><div class="meta">ulubione</div></div>
   </div>
@@ -36,9 +37,16 @@
     <div class="list-item">
       <h3><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h3>
       <p class="meta">Rok: {{ item.model.year|default:"-" }} | Kategoria: {{ item.model.category|default:"-" }}</p>
-      <p class="meta">Ilość: {{ item.quantity }} | Stan: {{ item.get_condition_display }} | Opakowanie: {{ item.get_packaging_state_display }}</p>
-      {% if item.notes %}<p>{{ item.notes }}</p>{% endif %}
-      {% if user == collection_obj.owner %}<div class="danger-zone"><a href="{% url 'collections:item-update' item.pk %}">Edytuj</a><a href="{% url 'collections:item-delete' item.pk %}">Usuń</a></div>{% endif %}
+      <p class="meta">Łącznie: {{ item.total_quantity }} szt. | Warianty: {{ item.variants|length }}</p>
+      <section class="list" style="margin-top:12px;">
+        {% for variant in item.variants %}
+          <div class="card">
+            <p class="meta">{{ variant.get_packaging_state_display }} | stan: {{ variant.get_condition_display }} | ilość: {{ variant.quantity }}</p>
+            {% if variant.notes %}<p>{{ variant.notes }}</p>{% endif %}
+            {% if user == collection_obj.owner %}<div class="danger-zone"><a href="{% url 'collections:item-update' variant.pk %}">Edytuj</a><a href="{% url 'collections:item-delete' variant.pk %}">Usuń</a></div>{% endif %}
+          </div>
+        {% endfor %}
+      </section>
     </div>
   {% empty %}
     <div class="panel">

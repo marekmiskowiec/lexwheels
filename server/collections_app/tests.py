@@ -47,13 +47,63 @@ class CollectionTests(TestCase):
                 'model': self.model_obj.pk,
                 'quantity': 2,
                 'condition': 'mint',
-                'packaging_state': 'carded',
+                'packaging_state': 'short_card',
                 'notes': 'Test',
                 'is_favorite': True,
             },
         )
         self.assertRedirects(response, self.private_collection.get_absolute_url())
         self.assertTrue(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).exists())
+
+    def test_owner_can_add_same_model_with_different_packaging_variant(self):
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {
+                'model': self.model_obj.pk,
+                'quantity': 2,
+                'condition': 'good',
+                'packaging_state': 'loose',
+                'notes': '',
+                'is_favorite': False,
+            },
+        )
+
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 2)
+
+    def test_owner_cannot_add_duplicate_model_variant(self):
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {
+                'model': self.model_obj.pk,
+                'quantity': 2,
+                'condition': 'mint',
+                'packaging_state': 'short_card',
+                'notes': '',
+                'is_favorite': False,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Taki wariant modelu jest już w tej kolekcji.')
 
     def test_owner_can_update_collection(self):
         self.client.force_login(self.owner)
@@ -118,6 +168,30 @@ class CollectionTests(TestCase):
 
         self.assertContains(response, 'Rok: 2022')
         self.assertContains(response, 'Kategoria: Mainline')
+
+    def test_collection_detail_groups_variants_for_same_model(self):
+        CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            quantity=2,
+            condition='good',
+            packaging_state='loose',
+        )
+
+        response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
+
+        self.assertContains(response, 'Łącznie: 3 szt.')
+        self.assertContains(response, 'Krótka karta | stan: Mint | ilość: 1')
+        self.assertContains(response, 'Luzak | stan: Good | ilość: 2')
+        self.assertContains(response, '<strong>1</strong><div class="meta">pozycje</div>', html=False)
+        self.assertContains(response, '<strong>2</strong><div class="meta">warianty</div>', html=False)
 
     def test_collection_detail_search_checks_series_and_toy_fields(self):
         CollectionItem.objects.create(collection=self.public_collection, model=self.model_obj)
