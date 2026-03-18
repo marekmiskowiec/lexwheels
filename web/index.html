@@ -192,9 +192,9 @@
 <body>
   <main class="page">
     <section class="hero">
-      <h1>Hot Wheels 2022</h1>
+      <h1>Hot Wheels Mainline 2022</h1>
       <p class="subtitle">
-        Podgląd listy wygenerowanej z pliku <code>data/hot_wheels_data.json</code>.
+        Podgląd listy wygenerowanej z pliku <code>data/catalog/hot-wheels/mainline/2022.json</code>.
         Wyszukiwanie działa po numerze, nazwie modelu, serii i numerze serii.
       </p>
       <div class="controls">
@@ -320,7 +320,7 @@
 
     async function loadData() {
       try {
-        const response = await fetch('../data/hot_wheels_data.json');
+        const response = await fetch('../data/catalog/hot-wheels/mainline/2022.json');
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }

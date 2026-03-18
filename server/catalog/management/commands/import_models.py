@@ -10,15 +10,16 @@ from catalog.models import HotWheelsModel
 
 
 class Command(BaseCommand):
-    help = 'Import Hot Wheels models from data/hot_wheels_data.json'
+    help = 'Import catalog models from a structured dataset JSON file.'
     SERIES_MARKERS = (
         'New for 2022!',
     )
+    DEFAULT_DATASET_PATH = settings.PROJECT_ROOT / 'data' / 'catalog' / 'hot-wheels' / 'mainline' / '2022.json'
 
     def add_arguments(self, parser):
         parser.add_argument(
             '--path',
-            default=str(settings.PROJECT_ROOT / 'data' / 'hot_wheels_data.json'),
+            default=str(self.DEFAULT_DATASET_PATH),
             help='Path to the JSON file to import.',
         )
 

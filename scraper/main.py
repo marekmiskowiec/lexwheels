@@ -18,7 +18,10 @@ URL = 'https://hotwheels.fandom.com/wiki/List_of_2022_Hot_Wheels'
 API_URL = 'https://hotwheels.fandom.com/api.php'
 PAGE_TITLE = 'List_of_2022_Hot_Wheels'
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-OUTPUT_FILE = PROJECT_ROOT / 'data' / 'hot_wheels_data.json'
+BRAND = 'Hot Wheels'
+CATEGORY = 'Mainline'
+YEAR = 2022
+OUTPUT_FILE = PROJECT_ROOT / 'data' / 'catalog' / 'hot-wheels' / 'mainline' / '2022.json'
 IMAGE_DIR = PROJECT_ROOT / 'images'
 REQUEST_TIMEOUT = 15
 HEADERS = {
@@ -158,6 +161,9 @@ def parse_rows(table, base_url: str) -> list[dict]:
             continue
 
         rows.append({
+            'Brand': BRAND,
+            'Category': CATEGORY,
+            'Year': YEAR,
             'Toy': columns[0].get_text(strip=True) if len(columns) > 0 else None,
             'Number': columns[1].get_text(strip=True) if len(columns) > 1 else None,
             'Model Name': columns[2].get_text(strip=True) if len(columns) > 2 else None,
