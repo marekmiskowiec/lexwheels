@@ -1,12 +1,13 @@
 import csv
 import json
 from itertools import groupby
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic.edit import FormView
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
@@ -14,7 +15,14 @@ from django.db.models import Count, F, Q, Sum
 
 from catalog.models import HotWheelsModel
 
-from .forms import CollectionBatchAddForm, CollectionForm, CollectionItemForm, CollectionItemMultiVariantForm
+from .forms import (
+    CatalogQuickAddForm,
+    CollectionBatchAddForm,
+    CollectionBulkEditForm,
+    CollectionForm,
+    CollectionItemForm,
+    CollectionItemMultiVariantForm,
+)
 from .models import Collection, CollectionItem
 
 
@@ -33,6 +41,10 @@ def build_chart_rows(rows, label_map=None):
             }
         )
     return chart_rows
+
+
+def collection_filter_session_key(collection_id):
+    return f'collection_filters_{collection_id}'
 
 
 class DashboardView(LoginRequiredMixin, ListView):
@@ -130,6 +142,37 @@ class CollectionDetailView(DetailView):
             return obj
         raise Http404
 
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        base_url = self.object.get_absolute_url()
+        session_key = collection_filter_session_key(self.object.pk)
+
+        if request.GET.get('save_filters') == '1':
+            filters = {
+                key: request.GET.get(key, '').strip()
+                for key in ('q', 'brand', 'condition', 'packaging')
+                if request.GET.get(key, '').strip()
+            }
+            request.session[session_key] = filters
+            messages.success(request, 'Zapisano filtry tej kolekcji.')
+            if filters:
+                return redirect(f'{base_url}?{urlencode(filters)}')
+            return redirect(base_url)
+
+        if request.GET.get('apply_saved_filters') == '1':
+            saved_filters = request.session.get(session_key, {})
+            if saved_filters:
+                return redirect(f'{base_url}?{urlencode(saved_filters)}')
+            messages.info(request, 'Brak zapisanych filtrów dla tej kolekcji.')
+            return redirect(base_url)
+
+        if request.GET.get('clear_saved_filters') == '1':
+            request.session.pop(session_key, None)
+            messages.success(request, 'Usunięto zapisane filtry tej kolekcji.')
+            return redirect(base_url)
+
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         items = self.object.items.select_related('model')
@@ -207,6 +250,8 @@ class CollectionDetailView(DetailView):
         context['condition_options'] = CollectionItem.CONDITION_CHOICES
         context['packaging_options'] = CollectionItem.PACKAGING_CHOICES
         context['filtered_count'] = len(grouped_items)
+        context['saved_filters'] = self.request.session.get(collection_filter_session_key(self.object.pk), {})
+        context['bulk_edit_form'] = CollectionBulkEditForm(collection=self.object)
         return context
 
 
@@ -363,6 +408,33 @@ class CollectionBatchDeleteView(LoginRequiredMixin, View):
         return redirect(collection.get_absolute_url())
 
 
+class CollectionBatchEditView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        collection = get_object_or_404(Collection, pk=pk, owner=request.user)
+        selected_variant_ids = {int(item_id) for item_id in request.POST.getlist('item_ids') if item_id.isdigit()}
+        form = CollectionBulkEditForm(request.POST, collection=collection)
+
+        if not selected_variant_ids:
+            messages.error(request, 'Zaznacz co najmniej jeden wariant do masowej edycji.')
+            return redirect(collection.get_absolute_url())
+
+        if not form.is_valid():
+            for errors in form.errors.values():
+                for error in errors:
+                    messages.error(request, error)
+            return redirect(collection.get_absolute_url())
+
+        queryset = collection.items.filter(pk__in=selected_variant_ids)
+        updated_count = form.apply(queryset)
+        skipped_count = len(selected_variant_ids) - updated_count
+
+        if updated_count:
+            messages.success(request, f'Zaktualizowano {updated_count} wariantów w kolekcji "{collection.name}".')
+        if skipped_count:
+            messages.info(request, f'Pominięto {skipped_count} wariantów z powodu duplikatów lub braku zmian.')
+        return redirect(collection.get_absolute_url())
+
+
 class CollectionItemCreateView(LoginRequiredMixin, FormView):
     form_class = CollectionItemMultiVariantForm
     template_name = 'collections/item_form.html'
@@ -399,6 +471,31 @@ class CollectionItemCreateView(LoginRequiredMixin, FormView):
         context['is_multi_variant_form'] = True
         context['collection_obj'] = self.collection
         return context
+
+
+class CatalogQuickAddView(LoginRequiredMixin, FormView):
+    form_class = CatalogQuickAddForm
+    template_name = 'catalog/model_list.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['owner'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        created_items = form.save()
+        collection = form.cleaned_data['collection']
+        if len(created_items) == 1:
+            messages.success(self.request, f'Dodano 1 wariant do kolekcji "{collection.name}".')
+        else:
+            messages.success(self.request, f'Dodano {len(created_items)} warianty do kolekcji "{collection.name}".')
+        return redirect(form.cleaned_data.get('next') or reverse('catalog:model-list'))
+
+    def form_invalid(self, form):
+        for errors in form.errors.values():
+            for error in errors:
+                messages.error(self.request, error)
+        return redirect(form.data.get('next') or reverse('catalog:model-list'))
 
 
 class CollectionItemUpdateView(OwnerRequiredMixin, UpdateView):

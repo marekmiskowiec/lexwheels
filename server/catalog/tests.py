@@ -152,6 +152,16 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertNotContains(response, 'Custom Mustang')
 
+    def test_catalog_can_save_and_apply_filters(self):
+        save_response = self.client.get(
+            reverse('catalog:model-list'),
+            {'brand': 'Hot Wheels', 'sort': 'name', 'save_filters': '1'},
+        )
+        self.assertRedirects(save_response, f"{reverse('catalog:model-list')}?brand=Hot+Wheels&sort=name")
+
+        apply_response = self.client.get(reverse('catalog:model-list'), {'apply_saved_filters': '1'})
+        self.assertRedirects(apply_response, f"{reverse('catalog:model-list')}?brand=Hot+Wheels&sort=name")
+
     def test_model_detail(self):
         response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
         self.assertContains(response, 'HCT05')

@@ -2,7 +2,9 @@ from django.urls import path
 
 from .views import (
     CollectionBatchAddView,
+    CollectionBatchEditView,
     CollectionBatchDeleteView,
+    CatalogQuickAddView,
     CollectionCreateView,
     CollectionDeleteView,
     CollectionDetailView,
@@ -21,8 +23,10 @@ urlpatterns = [
     path('', DashboardView.as_view(), name='dashboard'),
     path('public/', PublicCollectionListView.as_view(), name='public-collections'),
     path('batch-add/', CollectionBatchAddView.as_view(), name='batch-add'),
+    path('quick-add/', CatalogQuickAddView.as_view(), name='quick-add'),
     path('new/', CollectionCreateView.as_view(), name='collection-create'),
     path('<int:pk>/', CollectionDetailView.as_view(), name='collection-detail'),
+    path('<int:pk>/items/batch-edit/', CollectionBatchEditView.as_view(), name='item-batch-edit'),
     path('<int:pk>/items/batch-delete/', CollectionBatchDeleteView.as_view(), name='item-batch-delete'),
     path('<int:pk>/export/<str:fmt>/', CollectionExportView.as_view(), name='collection-export'),
     path('<int:pk>/edit/', CollectionUpdateView.as_view(), name='collection-update'),

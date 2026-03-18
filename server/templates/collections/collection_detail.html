@@ -90,6 +90,17 @@
       </div>
       <p class="meta" style="margin:12px 0 0;">Zaznaczenie przy modelu usuwa wszystkie jego warianty. Możesz też zaznaczyć pojedyncze warianty poniżej.</p>
     </form>
+    <form method="post" action="{% url 'collections:item-batch-edit' collection_obj.pk %}" id="batch-edit-form" class="panel" style="margin-top:12px;">
+      {% csrf_token %}
+      <h2>Masowa edycja wariantów</h2>
+      <div class="filters">
+        <div style="flex: 1 1 140px;">{{ bulk_edit_form.quantity.label_tag }} {{ bulk_edit_form.quantity }}</div>
+        <div style="flex: 1 1 220px;">{{ bulk_edit_form.condition.label_tag }} {{ bulk_edit_form.condition }}</div>
+        <div style="flex: 1 1 220px;">{{ bulk_edit_form.packaging_state.label_tag }} {{ bulk_edit_form.packaging_state }}</div>
+        <div><button type="submit">Zastosuj do zaznaczonych wariantów</button></div>
+      </div>
+      <p class="meta" style="margin:12px 0 0;">Masowa edycja działa tylko na zaznaczonych wariantach, nie na checkboxach "Usuń cały model".</p>
+    </form>
   {% endif %}
   <div class="panel">
     <form method="get" class="filters">
@@ -125,6 +136,8 @@
         </select>
       </div>
       <div><button type="submit">Szukaj</button></div>
+      <div><button type="submit" name="save_filters" value="1" class="secondary">Zapisz filtry</button></div>
+      {% if saved_filters %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}?apply_saved_filters=1">Przywróć zapisane</a></div><div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}?clear_saved_filters=1">Usuń zapisane</a></div>{% endif %}
       {% if query or selected_brand or selected_condition or selected_packaging %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Usuń wszystkie filtry</a></div>{% endif %}
     </form>
     {% if query %}
@@ -132,7 +145,7 @@
     {% endif %}
   </div>
   {% for item in items %}
-    <div class="list-item">
+    <div class="list-item collection-item-card">
       {% if user == collection_obj.owner %}
         <label class="meta" style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
           <input type="checkbox" name="model_ids" value="{{ item.model.pk }}" form="batch-delete-form" class="batch-delete-checkbox" style="width:auto;">
@@ -142,17 +155,18 @@
       <h3><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h3>
       <p class="meta">Marka: {{ item.model.brand|default:"-" }} | Rok: {{ item.model.year|default:"-" }} | Kategoria: {{ item.model.category|default:"-" }}</p>
       <p class="meta">Łącznie: {{ item.total_quantity }} szt. | Warianty: {{ item.variants|length }}</p>
-      <section class="list" style="margin-top:12px;">
+      <section class="list variant-grid" style="margin-top:12px;">
         {% for variant in item.variants %}
           <div class="card">
             {% if user == collection_obj.owner %}
               <label class="meta" style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-                <input type="checkbox" name="item_ids" value="{{ variant.pk }}" form="batch-delete-form" class="batch-delete-checkbox" style="width:auto;">
-                Usuń ten wariant
+                <input type="checkbox" name="item_ids" value="{{ variant.pk }}" form="batch-delete-form" class="batch-delete-checkbox variant-checkbox" style="width:auto;">
+                Zaznacz wariant
               </label>
             {% endif %}
             <p class="meta">{{ variant.get_packaging_state_display }} | stan: {{ variant.get_condition_display }} | ilość: {{ variant.quantity }}</p>
             {% if variant.notes %}<p>{{ variant.notes }}</p>{% endif %}
+            {% if user == collection_obj.owner %}<input type="hidden" name="item_ids" value="{{ variant.pk }}" form="batch-edit-form" class="batch-edit-proxy" disabled>{% endif %}
             {% if user == collection_obj.owner %}<div class="danger-zone"><a href="{% url 'collections:item-update' variant.pk %}">Edytuj</a><a href="{% url 'collections:item-delete' variant.pk %}">Usuń</a></div>{% endif %}
           </div>
         {% endfor %}
@@ -167,7 +181,10 @@
 {% if user == collection_obj.owner %}
   <script>
     const batchDeleteForm = document.getElementById('batch-delete-form');
+    const batchEditForm = document.getElementById('batch-edit-form');
     const batchDeleteCheckboxes = document.querySelectorAll('.batch-delete-checkbox');
+    const variantCheckboxes = document.querySelectorAll('.variant-checkbox');
+    const batchEditProxyInputs = document.querySelectorAll('.batch-edit-proxy');
     const selectAllItemsButton = document.getElementById('select-all-items');
     const clearAllItemsButton = document.getElementById('clear-all-items');
 
@@ -187,11 +204,34 @@
       });
     }
 
+    if (batchEditForm) {
+      batchEditForm.addEventListener('submit', (event) => {
+        const checkedCount = Array.from(variantCheckboxes).filter((checkbox) => checkbox.checked).length;
+        if (!checkedCount) {
+          event.preventDefault();
+          window.alert('Zaznacz co najmniej jeden wariant do masowej edycji.');
+        }
+      });
+    }
+
+    const syncBatchEditSelection = () => {
+      variantCheckboxes.forEach((checkbox, index) => {
+        if (batchEditProxyInputs[index]) {
+          batchEditProxyInputs[index].disabled = !checkbox.checked;
+        }
+      });
+    };
+
+    variantCheckboxes.forEach((checkbox) => {
+      checkbox.addEventListener('change', syncBatchEditSelection);
+    });
+
     if (selectAllItemsButton) {
       selectAllItemsButton.addEventListener('click', () => {
         batchDeleteCheckboxes.forEach((checkbox) => {
           checkbox.checked = true;
         });
+        syncBatchEditSelection();
       });
     }
 
@@ -200,8 +240,11 @@
         batchDeleteCheckboxes.forEach((checkbox) => {
           checkbox.checked = false;
         });
+        syncBatchEditSelection();
       });
     }
+
+    syncBatchEditSelection();
   </script>
 {% endif %}
 {% endblock %}

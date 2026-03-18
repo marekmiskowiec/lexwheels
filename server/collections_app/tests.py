@@ -336,6 +336,91 @@ class CollectionTests(TestCase):
         self.assertRedirects(response, reverse('catalog:model-list'))
         self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 1)
 
+    def test_owner_can_quick_add_model_variants_from_catalog(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:quick-add'),
+            {
+                'collection': self.private_collection.pk,
+                'model': self.model_obj.pk,
+                'next': reverse('catalog:model-list'),
+                'enabled_short_card': 'on',
+                'quantity_short_card': 1,
+                'condition_short_card': 'mint',
+                'enabled_loose': 'on',
+                'quantity_loose': 2,
+                'condition_loose': 'good',
+            },
+        )
+
+        self.assertRedirects(response, reverse('catalog:model-list'))
+        self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 2)
+
+    def test_owner_can_batch_edit_selected_variants(self):
+        short_card = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        loose = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=2,
+            condition='good',
+            packaging_state='loose',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-batch-edit', args=[self.private_collection.pk]),
+            {
+                'item_ids': [short_card.pk, loose.pk],
+                'quantity': 3,
+                'condition': 'used',
+                'packaging_state': '',
+            },
+        )
+
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        short_card.refresh_from_db()
+        loose.refresh_from_db()
+        self.assertEqual(short_card.quantity, 3)
+        self.assertEqual(loose.quantity, 3)
+        self.assertEqual(short_card.condition, 'used')
+        self.assertEqual(loose.condition, 'used')
+
+    def test_collection_detail_can_save_and_apply_filters(self):
+        matchbox_model = HotWheelsModel.objects.create(
+            app_id='def456',
+            brand='Matchbox',
+            toy='MBX01',
+            number='002',
+            model_name='MBX Adventure',
+            year=2023,
+            category='Mainline',
+            series='Adventure Drivers',
+            series_number='2/5',
+            photo_url='https://example.com/matchbox.jpg',
+        )
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj)
+        CollectionItem.objects.create(collection=self.private_collection, model=matchbox_model)
+        self.client.force_login(self.owner)
+
+        save_response = self.client.get(
+            reverse('collections:collection-detail', args=[self.private_collection.pk]),
+            {'brand': 'Matchbox', 'save_filters': '1'},
+        )
+        self.assertRedirects(save_response, f'{self.private_collection.get_absolute_url()}?brand=Matchbox')
+
+        apply_response = self.client.get(
+            reverse('collections:collection-detail', args=[self.private_collection.pk]),
+            {'apply_saved_filters': '1'},
+        )
+        self.assertRedirects(apply_response, f'{self.private_collection.get_absolute_url()}?brand=Matchbox')
+
     def test_owner_can_batch_delete_selected_variants(self):
         short_card = CollectionItem.objects.create(
             collection=self.private_collection,

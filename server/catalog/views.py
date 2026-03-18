@@ -1,9 +1,15 @@
+from django.contrib import messages
 from django.db.models import Q
+from django.shortcuts import redirect
 from django.views.generic import DetailView, ListView
+from urllib.parse import urlencode
 
-from collections_app.forms import CollectionBatchAddForm
+from collections_app.forms import CatalogQuickAddForm, CollectionBatchAddForm
 
 from .models import HotWheelsModel
+
+
+CATALOG_FILTER_SESSION_KEY = 'catalog_filters'
 
 
 class ModelListView(ListView):
@@ -11,6 +17,34 @@ class ModelListView(ListView):
     template_name = 'catalog/model_list.html'
     context_object_name = 'models'
     paginate_by = 24
+
+    def get(self, request, *args, **kwargs):
+        base_url = request.path
+        if request.GET.get('save_filters') == '1':
+            filters = {
+                key: request.GET.get(key, '').strip()
+                for key in ('q', 'brand', 'series', 'year', 'category', 'sort')
+                if request.GET.get(key, '').strip()
+            }
+            request.session[CATALOG_FILTER_SESSION_KEY] = filters
+            messages.success(request, 'Zapisano filtry katalogu.')
+            if filters:
+                return redirect(f'{base_url}?{urlencode(filters)}')
+            return redirect(base_url)
+
+        if request.GET.get('apply_saved_filters') == '1':
+            saved_filters = request.session.get(CATALOG_FILTER_SESSION_KEY, {})
+            if saved_filters:
+                return redirect(f'{base_url}?{urlencode(saved_filters)}')
+            messages.info(request, 'Brak zapisanych filtrów katalogu.')
+            return redirect(base_url)
+
+        if request.GET.get('clear_saved_filters') == '1':
+            request.session.pop(CATALOG_FILTER_SESSION_KEY, None)
+            messages.success(request, 'Usunięto zapisane filtry katalogu.')
+            return redirect(base_url)
+
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         queryset = HotWheelsModel.objects.all()
@@ -81,6 +115,8 @@ class ModelListView(ListView):
         )
         if self.request.user.is_authenticated:
             context['batch_add_form'] = CollectionBatchAddForm(owner=self.request.user, initial={'next': self.request.get_full_path()})
+            context['quick_add_form'] = CatalogQuickAddForm(owner=self.request.user, initial={'next': self.request.get_full_path()})
+        context['saved_filters'] = self.request.session.get(CATALOG_FILTER_SESSION_KEY, {})
         return context
 
 

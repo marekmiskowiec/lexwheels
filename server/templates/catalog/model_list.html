@@ -11,6 +11,9 @@
     <div style="flex: 1 1 220px;"><label for="category">Kategoria</label><select id="category" name="category"><option value="">Wszystkie kategorie</option>{% for category in category_options %}<option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>{% endfor %}</select></div>
     <div style="flex: 1 1 220px;"><label for="sort">Sortowanie</label><select id="sort" name="sort"><option value="number" {% if selected_sort == 'number' %}selected{% endif %}>Po numerze</option><option value="year" {% if selected_sort == 'year' %}selected{% endif %}>Po roku</option><option value="category" {% if selected_sort == 'category' %}selected{% endif %}>Po kategorii</option><option value="name" {% if selected_sort == 'name' %}selected{% endif %}>Po nazwie</option></select></div>
     <div><button type="submit">Filtruj</button></div>
+    <div><button type="submit" name="save_filters" value="1" class="secondary">Zapisz filtry</button></div>
+    {% if saved_filters %}<div><a class="button secondary" href="{% url 'catalog:model-list' %}?apply_saved_filters=1">Przywróć zapisane</a></div><div><a class="button secondary" href="{% url 'catalog:model-list' %}?clear_saved_filters=1">Usuń zapisane</a></div>{% endif %}
+    {% if query or selected_brand or selected_series or selected_year or selected_category or selected_sort != 'number' %}<div><a class="button secondary" href="{% url 'catalog:model-list' %}">Usuń wszystkie filtry</a></div>{% endif %}
   </form>
   {% if user.is_authenticated %}
     {% if batch_add_form.fields.collection.queryset %}
@@ -45,6 +48,43 @@
       <p class="meta">Toy: {{ item.toy }} | Number: {{ item.number }}</p>
       <p class="meta">Rok: {{ item.year|default:"-" }} | Kategoria: {{ item.category|default:"-" }}</p>
       <p class="meta">{{ item.series }} {% if item.series_number %}| {{ item.series_number }}{% endif %}</p>
+      {% if user.is_authenticated and quick_add_form.fields.collection.queryset %}
+        <details class="quick-add-box">
+          <summary>Szybko dodaj warianty</summary>
+          <form method="post" action="{% url 'collections:quick-add' %}" class="list" style="margin-top:12px;">
+            {% csrf_token %}
+            <input type="hidden" name="model" value="{{ item.pk }}">
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <div>
+              {{ quick_add_form.collection.label_tag }}
+              {{ quick_add_form.collection }}
+            </div>
+            {% for section in quick_add_form.variant_sections %}
+              <div class="card compact-card">
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                  <input type="checkbox" name="enabled_{{ section.packaging_value }}" style="width:auto;">
+                  <strong>{{ section.packaging_label }}</strong>
+                </label>
+                <div class="filters">
+                  <div style="flex:1 1 110px;">
+                    <label for="quantity_{{ section.packaging_value }}_{{ item.pk }}">Ilość</label>
+                    <input id="quantity_{{ section.packaging_value }}_{{ item.pk }}" type="number" name="quantity_{{ section.packaging_value }}" min="1" value="1">
+                  </div>
+                  <div style="flex:1 1 180px;">
+                    <label for="condition_{{ section.packaging_value }}_{{ item.pk }}">Stan</label>
+                    <select id="condition_{{ section.packaging_value }}_{{ item.pk }}" name="condition_{{ section.packaging_value }}">
+                      {% for value, label in section.condition.field.choices %}
+                        <option value="{{ value }}" {% if value == 'good' %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+            <button type="submit">Dodaj warianty</button>
+          </form>
+        </details>
+      {% endif %}
     </article>
   {% empty %}
     <div class="panel"><p>Brak modeli dla podanego filtra.</p></div>
