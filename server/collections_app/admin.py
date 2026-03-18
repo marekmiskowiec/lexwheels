@@ -28,7 +28,19 @@ class CollectionItemAdmin(admin.ModelAdmin):
         'has_soft_corners',
         'has_protector',
         'is_signed',
+        'has_bent_hook',
+        'has_cracked_blister',
         'is_favorite',
     )
-    list_filter = ('condition', 'packaging_state', 'is_sealed', 'has_soft_corners', 'has_protector', 'is_signed', 'is_favorite')
+    list_filter = (
+        'condition',
+        'packaging_state',
+        'is_sealed',
+        'has_soft_corners',
+        'has_protector',
+        'is_signed',
+        'has_bent_hook',
+        'has_cracked_blister',
+        'is_favorite',
+    )
     search_fields = ('collection__name', 'collection__owner__email', 'model__model_name')

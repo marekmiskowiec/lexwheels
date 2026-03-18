@@ -18,6 +18,22 @@ class CollectionForm(forms.ModelForm):
 
 
 class VariantSectionsMixin:
+    CARD_ATTRIBUTE_NAMES = (
+        'is_sealed',
+        'has_soft_corners',
+        'has_protector',
+        'is_signed',
+        'has_bent_hook',
+        'has_cracked_blister',
+    )
+
+    @classmethod
+    def normalize_card_attributes(cls, packaging_value, payload):
+        if packaging_value == 'loose':
+            for field_name in cls.CARD_ATTRIBUTE_NAMES:
+                payload[field_name] = False
+        return payload
+
     def build_variant_sections(self, packaging_choices=None):
         self.packaging_choices = tuple(packaging_choices or CollectionItem.PACKAGING_CHOICES)
         self.variant_sections = []
@@ -29,6 +45,8 @@ class VariantSectionsMixin:
             soft_corners_name = f'has_soft_corners_{packaging_value}'
             protector_name = f'has_protector_{packaging_value}'
             signed_name = f'is_signed_{packaging_value}'
+            bent_hook_name = f'has_bent_hook_{packaging_value}'
+            cracked_blister_name = f'has_cracked_blister_{packaging_value}'
 
             self.fields[enabled_name] = forms.BooleanField(required=False, label=packaging_label)
             self.fields[quantity_name] = forms.IntegerField(required=False, min_value=1, initial=1, label='Ilość')
@@ -42,10 +60,13 @@ class VariantSectionsMixin:
             self.fields[soft_corners_name] = forms.BooleanField(required=False, label='Soft corners')
             self.fields[protector_name] = forms.BooleanField(required=False, label='Protector')
             self.fields[signed_name] = forms.BooleanField(required=False, label='Signed')
+            self.fields[bent_hook_name] = forms.BooleanField(required=False, label='Bent hook')
+            self.fields[cracked_blister_name] = forms.BooleanField(required=False, label='Cracked blister')
             self.variant_sections.append(
                 {
                     'packaging_value': packaging_value,
                     'packaging_label': packaging_label,
+                    'supports_card_attributes': packaging_value != 'loose',
                     'enabled': self[enabled_name],
                     'quantity': self[quantity_name],
                     'condition': self[condition_name],
@@ -53,6 +74,8 @@ class VariantSectionsMixin:
                     'has_soft_corners': self[soft_corners_name],
                     'has_protector': self[protector_name],
                     'is_signed': self[signed_name],
+                    'has_bent_hook': self[bent_hook_name],
+                    'has_cracked_blister': self[cracked_blister_name],
                 }
             )
 
@@ -72,15 +95,20 @@ class VariantSectionsMixin:
                 self.add_error(f'condition_{packaging_value}', 'Wybierz stan dla zaznaczonego wariantu.')
                 continue
             selected_variants.append(
-                {
-                    'packaging_value': packaging_value,
-                    'quantity': quantity,
-                    'condition': condition,
-                    'is_sealed': self.cleaned_data.get(f'is_sealed_{packaging_value}', False),
-                    'has_soft_corners': self.cleaned_data.get(f'has_soft_corners_{packaging_value}', False),
-                    'has_protector': self.cleaned_data.get(f'has_protector_{packaging_value}', False),
-                    'is_signed': self.cleaned_data.get(f'is_signed_{packaging_value}', False),
-                }
+                self.normalize_card_attributes(
+                    packaging_value,
+                    {
+                        'packaging_value': packaging_value,
+                        'quantity': quantity,
+                        'condition': condition,
+                        'is_sealed': self.cleaned_data.get(f'is_sealed_{packaging_value}', False),
+                        'has_soft_corners': self.cleaned_data.get(f'has_soft_corners_{packaging_value}', False),
+                        'has_protector': self.cleaned_data.get(f'has_protector_{packaging_value}', False),
+                        'is_signed': self.cleaned_data.get(f'is_signed_{packaging_value}', False),
+                        'has_bent_hook': self.cleaned_data.get(f'has_bent_hook_{packaging_value}', False),
+                        'has_cracked_blister': self.cleaned_data.get(f'has_cracked_blister_{packaging_value}', False),
+                    },
+                )
             )
 
         return selected_variants
@@ -100,6 +128,8 @@ class CollectionItemForm(forms.ModelForm):
             'has_soft_corners',
             'has_protector',
             'is_signed',
+            'has_bent_hook',
+            'has_cracked_blister',
             'acquired_at',
             'notes',
             'is_favorite',
@@ -110,6 +140,10 @@ class CollectionItemForm(forms.ModelForm):
         model = getattr(self.instance, 'model', None) or self.initial.get('model')
         if model and hasattr(model, 'available_packaging_choices'):
             self.fields['packaging_state'].choices = model.available_packaging_choices
+        current_packaging = getattr(self.instance, 'packaging_state', '') or self.initial.get('packaging_state')
+        if current_packaging == 'loose':
+            for field_name in self.CARD_ATTRIBUTE_NAMES:
+                self.fields.pop(field_name, None)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -118,6 +152,8 @@ class CollectionItemForm(forms.ModelForm):
         condition = cleaned_data.get('condition')
         if not all([model, packaging_state, condition]):
             return cleaned_data
+
+        cleaned_data = self.normalize_card_attributes(packaging_state, cleaned_data)
 
         if packaging_state not in model.available_packaging_states:
             raise forms.ValidationError('Ten model nie występuje w wybranym typie opakowania.')
@@ -135,6 +171,8 @@ class CollectionItemForm(forms.ModelForm):
             has_soft_corners=cleaned_data.get('has_soft_corners', False),
             has_protector=cleaned_data.get('has_protector', False),
             is_signed=cleaned_data.get('is_signed', False),
+            has_bent_hook=cleaned_data.get('has_bent_hook', False),
+            has_cracked_blister=cleaned_data.get('has_cracked_blister', False),
         )
         if self.instance.pk:
             queryset = queryset.exclude(pk=self.instance.pk)
@@ -203,6 +241,8 @@ class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
                     has_soft_corners=variant['has_soft_corners'],
                     has_protector=variant['has_protector'],
                     is_signed=variant['is_signed'],
+                    has_bent_hook=variant['has_bent_hook'],
+                    has_cracked_blister=variant['has_cracked_blister'],
                 ).exists():
                     self.add_error(
                         None,
@@ -227,6 +267,8 @@ class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
                     has_soft_corners=variant['has_soft_corners'],
                     has_protector=variant['has_protector'],
                     is_signed=variant['is_signed'],
+                    has_bent_hook=variant['has_bent_hook'],
+                    has_cracked_blister=variant['has_cracked_blister'],
                 )
             )
         return created_items
@@ -273,6 +315,8 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
                     has_soft_corners=variant['has_soft_corners'],
                     has_protector=variant['has_protector'],
                     is_signed=variant['is_signed'],
+                    has_bent_hook=variant['has_bent_hook'],
+                    has_cracked_blister=variant['has_cracked_blister'],
                 ).exists():
                     self.add_error(
                         None,
@@ -298,6 +342,8 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
                     has_soft_corners=variant['has_soft_corners'],
                     has_protector=variant['has_protector'],
                     is_signed=variant['is_signed'],
+                    has_bent_hook=variant['has_bent_hook'],
+                    has_cracked_blister=variant['has_cracked_blister'],
                 )
             )
         return created_items
@@ -349,6 +395,18 @@ class CollectionBulkEditForm(forms.Form):
         coerce=lambda value: {'true': True, 'false': False}.get(value, ''),
         label='Signed',
     )
+    has_bent_hook = forms.TypedChoiceField(
+        required=False,
+        choices=(('', 'Bez zmian'), ('true', 'Tak'), ('false', 'Nie')),
+        coerce=lambda value: {'true': True, 'false': False}.get(value, ''),
+        label='Bent hook',
+    )
+    has_cracked_blister = forms.TypedChoiceField(
+        required=False,
+        choices=(('', 'Bez zmian'), ('true', 'Tak'), ('false', 'Nie')),
+        coerce=lambda value: {'true': True, 'false': False}.get(value, ''),
+        label='Cracked blister',
+    )
 
     def __init__(self, *args, **kwargs):
         collection = kwargs.pop('collection')
@@ -357,7 +415,16 @@ class CollectionBulkEditForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        changed_fields = ('condition', 'packaging_state', 'is_sealed', 'has_soft_corners', 'has_protector', 'is_signed')
+        changed_fields = (
+            'condition',
+            'packaging_state',
+            'is_sealed',
+            'has_soft_corners',
+            'has_protector',
+            'is_signed',
+            'has_bent_hook',
+            'has_cracked_blister',
+        )
         has_quantity_change = cleaned_data.get('quantity') is not None
         has_other_change = any(cleaned_data.get(field_name) != '' for field_name in changed_fields)
         if not (has_quantity_change or has_other_change):
@@ -374,6 +441,15 @@ class CollectionBulkEditForm(forms.Form):
             new_has_soft_corners = item.has_soft_corners if self.cleaned_data.get('has_soft_corners', '') == '' else self.cleaned_data['has_soft_corners']
             new_has_protector = item.has_protector if self.cleaned_data.get('has_protector', '') == '' else self.cleaned_data['has_protector']
             new_is_signed = item.is_signed if self.cleaned_data.get('is_signed', '') == '' else self.cleaned_data['is_signed']
+            new_has_bent_hook = item.has_bent_hook if self.cleaned_data.get('has_bent_hook', '') == '' else self.cleaned_data['has_bent_hook']
+            new_has_cracked_blister = item.has_cracked_blister if self.cleaned_data.get('has_cracked_blister', '') == '' else self.cleaned_data['has_cracked_blister']
+            if new_packaging == 'loose':
+                new_is_sealed = False
+                new_has_soft_corners = False
+                new_has_protector = False
+                new_is_signed = False
+                new_has_bent_hook = False
+                new_has_cracked_blister = False
 
             if new_packaging not in item.model.available_packaging_states:
                 continue
@@ -387,6 +463,8 @@ class CollectionBulkEditForm(forms.Form):
                 has_soft_corners=new_has_soft_corners,
                 has_protector=new_has_protector,
                 is_signed=new_is_signed,
+                has_bent_hook=new_has_bent_hook,
+                has_cracked_blister=new_has_cracked_blister,
             ).exclude(pk=item.pk).exists()
             if duplicate_exists:
                 continue
@@ -399,6 +477,8 @@ class CollectionBulkEditForm(forms.Form):
                 or new_has_soft_corners != item.has_soft_corners
                 or new_has_protector != item.has_protector
                 or new_is_signed != item.is_signed
+                or new_has_bent_hook != item.has_bent_hook
+                or new_has_cracked_blister != item.has_cracked_blister
             ):
                 item.quantity = new_quantity
                 item.condition = new_condition
@@ -407,6 +487,8 @@ class CollectionBulkEditForm(forms.Form):
                 item.has_soft_corners = new_has_soft_corners
                 item.has_protector = new_has_protector
                 item.is_signed = new_is_signed
+                item.has_bent_hook = new_has_bent_hook
+                item.has_cracked_blister = new_has_cracked_blister
                 item.save(
                     update_fields=[
                         'quantity',
@@ -416,6 +498,8 @@ class CollectionBulkEditForm(forms.Form):
                         'has_soft_corners',
                         'has_protector',
                         'is_signed',
+                        'has_bent_hook',
+                        'has_cracked_blister',
                     ]
                 )
                 updated_count += 1

@@ -132,6 +132,19 @@ class CollectionTests(TestCase):
         self.assertRedirects(response, self.private_collection.get_absolute_url())
         self.assertTrue(CollectionItem.objects.filter(collection=self.private_collection, model=selected_model).exists())
 
+    def test_item_create_marks_loose_variant_as_without_card_attributes(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.get(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {'model': self.model_obj.pk},
+        )
+
+        loose_section = next(
+            section for section in response.context['form'].variant_sections if section['packaging_value'] == 'loose'
+        )
+        self.assertFalse(loose_section['supports_card_attributes'])
+
     def test_owner_can_add_same_model_with_different_packaging_variant(self):
         CollectionItem.objects.create(
             collection=self.private_collection,
@@ -155,6 +168,30 @@ class CollectionTests(TestCase):
         self.assertRedirects(response, self.private_collection.get_absolute_url())
         self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 2)
 
+    def test_loose_variant_clears_card_attributes_from_post_data(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {
+                'model': self.model_obj.pk,
+                'enabled_loose': 'on',
+                'quantity_loose': 1,
+                'condition_loose': 'good',
+                'is_sealed_loose': 'on',
+                'has_protector_loose': 'on',
+                'has_bent_hook_loose': 'on',
+                'has_cracked_blister_loose': 'on',
+            },
+        )
+
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        item = CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj, packaging_state='loose')
+        self.assertFalse(item.is_sealed)
+        self.assertFalse(item.has_protector)
+        self.assertFalse(item.has_bent_hook)
+        self.assertFalse(item.has_cracked_blister)
+
     def test_owner_can_add_same_model_with_same_packaging_when_attributes_differ(self):
         CollectionItem.objects.create(
             collection=self.private_collection,
@@ -174,6 +211,30 @@ class CollectionTests(TestCase):
                 'quantity_short_card': 1,
                 'condition_short_card': 'mint',
                 'is_signed_short_card': 'on',
+            },
+        )
+
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 2)
+
+    def test_owner_can_add_same_model_with_bent_hook_difference(self):
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            has_bent_hook=True,
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {
+                'model': self.model_obj.pk,
+                'enabled_short_card': 'on',
+                'quantity_short_card': 1,
+                'condition_short_card': 'mint',
             },
         )
 
@@ -379,7 +440,6 @@ class CollectionTests(TestCase):
         self.assertContains(response, 'Krótka karta | stan: Mint | ilość: 1')
         self.assertContains(response, 'Luzak | stan: Good | ilość: 2')
         self.assertContains(response, 'Cechy: Sealed')
-        self.assertContains(response, 'Cechy: Signed')
         self.assertContains(response, '<strong>1</strong><div class="meta">pozycje</div>', html=False)
         self.assertContains(response, '<strong>2</strong><div class="meta">warianty</div>', html=False)
 
@@ -473,6 +533,34 @@ class CollectionTests(TestCase):
         self.assertContains(response, 'Cechy: Sealed, Protector')
         self.assertNotContains(response, 'Luzak | stan: Good | ilość: 2')
 
+    def test_collection_detail_can_filter_by_bent_hook_and_cracked_blister(self):
+        CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            has_bent_hook=True,
+        )
+        CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            quantity=2,
+            condition='good',
+            packaging_state='long_card',
+            has_cracked_blister=True,
+        )
+
+        response = self.client.get(
+            reverse('collections:collection-detail', args=[self.public_collection.pk]),
+            {'cracked_blister': 'yes'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Długa karta | stan: Good | ilość: 2')
+        self.assertContains(response, 'Cechy: Cracked blister')
+        self.assertNotContains(response, 'Krótka karta | stan: Mint | ilość: 1')
+
     def test_collection_detail_can_filter_for_missing_packaging_attribute(self):
         CollectionItem.objects.create(
             collection=self.public_collection,
@@ -540,6 +628,7 @@ class CollectionTests(TestCase):
             is_favorite=True,
             is_sealed=True,
             has_protector=True,
+            has_bent_hook=True,
         )
         self.client.force_login(self.owner)
         response = self.client.get(reverse('collections:collection-export', args=[self.private_collection.pk, 'json']))
@@ -549,6 +638,7 @@ class CollectionTests(TestCase):
         self.assertEqual(payload['items'][0]['model_name'], '1970 Pontiac Firebird')
         self.assertTrue(payload['items'][0]['is_sealed'])
         self.assertTrue(payload['items'][0]['has_protector'])
+        self.assertTrue(payload['items'][0]['has_bent_hook'])
 
     def test_other_user_cannot_export_collection(self):
         self.client.force_login(self.other)
@@ -606,17 +696,21 @@ class CollectionTests(TestCase):
                 'quantity_short_card': 1,
                 'condition_short_card': 'mint',
                 'is_sealed_short_card': 'on',
+                'has_bent_hook_short_card': 'on',
                 'enabled_loose': 'on',
                 'quantity_loose': 2,
                 'condition_loose': 'good',
                 'is_signed_loose': 'on',
+                'has_cracked_blister_loose': 'on',
             },
         )
 
         self.assertRedirects(response, reverse('catalog:model-list'))
         self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 2)
         self.assertTrue(CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj, packaging_state='short_card').is_sealed)
-        self.assertTrue(CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj, packaging_state='loose').is_signed)
+        self.assertTrue(CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj, packaging_state='short_card').has_bent_hook)
+        self.assertFalse(CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj, packaging_state='loose').is_signed)
+        self.assertFalse(CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj, packaging_state='loose').has_cracked_blister)
 
     def test_owner_can_batch_edit_selected_variants(self):
         short_card = CollectionItem.objects.create(
@@ -643,6 +737,7 @@ class CollectionTests(TestCase):
                 'condition': 'used',
                 'packaging_state': '',
                 'has_protector': 'true',
+                'has_cracked_blister': 'true',
             },
         )
 
@@ -654,7 +749,9 @@ class CollectionTests(TestCase):
         self.assertEqual(short_card.condition, 'used')
         self.assertEqual(loose.condition, 'used')
         self.assertTrue(short_card.has_protector)
-        self.assertTrue(loose.has_protector)
+        self.assertFalse(loose.has_protector)
+        self.assertTrue(short_card.has_cracked_blister)
+        self.assertFalse(loose.has_cracked_blister)
 
     def test_collection_detail_can_save_and_apply_filters(self):
         matchbox_model = HotWheelsModel.objects.create(
@@ -675,15 +772,15 @@ class CollectionTests(TestCase):
 
         save_response = self.client.get(
             reverse('collections:collection-detail', args=[self.private_collection.pk]),
-            {'brand': 'Matchbox', 'sealed': 'yes', 'save_filters': '1'},
+            {'brand': 'Matchbox', 'sealed': 'yes', 'cracked_blister': 'no', 'save_filters': '1'},
         )
-        self.assertRedirects(save_response, f'{self.private_collection.get_absolute_url()}?brand=Matchbox&sealed=yes')
+        self.assertRedirects(save_response, f'{self.private_collection.get_absolute_url()}?brand=Matchbox&sealed=yes&cracked_blister=no')
 
         apply_response = self.client.get(
             reverse('collections:collection-detail', args=[self.private_collection.pk]),
             {'apply_saved_filters': '1'},
         )
-        self.assertRedirects(apply_response, f'{self.private_collection.get_absolute_url()}?brand=Matchbox&sealed=yes')
+        self.assertRedirects(apply_response, f'{self.private_collection.get_absolute_url()}?brand=Matchbox&sealed=yes&cracked_blister=no')
 
     def test_owner_can_batch_delete_selected_variants(self):
         short_card = CollectionItem.objects.create(

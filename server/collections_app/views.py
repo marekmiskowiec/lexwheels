@@ -52,6 +52,8 @@ ATTRIBUTE_FILTER_FIELDS = (
     ('soft_corners', 'has_soft_corners'),
     ('protector', 'has_protector'),
     ('signed', 'is_signed'),
+    ('bent_hook', 'has_bent_hook'),
+    ('cracked_blister', 'has_cracked_blister'),
 )
 
 
@@ -167,7 +169,18 @@ class CollectionDetailView(DetailView):
         if request.GET.get('save_filters') == '1':
             filters = {
                 key: request.GET.get(key, '').strip()
-                for key in ('q', 'brand', 'condition', 'packaging', 'sealed', 'soft_corners', 'protector', 'signed')
+                for key in (
+                    'q',
+                    'brand',
+                    'condition',
+                    'packaging',
+                    'sealed',
+                    'soft_corners',
+                    'protector',
+                    'signed',
+                    'bent_hook',
+                    'cracked_blister',
+                )
                 if request.GET.get(key, '').strip()
             }
             request.session[session_key] = filters
@@ -201,6 +214,8 @@ class CollectionDetailView(DetailView):
         selected_soft_corners = self.request.GET.get('soft_corners', '').strip()
         selected_protector = self.request.GET.get('protector', '').strip()
         selected_signed = self.request.GET.get('signed', '').strip()
+        selected_bent_hook = self.request.GET.get('bent_hook', '').strip()
+        selected_cracked_blister = self.request.GET.get('cracked_blister', '').strip()
 
         if query:
             items = items.filter(
@@ -270,6 +285,8 @@ class CollectionDetailView(DetailView):
         context['selected_soft_corners'] = selected_soft_corners
         context['selected_protector'] = selected_protector
         context['selected_signed'] = selected_signed
+        context['selected_bent_hook'] = selected_bent_hook
+        context['selected_cracked_blister'] = selected_cracked_blister
         context['brand_options'] = (
             self.object.items.exclude(model__brand='')
             .values_list('model__brand', flat=True)
@@ -331,6 +348,8 @@ class CollectionExportView(LoginRequiredMixin, View):
                 'Soft Corners',
                 'Protector',
                 'Signed',
+                'Bent Hook',
+                'Cracked Blister',
                 'Acquired At',
                 'Is Favorite',
                 'Notes',
@@ -349,6 +368,8 @@ class CollectionExportView(LoginRequiredMixin, View):
                     item.has_soft_corners,
                     item.has_protector,
                     item.is_signed,
+                    item.has_bent_hook,
+                    item.has_cracked_blister,
                     item.acquired_at.isoformat() if item.acquired_at else '',
                     item.is_favorite,
                     item.notes,
@@ -377,6 +398,8 @@ class CollectionExportView(LoginRequiredMixin, View):
                         'has_soft_corners': item.has_soft_corners,
                         'has_protector': item.has_protector,
                         'is_signed': item.is_signed,
+                        'has_bent_hook': item.has_bent_hook,
+                        'has_cracked_blister': item.has_cracked_blister,
                         'acquired_at': item.acquired_at.isoformat() if item.acquired_at else None,
                         'is_favorite': item.is_favorite,
                         'notes': item.notes,

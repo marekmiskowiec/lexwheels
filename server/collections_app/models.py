@@ -66,6 +66,8 @@ class CollectionItem(models.Model):
     has_soft_corners = models.BooleanField(default=False)
     has_protector = models.BooleanField(default=False)
     is_signed = models.BooleanField(default=False)
+    has_bent_hook = models.BooleanField(default=False)
+    has_cracked_blister = models.BooleanField(default=False)
     acquired_at = models.DateField(blank=True, null=True)
     notes = models.TextField(blank=True)
     is_favorite = models.BooleanField(default=False)
@@ -81,6 +83,8 @@ class CollectionItem(models.Model):
             'has_soft_corners',
             'has_protector',
             'is_signed',
+            'has_bent_hook',
+            'has_cracked_blister',
         )
 
     def __str__(self) -> str:
@@ -91,7 +95,13 @@ class CollectionItem(models.Model):
         return self.model.image_src_for_packaging(self.packaging_state)
 
     @property
+    def supports_card_attributes(self) -> bool:
+        return self.packaging_state != 'loose'
+
+    @property
     def attribute_badges(self) -> list[str]:
+        if not self.supports_card_attributes:
+            return []
         badges = []
         if self.is_sealed:
             badges.append('Sealed')
@@ -101,4 +111,8 @@ class CollectionItem(models.Model):
             badges.append('Protector')
         if self.is_signed:
             badges.append('Signed')
+        if self.has_bent_hook:
+            badges.append('Bent hook')
+        if self.has_cracked_blister:
+            badges.append('Cracked blister')
         return badges

@@ -47,12 +47,16 @@
                 {% if section.condition.errors %}<small class="meta">{{ section.condition.errors|join:', ' }}</small>{% endif %}
               </div>
             </div>
-            <div class="filters" style="margin-top:10px;">
-              <label style="display:flex; align-items:center; gap:8px;">{{ section.is_sealed }} <span>Sealed</span></label>
-              <label style="display:flex; align-items:center; gap:8px;">{{ section.has_soft_corners }} <span>Soft corners</span></label>
-              <label style="display:flex; align-items:center; gap:8px;">{{ section.has_protector }} <span>Protector</span></label>
-              <label style="display:flex; align-items:center; gap:8px;">{{ section.is_signed }} <span>Signed</span></label>
-            </div>
+            {% if section.supports_card_attributes %}
+              <div class="filters" style="margin-top:10px;">
+                <label style="display:flex; align-items:center; gap:8px;">{{ section.is_sealed }} <span>Sealed</span></label>
+                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_soft_corners }} <span>Soft corners</span></label>
+                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_protector }} <span>Protector</span></label>
+                <label style="display:flex; align-items:center; gap:8px;">{{ section.is_signed }} <span>Signed</span></label>
+                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_bent_hook }} <span>Bent hook</span></label>
+                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_cracked_blister }} <span>Cracked blister</span></label>
+              </div>
+            {% endif %}
           </div>
         {% endfor %}
       </div>

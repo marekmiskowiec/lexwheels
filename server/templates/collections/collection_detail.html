@@ -101,6 +101,8 @@
         <div style="flex: 1 1 180px;">{{ bulk_edit_form.has_soft_corners.label_tag }} {{ bulk_edit_form.has_soft_corners }}</div>
         <div style="flex: 1 1 180px;">{{ bulk_edit_form.has_protector.label_tag }} {{ bulk_edit_form.has_protector }}</div>
         <div style="flex: 1 1 180px;">{{ bulk_edit_form.is_signed.label_tag }} {{ bulk_edit_form.is_signed }}</div>
+        <div style="flex: 1 1 180px;">{{ bulk_edit_form.has_bent_hook.label_tag }} {{ bulk_edit_form.has_bent_hook }}</div>
+        <div style="flex: 1 1 180px;">{{ bulk_edit_form.has_cracked_blister.label_tag }} {{ bulk_edit_form.has_cracked_blister }}</div>
         <div><button type="submit">Zastosuj do zaznaczonych wariantów</button></div>
       </div>
       <p class="meta" style="margin:12px 0 0;">Masowa edycja działa tylko na zaznaczonych wariantach, nie na checkboxach "Usuń cały model".</p>
@@ -171,10 +173,26 @@
           {% endfor %}
         </select>
       </div>
+      <div style="flex: 1 1 180px;">
+        <label for="bent_hook">Bent hook</label>
+        <select id="bent_hook" name="bent_hook">
+          {% for value, label in boolean_filter_options %}
+            <option value="{{ value }}" {% if selected_bent_hook == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="flex: 1 1 180px;">
+        <label for="cracked_blister">Cracked blister</label>
+        <select id="cracked_blister" name="cracked_blister">
+          {% for value, label in boolean_filter_options %}
+            <option value="{{ value }}" {% if selected_cracked_blister == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
       <div><button type="submit">Szukaj</button></div>
       <div><button type="submit" name="save_filters" value="1" class="secondary">Zapisz filtry</button></div>
       {% if saved_filters %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}?apply_saved_filters=1">Przywróć zapisane</a></div><div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}?clear_saved_filters=1">Usuń zapisane</a></div>{% endif %}
-      {% if query or selected_brand or selected_condition or selected_packaging or selected_sealed or selected_soft_corners or selected_protector or selected_signed %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Usuń wszystkie filtry</a></div>{% endif %}
+      {% if query or selected_brand or selected_condition or selected_packaging or selected_sealed or selected_soft_corners or selected_protector or selected_signed or selected_bent_hook or selected_cracked_blister %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Usuń wszystkie filtry</a></div>{% endif %}
     </form>
     {% if query %}
       <p class="meta" style="margin:12px 0 0;">Znaleziono {{ filtered_count }} pozycji dla frazy "{{ query }}".</p>
