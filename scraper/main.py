@@ -47,6 +47,15 @@ def build_dataset_path(brand: str, line: str, year: int) -> Path:
     )
 
 
+def build_image_dir(brand: str, line: str, year: int) -> Path:
+    return (
+        IMAGE_DIR
+        / slugify(brand).replace('_', '-')
+        / slugify(line).replace('_', '-')
+        / str(year)
+    )
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Scrape Hot Wheels catalog data into structured JSON datasets.')
     parser.add_argument('--brand', default='Hot Wheels', help='Brand label stored in the dataset.')
@@ -139,7 +148,11 @@ def build_image_path(row_data: dict, image_url: str) -> Path:
     ]))
     url_hash = hashlib.md5(image_url.encode('utf-8')).hexdigest()[:10]
     filename = f'{slugify(stem)}_{url_hash}{suffix}'
-    return IMAGE_DIR / filename
+    return build_image_dir(
+        str(row_data.get('Brand', 'Hot Wheels')),
+        str(row_data.get('Category', 'Mainline')),
+        int(row_data.get('Year') or 0),
+    ) / filename
 
 
 def download_image(image_url: str, destination: Path) -> str | None:
