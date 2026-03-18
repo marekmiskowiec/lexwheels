@@ -119,6 +119,17 @@ python3 server/manage.py import_models
 python3 server/manage.py runserver
 ```
 
+Useful import variants:
+
+```bash
+python3 server/manage.py import_models
+python3 server/manage.py import_models --path data/catalog/hot-wheels/mainline/2022.json
+python3 server/manage.py import_models --brand hot-wheels --line premium --year 2024
+python3 server/manage.py import_models --dry-run
+```
+
+`import_models` now scans `data/catalog/<brand>/<line>/<year>.json` by default, so you can import many brands and product lines in one run.
+
 Then open:
 
 ```text
@@ -193,7 +204,7 @@ This starts:
 - PostgreSQL 16
 - Django on `http://127.0.0.1:8000/`
 
-The web container runs migrations and imports `data/catalog/hot-wheels/mainline/2022.json` on startup.
+The web container runs migrations and imports all matching datasets from `data/catalog/` on startup.
 
 ## Production Deployment
 

@@ -99,6 +99,95 @@ class ImportModelsCommandTests(TestCase):
         self.assertEqual(model.category, 'Mainline')
         self.assertEqual(model.series, 'Series A New for 2023!')
 
+    def test_import_can_read_brand_line_and_year_from_path_structure(self):
+        payload = [{
+            'Toy': 'MBX01',
+            'Number': '002',
+            'Model Name': 'Adventure Van',
+            'Series': 'Adventure Drivers',
+            'Series Number': '2/5',
+            'Photo': 'https://example.com/van.jpg',
+            'Local Photo': 'images/van.jpg',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / 'matchbox' / 'collectors' / '2024.json'
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(payload))
+            call_command('import_models', path=str(path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.brand, 'Matchbox')
+        self.assertEqual(model.category, 'Collectors')
+        self.assertEqual(model.year, 2024)
+
+    def test_import_can_scan_dataset_tree(self):
+        first_payload = [{
+            'Brand': 'Hot Wheels',
+            'Category': 'Mainline',
+            'Year': 2022,
+            'Toy': 'HW01',
+            'Number': '001',
+            'Model Name': 'Car One',
+            'Series': 'Series A',
+            'Series Number': '1/5',
+        }]
+        second_payload = [{
+            'Toy': 'MBX01',
+            'Number': '002',
+            'Model Name': 'Car Two',
+            'Series': 'Series B',
+            'Series Number': '2/5',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            first_path = root / 'hot-wheels' / 'mainline' / '2022.json'
+            second_path = root / 'matchbox' / 'collectors' / '2024.json'
+            first_path.parent.mkdir(parents=True, exist_ok=True)
+            second_path.parent.mkdir(parents=True, exist_ok=True)
+            first_path.write_text(json.dumps(first_payload))
+            second_path.write_text(json.dumps(second_payload))
+
+            call_command('import_models', root=str(root))
+
+        self.assertEqual(HotWheelsModel.objects.count(), 2)
+        self.assertTrue(HotWheelsModel.objects.filter(model_name='Car One', brand='Hot Wheels').exists())
+        self.assertTrue(HotWheelsModel.objects.filter(model_name='Car Two', brand='Matchbox', category='Collectors').exists())
+
+    def test_import_can_filter_dataset_tree(self):
+        hot_wheels_payload = [{
+            'Toy': 'HW01',
+            'Number': '001',
+            'Model Name': 'Car One',
+            'Series': 'Series A',
+            'Series Number': '1/5',
+        }]
+        matchbox_payload = [{
+            'Toy': 'MBX01',
+            'Number': '002',
+            'Model Name': 'Car Two',
+            'Series': 'Series B',
+            'Series Number': '2/5',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            hot_wheels_path = root / 'hot-wheels' / 'mainline' / '2022.json'
+            matchbox_path = root / 'matchbox' / 'collectors' / '2024.json'
+            hot_wheels_path.parent.mkdir(parents=True, exist_ok=True)
+            matchbox_path.parent.mkdir(parents=True, exist_ok=True)
+            hot_wheels_path.write_text(json.dumps(hot_wheels_payload))
+            matchbox_path.write_text(json.dumps(matchbox_payload))
+
+            call_command('import_models', root=str(root), brand='matchbox', line='collectors', year=2024)
+
+        self.assertEqual(HotWheelsModel.objects.count(), 1)
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.brand, 'Matchbox')
+        self.assertEqual(model.category, 'Collectors')
+        self.assertEqual(model.year, 2024)
+
     def test_import_cleans_new_for_2022_marker_from_series(self):
         payload = [{
             'Toy': 'ABC',
