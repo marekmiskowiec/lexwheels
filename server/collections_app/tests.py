@@ -444,6 +444,61 @@ class CollectionTests(TestCase):
         self.assertContains(response, 'Luzak | stan: Good | ilość: 2')
         self.assertNotContains(response, 'Krótka karta | stan: Mint | ilość: 1')
 
+    def test_collection_detail_can_filter_by_packaging_attributes(self):
+        CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            is_sealed=True,
+            has_protector=True,
+        )
+        CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            quantity=2,
+            condition='good',
+            packaging_state='loose',
+            is_signed=True,
+        )
+
+        response = self.client.get(
+            reverse('collections:collection-detail', args=[self.public_collection.pk]),
+            {'sealed': 'yes', 'protector': 'yes'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Krótka karta | stan: Mint | ilość: 1')
+        self.assertContains(response, 'Cechy: Sealed, Protector')
+        self.assertNotContains(response, 'Luzak | stan: Good | ilość: 2')
+
+    def test_collection_detail_can_filter_for_missing_packaging_attribute(self):
+        CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            has_soft_corners=True,
+        )
+        CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            quantity=2,
+            condition='good',
+            packaging_state='loose',
+        )
+
+        response = self.client.get(
+            reverse('collections:collection-detail', args=[self.public_collection.pk]),
+            {'soft_corners': 'no'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Luzak | stan: Good | ilość: 2')
+        self.assertNotContains(response, 'Krótka karta | stan: Mint | ilość: 1')
+
     def test_collection_detail_can_filter_by_brand(self):
         second_model = HotWheelsModel.objects.create(
             app_id='def456',
@@ -620,15 +675,15 @@ class CollectionTests(TestCase):
 
         save_response = self.client.get(
             reverse('collections:collection-detail', args=[self.private_collection.pk]),
-            {'brand': 'Matchbox', 'save_filters': '1'},
+            {'brand': 'Matchbox', 'sealed': 'yes', 'save_filters': '1'},
         )
-        self.assertRedirects(save_response, f'{self.private_collection.get_absolute_url()}?brand=Matchbox')
+        self.assertRedirects(save_response, f'{self.private_collection.get_absolute_url()}?brand=Matchbox&sealed=yes')
 
         apply_response = self.client.get(
             reverse('collections:collection-detail', args=[self.private_collection.pk]),
             {'apply_saved_filters': '1'},
         )
-        self.assertRedirects(apply_response, f'{self.private_collection.get_absolute_url()}?brand=Matchbox')
+        self.assertRedirects(apply_response, f'{self.private_collection.get_absolute_url()}?brand=Matchbox&sealed=yes')
 
     def test_owner_can_batch_delete_selected_variants(self):
         short_card = CollectionItem.objects.create(

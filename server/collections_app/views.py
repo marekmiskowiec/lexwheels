@@ -47,6 +47,23 @@ def collection_filter_session_key(collection_id):
     return f'collection_filters_{collection_id}'
 
 
+ATTRIBUTE_FILTER_FIELDS = (
+    ('sealed', 'is_sealed'),
+    ('soft_corners', 'has_soft_corners'),
+    ('protector', 'has_protector'),
+    ('signed', 'is_signed'),
+)
+
+
+def parse_boolean_filter(raw_value):
+    value = (raw_value or '').strip().lower()
+    if value == 'yes':
+        return True
+    if value == 'no':
+        return False
+    return None
+
+
 class DashboardView(LoginRequiredMixin, ListView):
     template_name = 'collections/dashboard.html'
     context_object_name = 'collections'
@@ -150,7 +167,7 @@ class CollectionDetailView(DetailView):
         if request.GET.get('save_filters') == '1':
             filters = {
                 key: request.GET.get(key, '').strip()
-                for key in ('q', 'brand', 'condition', 'packaging')
+                for key in ('q', 'brand', 'condition', 'packaging', 'sealed', 'soft_corners', 'protector', 'signed')
                 if request.GET.get(key, '').strip()
             }
             request.session[session_key] = filters
@@ -180,6 +197,10 @@ class CollectionDetailView(DetailView):
         selected_brand = self.request.GET.get('brand', '').strip()
         selected_condition = self.request.GET.get('condition', '').strip()
         selected_packaging = self.request.GET.get('packaging', '').strip()
+        selected_sealed = self.request.GET.get('sealed', '').strip()
+        selected_soft_corners = self.request.GET.get('soft_corners', '').strip()
+        selected_protector = self.request.GET.get('protector', '').strip()
+        selected_signed = self.request.GET.get('signed', '').strip()
 
         if query:
             items = items.filter(
@@ -195,6 +216,10 @@ class CollectionDetailView(DetailView):
             items = items.filter(condition=selected_condition)
         if selected_packaging in dict(CollectionItem.PACKAGING_CHOICES):
             items = items.filter(packaging_state=selected_packaging)
+        for query_key, model_field in ATTRIBUTE_FILTER_FIELDS:
+            parsed_value = parse_boolean_filter(self.request.GET.get(query_key, ''))
+            if parsed_value is not None:
+                items = items.filter(**{model_field: parsed_value})
 
         grouped_items = []
         ordered_items = list(items.order_by('model__number', 'model__model_name', 'packaging_state', 'condition', 'pk'))
@@ -241,6 +266,10 @@ class CollectionDetailView(DetailView):
         context['selected_brand'] = selected_brand
         context['selected_condition'] = selected_condition
         context['selected_packaging'] = selected_packaging
+        context['selected_sealed'] = selected_sealed
+        context['selected_soft_corners'] = selected_soft_corners
+        context['selected_protector'] = selected_protector
+        context['selected_signed'] = selected_signed
         context['brand_options'] = (
             self.object.items.exclude(model__brand='')
             .values_list('model__brand', flat=True)
@@ -249,6 +278,11 @@ class CollectionDetailView(DetailView):
         )
         context['condition_options'] = CollectionItem.CONDITION_CHOICES
         context['packaging_options'] = CollectionItem.PACKAGING_CHOICES
+        context['boolean_filter_options'] = (
+            ('', 'Wszystkie'),
+            ('yes', 'Tak'),
+            ('no', 'Nie'),
+        )
         context['filtered_count'] = len(grouped_items)
         context['saved_filters'] = self.request.session.get(collection_filter_session_key(self.object.pk), {})
         context['bulk_edit_form'] = CollectionBulkEditForm(collection=self.object)
