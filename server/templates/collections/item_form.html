@@ -1,7 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="panel" style="max-width: 760px;">
-  <h1>Pozycja kolekcji</h1>
-  <form method="post" class="list">{% csrf_token %}{{ form.as_p }}<button type="submit">Zapisz</button></form>
+  <h1>{% if is_multi_variant_form %}Dodaj model do kolekcji{% else %}Pozycja kolekcji{% endif %}</h1>
+  <form method="post" class="list">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="message">{{ form.non_field_errors|join:', ' }}</div>
+    {% endif %}
+    {% if is_multi_variant_form %}
+      <p>
+        {{ form.model.label_tag }}
+        {{ form.model }}
+        {% if form.model.errors %}<small class="meta">{{ form.model.errors|join:', ' }}</small>{% endif %}
+      </p>
+      <div class="list">
+        {% for section in form.variant_sections %}
+          <div class="card">
+            <label style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">{{ section.enabled }} <strong>{{ section.packaging_label }}</strong></label>
+            <div class="filters">
+              <div style="flex: 1 1 140px;">
+                {{ section.quantity.label_tag }}
+                {{ section.quantity }}
+                {% if section.quantity.errors %}<small class="meta">{{ section.quantity.errors|join:', ' }}</small>{% endif %}
+              </div>
+              <div style="flex: 1 1 220px;">
+                {{ section.condition.label_tag }}
+                {{ section.condition }}
+                {% if section.condition.errors %}<small class="meta">{{ section.condition.errors|join:', ' }}</small>{% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      {{ form.as_p }}
+    {% endif %}
+    <button type="submit">Zapisz</button>
+  </form>
 </section>
 {% endblock %}

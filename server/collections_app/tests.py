@@ -45,11 +45,9 @@ class CollectionTests(TestCase):
             reverse('collections:item-create', args=[self.private_collection.pk]),
             {
                 'model': self.model_obj.pk,
-                'quantity': 2,
-                'condition': 'mint',
-                'packaging_state': 'short_card',
-                'notes': 'Test',
-                'is_favorite': True,
+                'enabled_short_card': 'on',
+                'quantity_short_card': 2,
+                'condition_short_card': 'mint',
             },
         )
         self.assertRedirects(response, self.private_collection.get_absolute_url())
@@ -69,11 +67,9 @@ class CollectionTests(TestCase):
             reverse('collections:item-create', args=[self.private_collection.pk]),
             {
                 'model': self.model_obj.pk,
-                'quantity': 2,
-                'condition': 'good',
-                'packaging_state': 'loose',
-                'notes': '',
-                'is_favorite': False,
+                'enabled_loose': 'on',
+                'quantity_loose': 2,
+                'condition_loose': 'good',
             },
         )
 
@@ -94,16 +90,37 @@ class CollectionTests(TestCase):
             reverse('collections:item-create', args=[self.private_collection.pk]),
             {
                 'model': self.model_obj.pk,
-                'quantity': 2,
-                'condition': 'mint',
-                'packaging_state': 'short_card',
-                'notes': '',
-                'is_favorite': False,
+                'enabled_short_card': 'on',
+                'quantity_short_card': 2,
+                'condition_short_card': 'mint',
             },
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Taki wariant modelu jest już w tej kolekcji.')
+        self.assertContains(response, 'już istnieje w tej kolekcji')
+
+    def test_owner_can_add_multiple_variants_in_single_form(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {
+                'model': self.model_obj.pk,
+                'enabled_short_card': 'on',
+                'quantity_short_card': 1,
+                'condition_short_card': 'mint',
+                'enabled_long_card': 'on',
+                'quantity_long_card': 1,
+                'condition_long_card': 'good',
+                'enabled_loose': 'on',
+                'quantity_loose': 2,
+                'condition_loose': 'good',
+            },
+        )
+
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 3)
+        self.assertTrue(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj, packaging_state='long_card').exists())
 
     def test_owner_can_update_collection(self):
         self.client.force_login(self.owner)

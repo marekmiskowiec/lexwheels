@@ -8,12 +8,13 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
+from django.views.generic.edit import FormView
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from django.db.models import Count, Q, Sum
 
 from catalog.models import HotWheelsModel
 
-from .forms import CollectionBatchAddForm, CollectionForm, CollectionItemForm
+from .forms import CollectionBatchAddForm, CollectionForm, CollectionItemForm, CollectionItemMultiVariantForm
 from .models import Collection, CollectionItem
 
 
@@ -252,30 +253,42 @@ class CollectionBatchAddView(LoginRequiredMixin, View):
         return redirect(next_url)
 
 
-class CollectionItemCreateView(LoginRequiredMixin, CreateView):
-    model = CollectionItem
-    form_class = CollectionItemForm
+class CollectionItemCreateView(LoginRequiredMixin, FormView):
+    form_class = CollectionItemMultiVariantForm
     template_name = 'collections/item_form.html'
 
     def dispatch(self, request, *args, **kwargs):
         self.collection = get_object_or_404(Collection, pk=self.kwargs['collection_pk'], owner=request.user)
         return super().dispatch(request, *args, **kwargs)
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        form.collection = self.collection
-        form.fields['model'].queryset = HotWheelsModel.objects.all()
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['collection'] = self.collection
+        return kwargs
+
+    def get_initial(self):
+        initial = super().get_initial()
         initial_model = self.request.GET.get('model')
         if initial_model and initial_model.isdigit():
-            form.initial['model'] = initial_model
-        return form
+            initial['model'] = initial_model
+        return initial
 
     def form_valid(self, form):
-        form.instance.collection = self.collection
+        created_items = form.save()
+        if len(created_items) == 1:
+            messages.success(self.request, 'Dodano 1 wariant modelu do kolekcji.')
+        else:
+            messages.success(self.request, f'Dodano {len(created_items)} warianty modelu do kolekcji.')
         return super().form_valid(form)
 
     def get_success_url(self):
         return self.collection.get_absolute_url()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_multi_variant_form'] = True
+        context['collection_obj'] = self.collection
+        return context
 
 
 class CollectionItemUpdateView(OwnerRequiredMixin, UpdateView):
@@ -290,6 +303,12 @@ class CollectionItemUpdateView(OwnerRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return self.object.collection.get_absolute_url()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_multi_variant_form'] = False
+        context['collection_obj'] = self.object.collection
+        return context
 
 
 class CollectionItemDeleteView(OwnerRequiredMixin, DeleteView):
