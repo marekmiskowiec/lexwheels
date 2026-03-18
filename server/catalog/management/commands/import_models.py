@@ -75,7 +75,7 @@ class Command(BaseCommand):
                 short_card_local_photo = self.clean_optional_text(row.get('Short Card Local Photo'))
                 long_card_local_photo = self.clean_optional_text(row.get('Long Card Local Photo')) or local_photo
                 loose_local_photo = self.clean_optional_text(row.get('Loose Local Photo')) or local_photo
-                if category.lower() not in {'semi premium', 'xl'}:
+                if category.lower() not in {'premium', 'semi premium', 'xl'}:
                     short_card_photo_url = short_card_photo_url or photo_url
                     short_card_local_photo = short_card_local_photo or local_photo
                 defaults = {

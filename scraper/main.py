@@ -69,6 +69,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--output', help='Override the destination JSON path.')
     parser.add_argument('--set-name', help='Optional set name used for nested dataset paths like <line>/<year>/<set>.json.')
     parser.add_argument(
+        '--include-section',
+        action='append',
+        default=[],
+        help='Only parse tables that belong to matching section titles. Can be repeated.',
+    )
+    parser.add_argument(
         '--update-existing-line',
         action='store_true',
         help='Merge the new scrape into the existing dataset file instead of overwriting it.',
@@ -153,18 +159,40 @@ def extract_headers(table) -> list[str]:
     return [th.get_text(' ', strip=True) for th in header_row.find_all('th')]
 
 
-def find_catalog_table(soup):
+def is_supported_catalog_headers(headers: list[str]) -> bool:
+    header_set = set(headers)
+    return (
+        {'Toy', 'Number', 'Model Name'}.issubset(header_set)
+        or {'Series #', 'Toy #', 'Casting Name'}.issubset(header_set)
+        or {'Col #', 'Toy #', 'Casting Name'}.issubset(header_set)
+        or {'Toy #', 'Col.#', 'Mix', 'Model Name'}.issubset(header_set)
+    )
+
+
+def get_table_section_title(table) -> str:
+    prev = table
+    while prev:
+        prev = prev.find_previous(['h2', 'h3', 'h4'])
+        if not prev:
+            break
+        text = prev.get_text(' ', strip=True)
+        if text:
+            return re.sub(r'\s*\[\s*\]\s*$', '', text).strip()
+    return ''
+
+
+def find_catalog_tables(soup, include_sections: list[str] | None = None) -> list[tuple[object, str]]:
+    include_sections = [section.strip().lower() for section in (include_sections or []) if section.strip()]
+    matches = []
     for table in soup.find_all('table'):
         headers = extract_headers(table)
-        if {'Toy', 'Number', 'Model Name'}.issubset(set(headers)):
-            return table
-        if {'Series #', 'Toy #', 'Casting Name'}.issubset(set(headers)):
-            return table
-        if {'Col #', 'Toy #', 'Casting Name'}.issubset(set(headers)):
-            return table
-        if {'Toy #', 'Col.#', 'Mix', 'Model Name'}.issubset(set(headers)):
-            return table
-    return None
+        if not is_supported_catalog_headers(headers):
+            continue
+        section_title = get_table_section_title(table)
+        if include_sections and not any(section in section_title.lower() for section in include_sections):
+            continue
+        matches.append((table, section_title))
+    return matches
 
 
 def build_image_path(row_data: dict, image_url: str) -> Path:
@@ -251,7 +279,7 @@ def attach_local_images(rows: list[dict], download_images: bool = True) -> list[
         carded_image_url = row.get('Carded Photo') or default_image_url
         loose_image_url = row.get('Loose Photo') or default_image_url
         category = str(row.get('Category') or '').strip().lower()
-        short_card_image_url = carded_image_url if category not in {'semi premium', 'xl'} else None
+        short_card_image_url = carded_image_url if category not in {'premium', 'semi premium', 'xl'} else None
         row['Photo'] = default_image_url
         row['Local Photo'] = row.get('Local Photo')
         row['Short Card Photo'] = short_card_image_url
@@ -369,12 +397,17 @@ def main() -> None:
 
     soup = BeautifulSoup(html, 'html.parser')
 
-    table = find_catalog_table(soup)
-    if not table:
+    table_matches = find_catalog_tables(soup, include_sections=args.include_section)
+    if not table_matches:
         print('No supported catalog table found on the page.')
         raise SystemExit(1)
 
-    rows = parse_rows(table, url, args.brand, args.line, args.year, args.set_name or '')
+    rows = []
+    for table, section_title in table_matches:
+        effective_series_label = args.set_name or section_title
+        if args.set_name and section_title:
+            effective_series_label = f'{args.set_name} - {section_title}'
+        rows.extend(parse_rows(table, url, args.brand, args.line, args.year, effective_series_label))
     if args.update_existing_line:
         rows = merge_rows(rows, read_existing_rows(output_file))
     rows = attach_local_images(rows, download_images=not args.skip_image_downloads)
