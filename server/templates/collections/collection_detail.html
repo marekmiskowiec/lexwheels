@@ -79,9 +79,26 @@
 </section>
 {% if user == collection_obj.owner %}
   <script>
+    const batchDeleteForm = document.getElementById('batch-delete-form');
     const batchDeleteCheckboxes = document.querySelectorAll('.batch-delete-checkbox');
     const selectAllItemsButton = document.getElementById('select-all-items');
     const clearAllItemsButton = document.getElementById('clear-all-items');
+
+    if (batchDeleteForm) {
+      batchDeleteForm.addEventListener('submit', (event) => {
+        const checkedCount = Array.from(batchDeleteCheckboxes).filter((checkbox) => checkbox.checked).length;
+        if (!checkedCount) {
+          return;
+        }
+
+        const confirmed = window.confirm(
+          `Czy na pewno chcesz usunąć zaznaczone pozycje z kolekcji? Zaznaczono: ${checkedCount}.`
+        );
+        if (!confirmed) {
+          event.preventDefault();
+        }
+      });
+    }
 
     if (selectAllItemsButton) {
       selectAllItemsButton.addEventListener('click', () => {
