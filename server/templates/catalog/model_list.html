@@ -6,6 +6,9 @@
   <form method="get" class="filters">
     <div style="flex: 2 1 300px;"><label for="q">Szukaj</label><input id="q" type="search" name="q" value="{{ query }}" placeholder="Toy, Number, nazwa modelu, seria"></div>
     <div style="flex: 1 1 220px;"><label for="series">Seria</label><select id="series" name="series"><option value="">Wszystkie serie</option>{% for series in series_options %}<option value="{{ series }}" {% if selected_series == series %}selected{% endif %}>{{ series }}</option>{% endfor %}</select></div>
+    <div style="flex: 1 1 180px;"><label for="year">Rok</label><select id="year" name="year"><option value="">Wszystkie lata</option>{% for year in year_options %}<option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>{% endfor %}</select></div>
+    <div style="flex: 1 1 220px;"><label for="category">Kategoria</label><select id="category" name="category"><option value="">Wszystkie kategorie</option>{% for category in category_options %}<option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>{% endfor %}</select></div>
+    <div style="flex: 1 1 220px;"><label for="sort">Sortowanie</label><select id="sort" name="sort"><option value="number" {% if selected_sort == 'number' %}selected{% endif %}>Po numerze</option><option value="year" {% if selected_sort == 'year' %}selected{% endif %}>Po roku</option><option value="category" {% if selected_sort == 'category' %}selected{% endif %}>Po kategorii</option><option value="name" {% if selected_sort == 'name' %}selected{% endif %}>Po nazwie</option></select></div>
     <div><button type="submit">Filtruj</button></div>
   </form>
   {% if user.is_authenticated %}
@@ -38,6 +41,7 @@
       {% if item.image_src %}<a href="{{ item.get_absolute_url }}"><img class="thumb" src="{{ item.image_src }}" alt="{{ item.model_name }}"></a>{% endif %}
       <h3><a href="{{ item.get_absolute_url }}">{{ item.model_name }}</a></h3>
       <p class="meta">Toy: {{ item.toy }} | Number: {{ item.number }}</p>
+      <p class="meta">Rok: {{ item.year|default:"-" }} | Kategoria: {{ item.category|default:"-" }}</p>
       <p class="meta">{{ item.series }} {% if item.series_number %}| {{ item.series_number }}{% endif %}</p>
     </article>
   {% empty %}
@@ -69,8 +73,8 @@
 {% endif %}
 {% if is_paginated %}
   <div class="pagination">
-    {% if page_obj.has_previous %}<a class="button secondary" href="?q={{ query }}&series={{ selected_series }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
-    {% if page_obj.has_next %}<a class="button secondary" href="?q={{ query }}&series={{ selected_series }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+    {% if page_obj.has_previous %}<a class="button secondary" href="?q={{ query }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+    {% if page_obj.has_next %}<a class="button secondary" href="?q={{ query }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&sort={{ selected_sort }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
   </div>
 {% endif %}
 {% endblock %}

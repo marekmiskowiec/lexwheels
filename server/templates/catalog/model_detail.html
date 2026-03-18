@@ -7,6 +7,8 @@
     <div>
       <h1>{{ model_obj.model_name }}</h1>
       <p><span class="badge">Toy {{ model_obj.toy }}</span> <span class="badge">Number {{ model_obj.number }}</span></p>
+      <p><strong>Rok:</strong> {{ model_obj.year|default:"-" }}</p>
+      <p><strong>Kategoria:</strong> {{ model_obj.category|default:"-" }}</p>
       <p><strong>Seria:</strong> {{ model_obj.series|default:"-" }}</p>
       <p><strong>Numer serii:</strong> {{ model_obj.series_number|default:"-" }}</p>
       {% if user.is_authenticated %}

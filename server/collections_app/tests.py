@@ -17,6 +17,8 @@ class CollectionTests(TestCase):
             toy='HCT05',
             number='001',
             model_name='1970 Pontiac Firebird',
+            year=2022,
+            category='Mainline',
             series='HW Dream Garage',
             series_number='1/5',
             photo_url='https://example.com/car.jpg',
@@ -90,6 +92,8 @@ class CollectionTests(TestCase):
             toy='HCT06',
             number='002',
             model_name='Custom Mustang',
+            year=2022,
+            category='Mainline',
             series='HW Dream Garage',
             series_number='2/5',
             photo_url='https://example.com/mustang.jpg',
@@ -106,6 +110,14 @@ class CollectionTests(TestCase):
         self.assertContains(response, 'Custom Mustang')
         self.assertNotContains(response, '1970 Pontiac Firebird')
         self.assertContains(response, 'Znaleziono 1 pozycji')
+
+    def test_collection_detail_shows_model_year_and_category(self):
+        CollectionItem.objects.create(collection=self.public_collection, model=self.model_obj)
+
+        response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
+
+        self.assertContains(response, 'Rok: 2022')
+        self.assertContains(response, 'Kategoria: Mainline')
 
     def test_collection_detail_search_checks_series_and_toy_fields(self):
         CollectionItem.objects.create(collection=self.public_collection, model=self.model_obj)
@@ -146,6 +158,8 @@ class CollectionTests(TestCase):
             toy='HCT06',
             number='002',
             model_name='Custom Mustang',
+            year=2022,
+            category='Mainline',
             series='HW Dream Garage',
             series_number='2/5',
             photo_url='https://example.com/mustang.jpg',

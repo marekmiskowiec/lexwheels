@@ -35,6 +35,7 @@
   {% for item in items %}
     <div class="list-item">
       <h3><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h3>
+      <p class="meta">Rok: {{ item.model.year|default:"-" }} | Kategoria: {{ item.model.category|default:"-" }}</p>
       <p class="meta">Ilość: {{ item.quantity }} | Stan: {{ item.get_condition_display }} | Opakowanie: {{ item.get_packaging_state_display }}</p>
       {% if item.notes %}<p>{{ item.notes }}</p>{% endif %}
       {% if user == collection_obj.owner %}<div class="danger-zone"><a href="{% url 'collections:item-update' item.pk %}">Edytuj</a><a href="{% url 'collections:item-delete' item.pk %}">Usuń</a></div>{% endif %}

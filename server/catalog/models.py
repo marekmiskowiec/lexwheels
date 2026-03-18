@@ -8,6 +8,8 @@ class HotWheelsModel(models.Model):
     toy = models.CharField(max_length=32)
     number = models.CharField(max_length=16)
     model_name = models.CharField(max_length=255)
+    year = models.PositiveIntegerField(blank=True, null=True)
+    category = models.CharField(max_length=64, blank=True)
     series = models.CharField(max_length=255, blank=True)
     series_number = models.CharField(max_length=32, blank=True)
     photo_url = models.URLField(blank=True)

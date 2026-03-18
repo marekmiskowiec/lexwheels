@@ -1,5 +1,6 @@
 import hashlib
 import json
+import re
 from pathlib import Path
 
 from django.conf import settings
@@ -33,6 +34,8 @@ class Command(BaseCommand):
                 'toy': row.get('Toy', ''),
                 'number': row.get('Number', ''),
                 'model_name': row.get('Model Name', ''),
+                'year': self.extract_year(row),
+                'category': self.extract_category(row),
                 'series': row.get('Series', ''),
                 'series_number': row.get('Series Number', ''),
                 'photo_url': row.get('Photo', ''),
@@ -52,7 +55,31 @@ class Command(BaseCommand):
             row.get('Toy', ''),
             row.get('Number', ''),
             row.get('Model Name', ''),
+            str(Command.extract_year(row) or ''),
+            Command.extract_category(row),
             row.get('Series', ''),
             row.get('Series Number', ''),
         ]
         return hashlib.sha256('|'.join(parts).encode('utf-8')).hexdigest()[:24]
+
+    @staticmethod
+    def extract_year(row: dict) -> int | None:
+        if row.get('Year'):
+            try:
+                return int(row['Year'])
+            except (TypeError, ValueError):
+                pass
+
+        series = row.get('Series', '')
+        match = re.search(r'(?:for|in)\s+(\d{4})', series)
+        if match:
+            return int(match.group(1))
+
+        # Current repository dataset comes from the 2022 Hot Wheels page.
+        return 2022
+
+    @staticmethod
+    def extract_category(row: dict) -> str:
+        if row.get('Category'):
+            return str(row['Category']).strip()
+        return 'Mainline'
