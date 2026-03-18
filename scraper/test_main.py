@@ -2,7 +2,7 @@ import unittest
 
 from bs4 import BeautifulSoup
 
-from main import find_catalog_tables, merge_rows
+from main import build_image_path, find_catalog_tables, merge_rows
 
 
 class UpdateExistingLineTests(unittest.TestCase):
@@ -86,6 +86,20 @@ class UpdateExistingLineTests(unittest.TestCase):
 
         self.assertEqual(len(tables), 1)
         self.assertEqual(tables[0][1], 'Mix 1')
+
+    def test_build_image_path_uses_set_subdirectory_when_present(self):
+        row = {
+            'Brand': 'Hot Wheels',
+            'Category': 'Premium',
+            'Year': 2025,
+            'Image Set': 'Fast & Furious Premium Series',
+            'Number': '1/5',
+            'Model Name': 'Mazda RX-7 FD',
+        }
+
+        image_path = build_image_path(row, 'https://example.com/rx7.jpg')
+
+        self.assertIn('images/hot-wheels/premium/2025/fast-furious-premium-series/', image_path.as_posix())
 
 
 if __name__ == '__main__':

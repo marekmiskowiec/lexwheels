@@ -50,13 +50,16 @@ def build_dataset_path(brand: str, line: str, year: int, set_name: str = '') -> 
     return base_path / f'{year}.json'
 
 
-def build_image_dir(brand: str, line: str, year: int) -> Path:
-    return (
+def build_image_dir(brand: str, line: str, year: int, set_name: str = '') -> Path:
+    base_dir = (
         IMAGE_DIR
         / slugify(brand).replace('_', '-')
         / slugify(line).replace('_', '-')
         / str(year)
     )
+    if set_name:
+        return base_dir / slugify(set_name).replace('_', '-')
+    return base_dir
 
 
 def parse_args() -> argparse.Namespace:
@@ -211,6 +214,7 @@ def build_image_path(row_data: dict, image_url: str) -> Path:
         str(row_data.get('Brand', 'Hot Wheels')),
         str(row_data.get('Category', 'Mainline')),
         int(row_data.get('Year') or 0),
+        str(row_data.get('Image Set', '') or ''),
     ) / filename
 
 
@@ -317,7 +321,15 @@ def attach_local_images(rows: list[dict], download_images: bool = True) -> list[
     return rows
 
 
-def parse_rows(table, base_url: str, brand: str, category: str, year: int, series_label: str = '') -> list[dict]:
+def parse_rows(
+    table,
+    base_url: str,
+    brand: str,
+    category: str,
+    year: int,
+    series_label: str = '',
+    image_set_label: str = '',
+) -> list[dict]:
     body = table.find('tbody') or table
     headers = extract_headers(table)
     header_index = {header: idx for idx, header in enumerate(headers)}
@@ -333,6 +345,7 @@ def parse_rows(table, base_url: str, brand: str, category: str, year: int, serie
                 'Brand': brand,
                 'Category': category,
                 'Year': year,
+                'Image Set': image_set_label,
                 'Toy': columns[header_index['Toy']].get_text(strip=True) if 'Toy' in header_index else None,
                 'Number': columns[header_index['Number']].get_text(strip=True) if 'Number' in header_index else None,
                 'Model Name': columns[header_index['Model Name']].get_text(strip=True) if 'Model Name' in header_index else None,
@@ -352,6 +365,7 @@ def parse_rows(table, base_url: str, brand: str, category: str, year: int, serie
                 'Brand': brand,
                 'Category': category,
                 'Year': year,
+                'Image Set': image_set_label,
                 'Toy': columns[header_index['Toy #']].get_text(strip=True) if 'Toy #' in header_index else None,
                 'Number': columns[header_index[collection_number_header]].get_text(strip=True) if collection_number_header in header_index else None,
                 'Model Name': columns[header_index['Casting Name']].get_text(strip=True) if 'Casting Name' in header_index else None,
@@ -370,6 +384,7 @@ def parse_rows(table, base_url: str, brand: str, category: str, year: int, serie
                 'Brand': brand,
                 'Category': category,
                 'Year': year,
+                'Image Set': image_set_label,
                 'Toy': columns[header_index['Toy #']].get_text(strip=True),
                 'Number': columns[header_index['Col.#']].get_text(strip=True),
                 'Model Name': columns[header_index['Model Name']].get_text(strip=True),
@@ -407,7 +422,17 @@ def main() -> None:
         effective_series_label = args.set_name or section_title
         if args.set_name and section_title:
             effective_series_label = f'{args.set_name} - {section_title}'
-        rows.extend(parse_rows(table, url, args.brand, args.line, args.year, effective_series_label))
+        rows.extend(
+            parse_rows(
+                table,
+                url,
+                args.brand,
+                args.line,
+                args.year,
+                effective_series_label,
+                args.set_name or '',
+            )
+        )
     if args.update_existing_line:
         rows = merge_rows(rows, read_existing_rows(output_file))
     rows = attach_local_images(rows, download_images=not args.skip_image_downloads)
