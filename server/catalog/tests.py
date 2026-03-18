@@ -6,10 +6,27 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
+from .management.commands.import_models import Command
 from .models import HotWheelsModel
 
 
 class ImportModelsCommandTests(TestCase):
+    def test_build_app_id_does_not_change_when_year_or_category_changes(self):
+        row = {
+            'Toy': 'ABC',
+            'Number': '001',
+            'Model Name': 'Test Car',
+            'Series': 'Series A',
+            'Series Number': '1/5',
+        }
+        with_meta = {
+            **row,
+            'Year': '2023',
+            'Category': 'Premium',
+        }
+
+        self.assertEqual(Command.build_app_id(row), Command.build_app_id(with_meta))
+
     def test_import_is_idempotent(self):
         payload = [{
             'Toy': 'ABC',

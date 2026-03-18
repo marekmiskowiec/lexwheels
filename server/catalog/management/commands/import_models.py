@@ -55,8 +55,6 @@ class Command(BaseCommand):
             row.get('Toy', ''),
             row.get('Number', ''),
             row.get('Model Name', ''),
-            str(Command.extract_year(row) or ''),
-            Command.extract_category(row),
             row.get('Series', ''),
             row.get('Series Number', ''),
         ]
