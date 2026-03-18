@@ -164,6 +164,9 @@
                 Zaznacz wariant
               </label>
             {% endif %}
+            {% if variant.image_src %}
+              <img class="thumb" style="height: 170px; margin-bottom:12px;" src="{{ variant.image_src }}" alt="{{ item.model.model_name }} - {{ variant.get_packaging_state_display }}">
+            {% endif %}
             <p class="meta">{{ variant.get_packaging_state_display }} | stan: {{ variant.get_condition_display }} | ilość: {{ variant.quantity }}</p>
             {% if variant.notes %}<p>{{ variant.notes }}</p>{% endif %}
             {% if user == collection_obj.owner %}<input type="hidden" name="item_ids" value="{{ variant.pk }}" form="batch-edit-form" class="batch-edit-proxy" disabled>{% endif %}

@@ -45,6 +45,12 @@ class Command(BaseCommand):
                 'series_number': row.get('Series Number', ''),
                 'photo_url': row.get('Photo', ''),
                 'local_photo_path': row.get('Local Photo', ''),
+                'short_card_photo_url': row.get('Short Card Photo') or row.get('Photo', ''),
+                'short_card_local_photo_path': row.get('Short Card Local Photo') or row.get('Local Photo', ''),
+                'long_card_photo_url': row.get('Long Card Photo') or row.get('Photo', ''),
+                'long_card_local_photo_path': row.get('Long Card Local Photo') or row.get('Local Photo', ''),
+                'loose_photo_url': row.get('Loose Photo') or row.get('Photo', ''),
+                'loose_local_photo_path': row.get('Loose Local Photo') or row.get('Local Photo', ''),
             }
             _, was_created = HotWheelsModel.objects.update_or_create(app_id=app_id, defaults=defaults)
             if was_created:

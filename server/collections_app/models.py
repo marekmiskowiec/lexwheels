@@ -72,3 +72,7 @@ class CollectionItem(models.Model):
 
     def __str__(self) -> str:
         return f'{self.collection} - {self.model}'
+
+    @property
+    def image_src(self) -> str:
+        return self.model.image_src_for_packaging(self.packaging_state)

@@ -52,6 +52,30 @@ class ImportModelsCommandTests(TestCase):
 
         self.assertEqual(HotWheelsModel.objects.count(), 1)
 
+    def test_import_backfills_packaging_photos_from_default_photo(self):
+        payload = [{
+            'Toy': 'ABC',
+            'Number': '001',
+            'Model Name': 'Test Car',
+            'Series': 'Series A',
+            'Series Number': '1/5',
+            'Photo': 'https://example.com/car.jpg',
+            'Local Photo': 'images/car.jpg',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / 'models.json'
+            path.write_text(json.dumps(payload))
+            call_command('import_models', path=str(path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.short_card_photo_url, 'https://example.com/car.jpg')
+        self.assertEqual(model.long_card_photo_url, 'https://example.com/car.jpg')
+        self.assertEqual(model.loose_photo_url, 'https://example.com/car.jpg')
+        self.assertEqual(model.short_card_local_photo_path, 'images/car.jpg')
+        self.assertEqual(model.long_card_local_photo_path, 'images/car.jpg')
+        self.assertEqual(model.loose_local_photo_path, 'images/car.jpg')
+
     def test_import_sets_year_and_category(self):
         payload = [{
             'Brand': 'Matchbox',
@@ -168,6 +192,9 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Hot Wheels')
         self.assertContains(response, '2022')
         self.assertContains(response, 'Mainline')
+        self.assertContains(response, 'Krótka karta')
+        self.assertContains(response, 'Długa karta')
+        self.assertContains(response, 'Luzak')
 
     def test_healthcheck(self):
         response = self.client.get(reverse('healthcheck'))

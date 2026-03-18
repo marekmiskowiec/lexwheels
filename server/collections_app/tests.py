@@ -215,6 +215,31 @@ class CollectionTests(TestCase):
         self.assertContains(response, '<strong>1</strong><div class="meta">pozycje</div>', html=False)
         self.assertContains(response, '<strong>2</strong><div class="meta">warianty</div>', html=False)
 
+    def test_collection_detail_uses_packaging_specific_images(self):
+        self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.save(update_fields=['short_card_photo_url', 'long_card_photo_url', 'loose_photo_url'])
+        CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='good',
+            packaging_state='loose',
+        )
+
+        response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
+
+        self.assertContains(response, 'https://example.com/short.jpg')
+        self.assertContains(response, 'https://example.com/loose.jpg')
+
     def test_collection_detail_search_checks_series_and_toy_fields(self):
         CollectionItem.objects.create(collection=self.public_collection, model=self.model_obj)
 

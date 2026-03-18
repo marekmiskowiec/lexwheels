@@ -136,6 +136,12 @@ def attach_local_images(rows: list[dict]) -> list[dict]:
     for row in rows:
         image_url = row.get('Photo')
         row['Local Photo'] = None
+        row['Short Card Photo'] = image_url
+        row['Long Card Photo'] = image_url
+        row['Loose Photo'] = image_url
+        row['Short Card Local Photo'] = None
+        row['Long Card Local Photo'] = None
+        row['Loose Local Photo'] = None
 
         if not image_url:
             continue
@@ -144,9 +150,15 @@ def attach_local_images(rows: list[dict]) -> list[dict]:
         if not image_path.exists():
             local_path = download_image(image_url, image_path)
             row['Local Photo'] = local_path
+            row['Short Card Local Photo'] = local_path
+            row['Long Card Local Photo'] = local_path
+            row['Loose Local Photo'] = local_path
             continue
 
         row['Local Photo'] = image_path.relative_to(PROJECT_ROOT).as_posix()
+        row['Short Card Local Photo'] = row['Local Photo']
+        row['Long Card Local Photo'] = row['Local Photo']
+        row['Loose Local Photo'] = row['Local Photo']
 
     return rows
 
