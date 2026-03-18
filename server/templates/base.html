@@ -57,7 +57,7 @@
       </div>
       <div class="nav-auth">
         {% if user.is_authenticated %}
-          <span class="meta">{{ user.email }}</span>
+          <span class="meta">{{ user.login }}</span>
           <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="secondary" type="submit">Wyloguj</button></form>
         {% else %}
           <a href="{% url 'login' %}">Logowanie</a>

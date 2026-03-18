@@ -13,7 +13,7 @@
         <img class="avatar small" src="{% static collector.avatar_static_path %}" alt="Avatar {{ collector.public_name }}">
         <div>
           <h3><a href="{% url 'accounts:public-profile' collector.pk %}">{{ collector.public_name }}</a></h3>
-          <p class="meta">{{ collector.email }}</p>
+          <p class="meta">Dołączył: {{ collector.date_joined|date:"j E Y" }}</p>
           {% if collector.bio %}<p>{{ collector.bio }}</p>{% endif %}
         </div>
       </div>

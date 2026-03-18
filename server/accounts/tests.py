@@ -63,6 +63,8 @@ class AccountTests(TestCase):
         )
         response = self.client.get(reverse('accounts:collector-list'))
         self.assertContains(response, 'Lex')
+        self.assertContains(response, f'Dołączył: {date_format(timezone.localtime(user.date_joined), "j E Y", use_l10n=True)}')
+        self.assertNotContains(response, user.email)
 
     def test_profile_renders_selected_avatar(self):
         user = User.objects.create_user(
@@ -99,3 +101,12 @@ class AccountTests(TestCase):
             'password': 'ComplexPass123',
         })
         self.assertRedirects(response, reverse('collections:dashboard'))
+
+    def test_authenticated_navigation_shows_login_instead_of_email(self):
+        user = User.objects.create_user(email='test@example.com', login='tester', password='ComplexPass123')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('collections:dashboard'))
+
+        self.assertContains(response, user.login)
+        self.assertNotContains(response, user.email)
