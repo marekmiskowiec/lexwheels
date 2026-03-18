@@ -11,6 +11,9 @@ from catalog.models import HotWheelsModel
 
 class Command(BaseCommand):
     help = 'Import Hot Wheels models from data/hot_wheels_data.json'
+    SERIES_MARKERS = (
+        'New for 2022!',
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -36,7 +39,7 @@ class Command(BaseCommand):
                 'model_name': row.get('Model Name', ''),
                 'year': self.extract_year(row),
                 'category': self.extract_category(row),
-                'series': row.get('Series', ''),
+                'series': self.clean_series(row.get('Series', '')),
                 'series_number': row.get('Series Number', ''),
                 'photo_url': row.get('Photo', ''),
                 'local_photo_path': row.get('Local Photo', ''),
@@ -81,3 +84,10 @@ class Command(BaseCommand):
         if row.get('Category'):
             return str(row['Category']).strip()
         return 'Mainline'
+
+    @classmethod
+    def clean_series(cls, value: str) -> str:
+        cleaned = value or ''
+        for marker in cls.SERIES_MARKERS:
+            cleaned = cleaned.replace(marker, ' ')
+        return re.sub(r'\s+', ' ', cleaned).strip()

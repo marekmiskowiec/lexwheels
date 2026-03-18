@@ -11,6 +11,12 @@ from .models import HotWheelsModel
 
 
 class ImportModelsCommandTests(TestCase):
+    def test_clean_series_removes_new_for_2022_marker(self):
+        self.assertEqual(
+            Command.clean_series("HW MetroNew for 2022!Ryu's Rides"),
+            "HW Metro Ryu's Rides",
+        )
+
     def test_build_app_id_does_not_change_when_year_or_category_changes(self):
         row = {
             'Toy': 'ABC',
@@ -65,6 +71,26 @@ class ImportModelsCommandTests(TestCase):
         model = HotWheelsModel.objects.get()
         self.assertEqual(model.year, 2023)
         self.assertEqual(model.category, 'Mainline')
+        self.assertEqual(model.series, 'Series A New for 2023!')
+
+    def test_import_cleans_new_for_2022_marker_from_series(self):
+        payload = [{
+            'Toy': 'ABC',
+            'Number': '001',
+            'Model Name': 'Test Car',
+            'Series': "HW MetroNew for 2022!Ryu's Rides",
+            'Series Number': '1/5',
+            'Photo': 'https://example.com/car.jpg',
+            'Local Photo': 'images/car.jpg',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / 'models.json'
+            path.write_text(json.dumps(payload))
+            call_command('import_models', path=str(path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.series, "HW Metro Ryu's Rides")
 
 
 class CatalogViewTests(TestCase):
