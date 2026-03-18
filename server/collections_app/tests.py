@@ -155,6 +155,31 @@ class CollectionTests(TestCase):
         self.assertRedirects(response, self.private_collection.get_absolute_url())
         self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 2)
 
+    def test_owner_can_add_same_model_with_same_packaging_when_attributes_differ(self):
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            is_sealed=True,
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {
+                'model': self.model_obj.pk,
+                'enabled_short_card': 'on',
+                'quantity_short_card': 1,
+                'condition_short_card': 'mint',
+                'is_signed_short_card': 'on',
+            },
+        )
+
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 2)
+
     def test_owner_cannot_add_duplicate_model_variant(self):
         CollectionItem.objects.create(
             collection=self.private_collection,
@@ -162,6 +187,7 @@ class CollectionTests(TestCase):
             quantity=1,
             condition='mint',
             packaging_state='short_card',
+            is_sealed=True,
         )
         self.client.force_login(self.owner)
 
@@ -172,6 +198,7 @@ class CollectionTests(TestCase):
                 'enabled_short_card': 'on',
                 'quantity_short_card': 2,
                 'condition_short_card': 'mint',
+                'is_sealed_short_card': 'on',
             },
         )
 
@@ -335,6 +362,7 @@ class CollectionTests(TestCase):
             quantity=1,
             condition='mint',
             packaging_state='short_card',
+            is_sealed=True,
         )
         CollectionItem.objects.create(
             collection=self.public_collection,
@@ -342,6 +370,7 @@ class CollectionTests(TestCase):
             quantity=2,
             condition='good',
             packaging_state='loose',
+            is_signed=True,
         )
 
         response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
@@ -349,6 +378,8 @@ class CollectionTests(TestCase):
         self.assertContains(response, 'Łącznie: 3 szt.')
         self.assertContains(response, 'Krótka karta | stan: Mint | ilość: 1')
         self.assertContains(response, 'Luzak | stan: Good | ilość: 2')
+        self.assertContains(response, 'Cechy: Sealed')
+        self.assertContains(response, 'Cechy: Signed')
         self.assertContains(response, '<strong>1</strong><div class="meta">pozycje</div>', html=False)
         self.assertContains(response, '<strong>2</strong><div class="meta">warianty</div>', html=False)
 
@@ -447,13 +478,22 @@ class CollectionTests(TestCase):
         self.assertIn('1970 Pontiac Firebird', response.content.decode())
 
     def test_owner_can_export_collection_as_json(self):
-        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=2, is_favorite=True)
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=2,
+            is_favorite=True,
+            is_sealed=True,
+            has_protector=True,
+        )
         self.client.force_login(self.owner)
         response = self.client.get(reverse('collections:collection-export', args=[self.private_collection.pk, 'json']))
         self.assertEqual(response.status_code, 200)
         payload = json.loads(response.content.decode())
         self.assertEqual(payload['collection']['name'], 'Prywatna')
         self.assertEqual(payload['items'][0]['model_name'], '1970 Pontiac Firebird')
+        self.assertTrue(payload['items'][0]['is_sealed'])
+        self.assertTrue(payload['items'][0]['has_protector'])
 
     def test_other_user_cannot_export_collection(self):
         self.client.force_login(self.other)
@@ -510,14 +550,18 @@ class CollectionTests(TestCase):
                 'enabled_short_card': 'on',
                 'quantity_short_card': 1,
                 'condition_short_card': 'mint',
+                'is_sealed_short_card': 'on',
                 'enabled_loose': 'on',
                 'quantity_loose': 2,
                 'condition_loose': 'good',
+                'is_signed_loose': 'on',
             },
         )
 
         self.assertRedirects(response, reverse('catalog:model-list'))
         self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 2)
+        self.assertTrue(CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj, packaging_state='short_card').is_sealed)
+        self.assertTrue(CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj, packaging_state='loose').is_signed)
 
     def test_owner_can_batch_edit_selected_variants(self):
         short_card = CollectionItem.objects.create(
@@ -543,6 +587,7 @@ class CollectionTests(TestCase):
                 'quantity': 3,
                 'condition': 'used',
                 'packaging_state': '',
+                'has_protector': 'true',
             },
         )
 
@@ -553,6 +598,8 @@ class CollectionTests(TestCase):
         self.assertEqual(loose.quantity, 3)
         self.assertEqual(short_card.condition, 'used')
         self.assertEqual(loose.condition, 'used')
+        self.assertTrue(short_card.has_protector)
+        self.assertTrue(loose.has_protector)
 
     def test_collection_detail_can_save_and_apply_filters(self):
         matchbox_model = HotWheelsModel.objects.create(

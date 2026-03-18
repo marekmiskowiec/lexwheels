@@ -124,6 +124,12 @@
                     </select>
                   </div>
                 </div>
+                <div class="filters" style="margin-top:10px;">
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="is_sealed_{{ packaging_value }}" style="width:auto;">Sealed</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_soft_corners_{{ packaging_value }}" style="width:auto;">Soft corners</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_protector_{{ packaging_value }}" style="width:auto;">Protector</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="is_signed_{{ packaging_value }}" style="width:auto;">Signed</label>
+                </div>
               </div>
             {% endfor %}
             <button type="submit">Dodaj warianty</button>

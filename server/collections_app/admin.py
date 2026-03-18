@@ -18,6 +18,17 @@ class CollectionAdmin(admin.ModelAdmin):
 
 @admin.register(CollectionItem)
 class CollectionItemAdmin(admin.ModelAdmin):
-    list_display = ('collection', 'model', 'quantity', 'condition', 'packaging_state', 'is_favorite')
-    list_filter = ('condition', 'packaging_state', 'is_favorite')
+    list_display = (
+        'collection',
+        'model',
+        'quantity',
+        'condition',
+        'packaging_state',
+        'is_sealed',
+        'has_soft_corners',
+        'has_protector',
+        'is_signed',
+        'is_favorite',
+    )
+    list_filter = ('condition', 'packaging_state', 'is_sealed', 'has_soft_corners', 'has_protector', 'is_signed', 'is_favorite')
     search_fields = ('collection__name', 'collection__owner__email', 'model__model_name')

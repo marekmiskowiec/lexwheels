@@ -25,6 +25,10 @@ class VariantSectionsMixin:
             enabled_name = f'enabled_{packaging_value}'
             quantity_name = f'quantity_{packaging_value}'
             condition_name = f'condition_{packaging_value}'
+            sealed_name = f'is_sealed_{packaging_value}'
+            soft_corners_name = f'has_soft_corners_{packaging_value}'
+            protector_name = f'has_protector_{packaging_value}'
+            signed_name = f'is_signed_{packaging_value}'
 
             self.fields[enabled_name] = forms.BooleanField(required=False, label=packaging_label)
             self.fields[quantity_name] = forms.IntegerField(required=False, min_value=1, initial=1, label='Ilość')
@@ -34,6 +38,10 @@ class VariantSectionsMixin:
                 initial='good',
                 label='Stan',
             )
+            self.fields[sealed_name] = forms.BooleanField(required=False, label='Sealed')
+            self.fields[soft_corners_name] = forms.BooleanField(required=False, label='Soft corners')
+            self.fields[protector_name] = forms.BooleanField(required=False, label='Protector')
+            self.fields[signed_name] = forms.BooleanField(required=False, label='Signed')
             self.variant_sections.append(
                 {
                     'packaging_value': packaging_value,
@@ -41,6 +49,10 @@ class VariantSectionsMixin:
                     'enabled': self[enabled_name],
                     'quantity': self[quantity_name],
                     'condition': self[condition_name],
+                    'is_sealed': self[sealed_name],
+                    'has_soft_corners': self[soft_corners_name],
+                    'has_protector': self[protector_name],
+                    'is_signed': self[signed_name],
                 }
             )
 
@@ -59,7 +71,17 @@ class VariantSectionsMixin:
             if not condition:
                 self.add_error(f'condition_{packaging_value}', 'Wybierz stan dla zaznaczonego wariantu.')
                 continue
-            selected_variants.append((packaging_value, quantity, condition))
+            selected_variants.append(
+                {
+                    'packaging_value': packaging_value,
+                    'quantity': quantity,
+                    'condition': condition,
+                    'is_sealed': self.cleaned_data.get(f'is_sealed_{packaging_value}', False),
+                    'has_soft_corners': self.cleaned_data.get(f'has_soft_corners_{packaging_value}', False),
+                    'has_protector': self.cleaned_data.get(f'has_protector_{packaging_value}', False),
+                    'is_signed': self.cleaned_data.get(f'is_signed_{packaging_value}', False),
+                }
+            )
 
         return selected_variants
 
@@ -74,6 +96,10 @@ class CollectionItemForm(forms.ModelForm):
             'quantity',
             'condition',
             'packaging_state',
+            'is_sealed',
+            'has_soft_corners',
+            'has_protector',
+            'is_signed',
             'acquired_at',
             'notes',
             'is_favorite',
@@ -105,6 +131,10 @@ class CollectionItemForm(forms.ModelForm):
             model=model,
             packaging_state=packaging_state,
             condition=condition,
+            is_sealed=cleaned_data.get('is_sealed', False),
+            has_soft_corners=cleaned_data.get('has_soft_corners', False),
+            has_protector=cleaned_data.get('has_protector', False),
+            is_signed=cleaned_data.get('is_signed', False),
         )
         if self.instance.pk:
             queryset = queryset.exclude(pk=self.instance.pk)
@@ -158,7 +188,9 @@ class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
             raise forms.ValidationError('Zaznacz przynajmniej jeden wariant modelu do dodania.')
 
         if model:
-            for packaging_value, _, condition in selected_variants:
+            for variant in selected_variants:
+                packaging_value = variant['packaging_value']
+                condition = variant['condition']
                 if packaging_value not in model.available_packaging_states:
                     self.add_error(None, 'Ten model nie występuje w wybranym typie opakowania.')
                     continue
@@ -167,10 +199,14 @@ class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
                     model=model,
                     packaging_state=packaging_value,
                     condition=condition,
+                    is_sealed=variant['is_sealed'],
+                    has_soft_corners=variant['has_soft_corners'],
+                    has_protector=variant['has_protector'],
+                    is_signed=variant['is_signed'],
                 ).exists():
                     self.add_error(
                         None,
-                        f'Wariant "{dict(CollectionItem.PACKAGING_CHOICES)[packaging_value]}" w stanie "{dict(CollectionItem.CONDITION_CHOICES)[condition]}" już istnieje w tej kolekcji.',
+                        f'Wariant "{dict(CollectionItem.PACKAGING_CHOICES)[packaging_value]}" w stanie "{dict(CollectionItem.CONDITION_CHOICES)[condition]}" z wybranymi cechami już istnieje w tej kolekcji.',
                     )
 
         cleaned_data['selected_variants'] = selected_variants
@@ -179,14 +215,18 @@ class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
     def save(self):
         model = self.cleaned_data['model']
         created_items = []
-        for packaging_value, quantity, condition in self.cleaned_data['selected_variants']:
+        for variant in self.cleaned_data['selected_variants']:
             created_items.append(
                 CollectionItem.objects.create(
                     collection=self.collection,
                     model=model,
-                    packaging_state=packaging_value,
-                    quantity=quantity,
-                    condition=condition,
+                    packaging_state=variant['packaging_value'],
+                    quantity=variant['quantity'],
+                    condition=variant['condition'],
+                    is_sealed=variant['is_sealed'],
+                    has_soft_corners=variant['has_soft_corners'],
+                    has_protector=variant['has_protector'],
+                    is_signed=variant['is_signed'],
                 )
             )
         return created_items
@@ -215,7 +255,9 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
             raise forms.ValidationError('Zaznacz przynajmniej jeden wariant modelu do dodania.')
 
         if collection and model:
-            for packaging_value, _, condition in selected_variants:
+            for variant in selected_variants:
+                packaging_value = variant['packaging_value']
+                condition = variant['condition']
                 if packaging_value not in model.available_packaging_states:
                     self.add_error(
                         None,
@@ -227,10 +269,14 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
                     model=model,
                     packaging_state=packaging_value,
                     condition=condition,
+                    is_sealed=variant['is_sealed'],
+                    has_soft_corners=variant['has_soft_corners'],
+                    has_protector=variant['has_protector'],
+                    is_signed=variant['is_signed'],
                 ).exists():
                     self.add_error(
                         None,
-                        f'Wariant "{dict(CollectionItem.PACKAGING_CHOICES)[packaging_value]}" w stanie "{dict(CollectionItem.CONDITION_CHOICES)[condition]}" już istnieje w tej kolekcji.',
+                        f'Wariant "{dict(CollectionItem.PACKAGING_CHOICES)[packaging_value]}" w stanie "{dict(CollectionItem.CONDITION_CHOICES)[condition]}" z wybranymi cechami już istnieje w tej kolekcji.',
                     )
 
         cleaned_data['selected_variants'] = selected_variants
@@ -240,14 +286,18 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
         collection = self.cleaned_data['collection']
         model = self.cleaned_data['model']
         created_items = []
-        for packaging_value, quantity, condition in self.cleaned_data['selected_variants']:
+        for variant in self.cleaned_data['selected_variants']:
             created_items.append(
                 CollectionItem.objects.create(
                     collection=collection,
                     model=model,
-                    packaging_state=packaging_value,
-                    quantity=quantity,
-                    condition=condition,
+                    packaging_state=variant['packaging_value'],
+                    quantity=variant['quantity'],
+                    condition=variant['condition'],
+                    is_sealed=variant['is_sealed'],
+                    has_soft_corners=variant['has_soft_corners'],
+                    has_protector=variant['has_protector'],
+                    is_signed=variant['is_signed'],
                 )
             )
         return created_items
@@ -275,6 +325,30 @@ class CollectionBulkEditForm(forms.Form):
         choices=(('', 'Bez zmian'),) + CollectionItem.PACKAGING_CHOICES,
         label='Nowe opakowanie',
     )
+    is_sealed = forms.TypedChoiceField(
+        required=False,
+        choices=(('', 'Bez zmian'), ('true', 'Tak'), ('false', 'Nie')),
+        coerce=lambda value: {'true': True, 'false': False}.get(value, ''),
+        label='Sealed',
+    )
+    has_soft_corners = forms.TypedChoiceField(
+        required=False,
+        choices=(('', 'Bez zmian'), ('true', 'Tak'), ('false', 'Nie')),
+        coerce=lambda value: {'true': True, 'false': False}.get(value, ''),
+        label='Soft corners',
+    )
+    has_protector = forms.TypedChoiceField(
+        required=False,
+        choices=(('', 'Bez zmian'), ('true', 'Tak'), ('false', 'Nie')),
+        coerce=lambda value: {'true': True, 'false': False}.get(value, ''),
+        label='Protector',
+    )
+    is_signed = forms.TypedChoiceField(
+        required=False,
+        choices=(('', 'Bez zmian'), ('true', 'Tak'), ('false', 'Nie')),
+        coerce=lambda value: {'true': True, 'false': False}.get(value, ''),
+        label='Signed',
+    )
 
     def __init__(self, *args, **kwargs):
         collection = kwargs.pop('collection')
@@ -283,7 +357,10 @@ class CollectionBulkEditForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        if not any(cleaned_data.get(field_name) for field_name in ('quantity', 'condition', 'packaging_state')):
+        changed_fields = ('condition', 'packaging_state', 'is_sealed', 'has_soft_corners', 'has_protector', 'is_signed')
+        has_quantity_change = cleaned_data.get('quantity') is not None
+        has_other_change = any(cleaned_data.get(field_name) != '' for field_name in changed_fields)
+        if not (has_quantity_change or has_other_change):
             raise forms.ValidationError('Wybierz przynajmniej jedną zmianę do zastosowania.')
         return cleaned_data
 
@@ -293,6 +370,10 @@ class CollectionBulkEditForm(forms.Form):
             new_quantity = self.cleaned_data.get('quantity') or item.quantity
             new_condition = self.cleaned_data.get('condition') or item.condition
             new_packaging = self.cleaned_data.get('packaging_state') or item.packaging_state
+            new_is_sealed = item.is_sealed if self.cleaned_data.get('is_sealed', '') == '' else self.cleaned_data['is_sealed']
+            new_has_soft_corners = item.has_soft_corners if self.cleaned_data.get('has_soft_corners', '') == '' else self.cleaned_data['has_soft_corners']
+            new_has_protector = item.has_protector if self.cleaned_data.get('has_protector', '') == '' else self.cleaned_data['has_protector']
+            new_is_signed = item.is_signed if self.cleaned_data.get('is_signed', '') == '' else self.cleaned_data['is_signed']
 
             if new_packaging not in item.model.available_packaging_states:
                 continue
@@ -302,6 +383,10 @@ class CollectionBulkEditForm(forms.Form):
                 model=item.model,
                 packaging_state=new_packaging,
                 condition=new_condition,
+                is_sealed=new_is_sealed,
+                has_soft_corners=new_has_soft_corners,
+                has_protector=new_has_protector,
+                is_signed=new_is_signed,
             ).exclude(pk=item.pk).exists()
             if duplicate_exists:
                 continue
@@ -310,11 +395,29 @@ class CollectionBulkEditForm(forms.Form):
                 new_quantity != item.quantity
                 or new_condition != item.condition
                 or new_packaging != item.packaging_state
+                or new_is_sealed != item.is_sealed
+                or new_has_soft_corners != item.has_soft_corners
+                or new_has_protector != item.has_protector
+                or new_is_signed != item.is_signed
             ):
                 item.quantity = new_quantity
                 item.condition = new_condition
                 item.packaging_state = new_packaging
-                item.save(update_fields=['quantity', 'condition', 'packaging_state'])
+                item.is_sealed = new_is_sealed
+                item.has_soft_corners = new_has_soft_corners
+                item.has_protector = new_has_protector
+                item.is_signed = new_is_signed
+                item.save(
+                    update_fields=[
+                        'quantity',
+                        'condition',
+                        'packaging_state',
+                        'is_sealed',
+                        'has_soft_corners',
+                        'has_protector',
+                        'is_signed',
+                    ]
+                )
                 updated_count += 1
 
         return updated_count

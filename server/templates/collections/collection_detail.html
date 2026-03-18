@@ -97,6 +97,10 @@
         <div style="flex: 1 1 140px;">{{ bulk_edit_form.quantity.label_tag }} {{ bulk_edit_form.quantity }}</div>
         <div style="flex: 1 1 220px;">{{ bulk_edit_form.condition.label_tag }} {{ bulk_edit_form.condition }}</div>
         <div style="flex: 1 1 220px;">{{ bulk_edit_form.packaging_state.label_tag }} {{ bulk_edit_form.packaging_state }}</div>
+        <div style="flex: 1 1 180px;">{{ bulk_edit_form.is_sealed.label_tag }} {{ bulk_edit_form.is_sealed }}</div>
+        <div style="flex: 1 1 180px;">{{ bulk_edit_form.has_soft_corners.label_tag }} {{ bulk_edit_form.has_soft_corners }}</div>
+        <div style="flex: 1 1 180px;">{{ bulk_edit_form.has_protector.label_tag }} {{ bulk_edit_form.has_protector }}</div>
+        <div style="flex: 1 1 180px;">{{ bulk_edit_form.is_signed.label_tag }} {{ bulk_edit_form.is_signed }}</div>
         <div><button type="submit">Zastosuj do zaznaczonych wariantów</button></div>
       </div>
       <p class="meta" style="margin:12px 0 0;">Masowa edycja działa tylko na zaznaczonych wariantach, nie na checkboxach "Usuń cały model".</p>
@@ -168,6 +172,9 @@
               <img class="thumb" style="height: 170px; margin-bottom:12px;" src="{{ variant.image_src }}" alt="{{ item.model.model_name }} - {{ variant.get_packaging_state_display }}">
             {% endif %}
             <p class="meta">{{ variant.get_packaging_state_display }} | stan: {{ variant.get_condition_display }} | ilość: {{ variant.quantity }}</p>
+            {% if variant.attribute_badges %}
+              <p class="meta">Cechy: {{ variant.attribute_badges|join:", " }}</p>
+            {% endif %}
             {% if variant.notes %}<p>{{ variant.notes }}</p>{% endif %}
             {% if user == collection_obj.owner %}<input type="hidden" name="item_ids" value="{{ variant.pk }}" form="batch-edit-form" class="batch-edit-proxy" disabled>{% endif %}
             {% if user == collection_obj.owner %}<div class="danger-zone"><a href="{% url 'collections:item-update' variant.pk %}">Edytuj</a><a href="{% url 'collections:item-delete' variant.pk %}">Usuń</a></div>{% endif %}

@@ -62,13 +62,26 @@ class CollectionItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     condition = models.CharField(max_length=16, choices=CONDITION_CHOICES, default='good')
     packaging_state = models.CharField(max_length=16, choices=PACKAGING_CHOICES, default='short_card')
+    is_sealed = models.BooleanField(default=False)
+    has_soft_corners = models.BooleanField(default=False)
+    has_protector = models.BooleanField(default=False)
+    is_signed = models.BooleanField(default=False)
     acquired_at = models.DateField(blank=True, null=True)
     notes = models.TextField(blank=True)
     is_favorite = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('-is_favorite', 'model__number', 'model__model_name', 'packaging_state', 'condition')
-        unique_together = ('collection', 'model', 'packaging_state', 'condition')
+        unique_together = (
+            'collection',
+            'model',
+            'packaging_state',
+            'condition',
+            'is_sealed',
+            'has_soft_corners',
+            'has_protector',
+            'is_signed',
+        )
 
     def __str__(self) -> str:
         return f'{self.collection} - {self.model}'
@@ -76,3 +89,16 @@ class CollectionItem(models.Model):
     @property
     def image_src(self) -> str:
         return self.model.image_src_for_packaging(self.packaging_state)
+
+    @property
+    def attribute_badges(self) -> list[str]:
+        badges = []
+        if self.is_sealed:
+            badges.append('Sealed')
+        if self.has_soft_corners:
+            badges.append('Soft corners')
+        if self.has_protector:
+            badges.append('Protector')
+        if self.is_signed:
+            badges.append('Signed')
+        return badges
