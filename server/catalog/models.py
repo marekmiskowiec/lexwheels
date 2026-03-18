@@ -5,6 +5,7 @@ from django.urls import reverse
 
 class HotWheelsModel(models.Model):
     app_id = models.CharField(max_length=64, unique=True)
+    brand = models.CharField(max_length=64, default='Hot Wheels')
     toy = models.CharField(max_length=32)
     number = models.CharField(max_length=16)
     model_name = models.CharField(max_length=255)

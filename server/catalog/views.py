@@ -16,6 +16,7 @@ class ModelListView(ListView):
         queryset = HotWheelsModel.objects.all()
         query = self.request.GET.get('q', '').strip()
         series = self.request.GET.get('series', '').strip()
+        brand = self.request.GET.get('brand', '').strip()
         year = self.request.GET.get('year', '').strip()
         category = self.request.GET.get('category', '').strip()
         sort = self.request.GET.get('sort', 'number').strip()
@@ -25,8 +26,11 @@ class ModelListView(ListView):
                 Q(toy__icontains=query)
                 | Q(number__icontains=query)
                 | Q(model_name__icontains=query)
+                | Q(brand__icontains=query)
                 | Q(series__icontains=query)
             )
+        if brand:
+            queryset = queryset.filter(brand=brand)
         if series:
             queryset = queryset.filter(series=series)
         if year.isdigit():
@@ -45,6 +49,7 @@ class ModelListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['query'] = self.request.GET.get('q', '').strip()
+        context['selected_brand'] = self.request.GET.get('brand', '').strip()
         context['selected_series'] = self.request.GET.get('series', '').strip()
         context['selected_year'] = self.request.GET.get('year', '').strip()
         context['selected_category'] = self.request.GET.get('category', '').strip()
@@ -55,6 +60,12 @@ class ModelListView(ListView):
             .values_list('series', flat=True)
             .distinct()
             .order_by('series')
+        )
+        context['brand_options'] = (
+            HotWheelsModel.objects.exclude(brand='')
+            .values_list('brand', flat=True)
+            .distinct()
+            .order_by('brand')
         )
         context['year_options'] = (
             HotWheelsModel.objects.exclude(year__isnull=True)

@@ -34,6 +34,7 @@ class Command(BaseCommand):
         for row in rows:
             app_id = self.build_app_id(row)
             defaults = {
+                'brand': self.extract_brand(row),
                 'toy': row.get('Toy', ''),
                 'number': row.get('Number', ''),
                 'model_name': row.get('Model Name', ''),
@@ -84,6 +85,12 @@ class Command(BaseCommand):
         if row.get('Category'):
             return str(row['Category']).strip()
         return 'Mainline'
+
+    @staticmethod
+    def extract_brand(row: dict) -> str:
+        if row.get('Brand'):
+            return str(row['Brand']).strip()
+        return 'Hot Wheels'
 
     @classmethod
     def clean_series(cls, value: str) -> str:

@@ -54,6 +54,7 @@ class ImportModelsCommandTests(TestCase):
 
     def test_import_sets_year_and_category(self):
         payload = [{
+            'Brand': 'Matchbox',
             'Toy': 'ABC',
             'Number': '001',
             'Model Name': 'Test Car',
@@ -69,6 +70,7 @@ class ImportModelsCommandTests(TestCase):
             call_command('import_models', path=str(path))
 
         model = HotWheelsModel.objects.get()
+        self.assertEqual(model.brand, 'Matchbox')
         self.assertEqual(model.year, 2023)
         self.assertEqual(model.category, 'Mainline')
         self.assertEqual(model.series, 'Series A New for 2023!')
@@ -97,6 +99,7 @@ class CatalogViewTests(TestCase):
     def setUp(self):
         self.model_obj = HotWheelsModel.objects.create(
             app_id='abc123',
+            brand='Hot Wheels',
             toy='HCT05',
             number='001',
             model_name='1970 Pontiac Firebird',
@@ -114,6 +117,7 @@ class CatalogViewTests(TestCase):
     def test_catalog_can_filter_by_year_and_category(self):
         HotWheelsModel.objects.create(
             app_id='def456',
+            brand='Matchbox',
             toy='HCT06',
             number='002',
             model_name='Custom Mustang',
@@ -129,9 +133,29 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertNotContains(response, 'Custom Mustang')
 
+    def test_catalog_can_filter_by_brand(self):
+        HotWheelsModel.objects.create(
+            app_id='def456',
+            brand='Matchbox',
+            toy='HCT06',
+            number='002',
+            model_name='Custom Mustang',
+            year=2023,
+            category='Premium',
+            series='MBX Road Trip',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:model-list'), {'brand': 'Hot Wheels'})
+
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertNotContains(response, 'Custom Mustang')
+
     def test_model_detail(self):
         response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
         self.assertContains(response, 'HCT05')
+        self.assertContains(response, 'Hot Wheels')
         self.assertContains(response, '2022')
         self.assertContains(response, 'Mainline')
 
