@@ -154,6 +154,10 @@ def find_catalog_table(soup):
             return table
         if {'Series #', 'Toy #', 'Casting Name'}.issubset(set(headers)):
             return table
+        if {'Col #', 'Toy #', 'Casting Name'}.issubset(set(headers)):
+            return table
+        if {'Toy #', 'Col.#', 'Mix', 'Model Name'}.issubset(set(headers)):
+            return table
     return None
 
 
@@ -196,7 +200,7 @@ def attach_local_images(rows: list[dict], download_images: bool = True) -> list[
         carded_image_url = row.get('Carded Photo') or default_image_url
         loose_image_url = row.get('Loose Photo') or default_image_url
         category = str(row.get('Category') or '').strip().lower()
-        short_card_image_url = carded_image_url if category != 'semi premium' else None
+        short_card_image_url = carded_image_url if category not in {'semi premium', 'xl'} else None
         row['Photo'] = default_image_url
         row['Local Photo'] = None
         row['Short Card Photo'] = short_card_image_url
@@ -256,18 +260,39 @@ def parse_rows(table, base_url: str, brand: str, category: str, year: int, serie
             })
             continue
 
-        if {'Series #', 'Toy #', 'Casting Name'}.issubset(set(headers)):
-            carded_photo = extract_photo_url(columns[header_index['Photo Carded']], base_url) if 'Photo Carded' in header_index else None
-            loose_photo = extract_photo_url(columns[header_index['Photo Loose']], base_url) if 'Photo Loose' in header_index else None
+        if {'Toy #', 'Casting Name'}.issubset(set(headers)) and ('Series #' in header_index or 'Col #' in header_index or 'Col.#' in header_index):
+            carded_header = 'Photo Carded' if 'Photo Carded' in header_index else 'Photo Card' if 'Photo Card' in header_index else None
+            loose_header = 'Photo Loose' if 'Photo Loose' in header_index else 'Photo Open' if 'Photo Open' in header_index else None
+            carded_photo = extract_photo_url(columns[header_index[carded_header]], base_url) if carded_header else None
+            loose_photo = extract_photo_url(columns[header_index[loose_header]], base_url) if loose_header else None
+            collection_number_header = 'Series #' if 'Series #' in header_index else 'Col #' if 'Col #' in header_index else 'Col.#'
             rows.append({
                 'Brand': brand,
                 'Category': category,
                 'Year': year,
                 'Toy': columns[header_index['Toy #']].get_text(strip=True) if 'Toy #' in header_index else None,
-                'Number': columns[header_index['Series #']].get_text(strip=True) if 'Series #' in header_index else None,
+                'Number': columns[header_index[collection_number_header]].get_text(strip=True) if collection_number_header in header_index else None,
                 'Model Name': columns[header_index['Casting Name']].get_text(strip=True) if 'Casting Name' in header_index else None,
-                'Series': series_label,
-                'Series Number': columns[header_index['Series #']].get_text(strip=True) if 'Series #' in header_index else '',
+                'Series': series_label or category,
+                'Series Number': columns[header_index[collection_number_header]].get_text(strip=True) if collection_number_header in header_index else '',
+                'Photo': carded_photo or loose_photo,
+                'Carded Photo': carded_photo,
+                'Loose Photo': loose_photo,
+            })
+            continue
+
+        if {'Toy #', 'Col.#', 'Mix', 'Model Name'}.issubset(set(headers)):
+            carded_photo = extract_photo_url(columns[header_index['Photo Card']], base_url) if 'Photo Card' in header_index else None
+            loose_photo = extract_photo_url(columns[header_index['Photo Open']], base_url) if 'Photo Open' in header_index else None
+            rows.append({
+                'Brand': brand,
+                'Category': category,
+                'Year': year,
+                'Toy': columns[header_index['Toy #']].get_text(strip=True),
+                'Number': columns[header_index['Col.#']].get_text(strip=True),
+                'Model Name': columns[header_index['Model Name']].get_text(strip=True),
+                'Series': series_label or category,
+                'Series Number': columns[header_index['Col.#']].get_text(strip=True),
                 'Photo': carded_photo or loose_photo,
                 'Carded Photo': carded_photo,
                 'Loose Photo': loose_photo,
