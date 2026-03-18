@@ -2,12 +2,30 @@
 {% block content %}
 <section class="panel" style="max-width: 760px;">
   <h1>{% if is_multi_variant_form %}Dodaj model do kolekcji{% else %}Pozycja kolekcji{% endif %}</h1>
+  {% if is_multi_variant_form %}
+    <form method="get" class="filters" style="margin-bottom:16px;">
+      <div style="flex:1 1 360px;">
+        <label for="model-search">Znajdź model</label>
+        <input id="model-search" type="search" name="q" value="{{ model_query }}" placeholder="Nazwa, Toy, Number, marka, seria">
+      </div>
+      <div><button type="submit">Szukaj modeli</button></div>
+      {% if model_query or form.initial.model %}
+        <div><a class="button secondary" href="{% url 'collections:item-create' collection_obj.pk %}">Wyczyść wyszukiwanie</a></div>
+      {% endif %}
+    </form>
+    {% if model_query %}
+      <p class="meta" style="margin-top:0; margin-bottom:14px;">Znalezione modele: {{ model_results_count }}{% if model_results_count == 100 %}+{% endif %}</p>
+    {% else %}
+      <p class="meta" style="margin-top:0; margin-bottom:14px;">Wpisz fragment nazwy, Toy, Number, markę albo serię, aby zawęzić listę modeli.</p>
+    {% endif %}
+  {% endif %}
   <form method="post" class="list">
     {% csrf_token %}
     {% if form.non_field_errors %}
       <div class="message">{{ form.non_field_errors|join:', ' }}</div>
     {% endif %}
     {% if is_multi_variant_form %}
+      {% if model_query %}<input type="hidden" name="_model_query" value="{{ model_query }}">{% endif %}
       <p>
         {{ form.model.label_tag }}
         {{ form.model }}

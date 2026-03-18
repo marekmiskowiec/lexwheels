@@ -445,7 +445,16 @@ class CollectionItemCreateView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
+        selected_model_id = ''
+        model_query = self.request.GET.get('q', '').strip()
+        if self.request.method == 'POST':
+            selected_model_id = self.request.POST.get('model', '').strip()
+            model_query = self.request.POST.get('_model_query', '').strip()
+        else:
+            selected_model_id = self.request.GET.get('model', '').strip()
         kwargs['collection'] = self.collection
+        kwargs['model_query'] = model_query
+        kwargs['selected_model_id'] = selected_model_id
         return kwargs
 
     def get_initial(self):
@@ -470,6 +479,8 @@ class CollectionItemCreateView(LoginRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         context['is_multi_variant_form'] = True
         context['collection_obj'] = self.collection
+        context['model_query'] = self.request.GET.get('q', '').strip() or self.request.POST.get('_model_query', '').strip()
+        context['model_results_count'] = context['form'].fields['model'].queryset.count()
         return context
 
 

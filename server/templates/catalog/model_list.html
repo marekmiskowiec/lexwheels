@@ -3,6 +3,28 @@
 {% block content %}
 <section class="panel hero">
   <h1>Katalog modeli Hot Wheels</h1>
+  <div class="stats-strip" style="margin-bottom:18px;">
+    <article class="stat-card">
+      <span class="stat-label">Modele w bazie</span>
+      <strong class="stat-value">{{ catalog_stats.total_models }}</strong>
+    </article>
+    <article class="stat-card">
+      <span class="stat-label">Wyniki po filtrach</span>
+      <strong class="stat-value">{{ catalog_stats.filtered_models }}</strong>
+    </article>
+    <article class="stat-card">
+      <span class="stat-label">Marki</span>
+      <strong class="stat-value">{{ catalog_stats.brand_count }}</strong>
+    </article>
+    <article class="stat-card">
+      <span class="stat-label">Roczniki</span>
+      <strong class="stat-value">{{ catalog_stats.year_count }}</strong>
+    </article>
+    <article class="stat-card">
+      <span class="stat-label">Kategorie</span>
+      <strong class="stat-value">{{ catalog_stats.category_count }}</strong>
+    </article>
+  </div>
   <form method="get" class="filters">
     <div style="flex: 2 1 300px;"><label for="q">Szukaj</label><input id="q" type="search" name="q" value="{{ query }}" placeholder="Toy, Number, nazwa modelu, seria"></div>
     <div style="flex: 1 1 220px;"><label for="brand">Marka</label><select id="brand" name="brand"><option value="">Wszystkie marki</option>{% for brand in brand_options %}<option value="{{ brand }}" {% if selected_brand == brand %}selected{% endif %}>{{ brand }}</option>{% endfor %}</select></div>

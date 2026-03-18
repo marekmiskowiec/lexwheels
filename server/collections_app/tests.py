@@ -53,6 +53,85 @@ class CollectionTests(TestCase):
         self.assertRedirects(response, self.private_collection.get_absolute_url())
         self.assertTrue(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).exists())
 
+    def test_item_create_requires_search_before_showing_model_list(self):
+        second_model = HotWheelsModel.objects.create(
+            app_id='def456',
+            toy='HCT06',
+            number='002',
+            model_name='Custom Mustang',
+            year=2022,
+            category='Mainline',
+            series='HW Dream Garage',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse('collections:item-create', args=[self.private_collection.pk]))
+
+        self.assertContains(response, 'Znajdź model')
+        self.assertContains(response, 'Wpisz fragment nazwy')
+        self.assertNotContains(response, '1970 Pontiac Firebird |')
+        self.assertNotContains(response, 'Custom Mustang |')
+        self.assertEqual(list(response.context['form'].fields['model'].queryset), [])
+
+    def test_item_create_can_filter_model_list_by_search_query(self):
+        second_model = HotWheelsModel.objects.create(
+            app_id='def456',
+            toy='HCT06',
+            number='002',
+            model_name='Custom Mustang',
+            year=2022,
+            category='Mainline',
+            series='HW Dream Garage',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.get(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {'q': 'Mustang'},
+        )
+
+        self.assertContains(response, 'Znalezione modele: 1')
+        self.assertContains(response, 'Custom Mustang |')
+        self.assertNotContains(response, '1970 Pontiac Firebird |')
+        self.assertEqual(list(response.context['form'].fields['model'].queryset), [second_model])
+
+    def test_owner_can_add_selected_model_from_broad_search_results(self):
+        broad_match_models = []
+        for index in range(120):
+            broad_match_models.append(
+                HotWheelsModel.objects.create(
+                    app_id=f'broad-{index}',
+                    toy=f'SUP{index:03d}',
+                    number=f'{index + 2:03d}',
+                    model_name=f'Toyota Supra Variant {index:03d}',
+                    year=2022,
+                    category='Mainline',
+                    series='HW Speed Graphics',
+                    series_number='1/5',
+                    photo_url='https://example.com/supra.jpg',
+                )
+            )
+        selected_model = broad_match_models[-1]
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {
+                'model': selected_model.pk,
+                '_model_query': 'Toyota Supra',
+                'enabled_short_card': 'on',
+                'quantity_short_card': 1,
+                'condition_short_card': 'mint',
+            },
+        )
+
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        self.assertTrue(CollectionItem.objects.filter(collection=self.private_collection, model=selected_model).exists())
+
     def test_owner_can_add_same_model_with_different_packaging_variant(self):
         CollectionItem.objects.create(
             collection=self.private_collection,

@@ -304,6 +304,30 @@ class CatalogViewTests(TestCase):
         response = self.client.get(reverse('catalog:model-list'), {'q': 'Firebird'})
         self.assertContains(response, '1970 Pontiac Firebird')
 
+    def test_catalog_shows_summary_stats(self):
+        HotWheelsModel.objects.create(
+            app_id='def456',
+            brand='Matchbox',
+            toy='MBX01',
+            number='002',
+            model_name='Custom Mustang',
+            year=2023,
+            category='Collectors',
+            series='MBX Road Trip',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:model-list'), {'brand': 'Hot Wheels'})
+
+        self.assertContains(response, 'Modele w bazie')
+        self.assertContains(response, 'Wyniki po filtrach')
+        self.assertContains(response, 'Marki')
+        self.assertContains(response, 'Roczniki')
+        self.assertContains(response, 'Kategorie')
+        self.assertContains(response, '<strong class="stat-value">2</strong>', html=True)
+        self.assertContains(response, '<strong class="stat-value">1</strong>', html=True)
+
     def test_catalog_can_filter_by_year_and_category(self):
         HotWheelsModel.objects.create(
             app_id='def456',

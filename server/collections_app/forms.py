@@ -1,8 +1,14 @@
 from django import forms
+from django.db.models import Q
 
 from catalog.models import HotWheelsModel
 
 from .models import Collection, CollectionItem
+
+
+class CatalogModelChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return f'{obj.model_name} | {obj.brand or "-"} | {obj.year or "-"} | Toy: {obj.toy} | Number: {obj.number}'
 
 
 class CollectionForm(forms.ModelForm):
@@ -98,13 +104,39 @@ class CollectionItemForm(forms.ModelForm):
 
 
 class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
-    model = forms.ModelChoiceField(queryset=HotWheelsModel.objects.none(), label='Model')
+    model = CatalogModelChoiceField(queryset=HotWheelsModel.objects.none(), label='Model')
 
     def __init__(self, *args, **kwargs):
         collection = kwargs.pop('collection')
+        model_query = kwargs.pop('model_query', '')
+        selected_model_id = kwargs.pop('selected_model_id', '')
         super().__init__(*args, **kwargs)
         self.collection = collection
-        self.fields['model'].queryset = HotWheelsModel.objects.all()
+        self.model_query = (model_query or '').strip()
+
+        queryset = HotWheelsModel.objects.none()
+        selected_model = None
+        if selected_model_id:
+            selected_model = HotWheelsModel.objects.filter(pk=selected_model_id).first()
+
+        if self.model_query:
+            result_ids = list(
+                HotWheelsModel.objects.filter(
+                    Q(model_name__icontains=self.model_query)
+                    | Q(toy__icontains=self.model_query)
+                    | Q(number__icontains=self.model_query)
+                    | Q(brand__icontains=self.model_query)
+                    | Q(series__icontains=self.model_query)
+                ).order_by('brand', 'year', 'number', 'model_name').values_list('pk', flat=True)[:100]
+            )
+            if selected_model and selected_model.pk not in result_ids:
+                result_ids.append(selected_model.pk)
+            queryset = HotWheelsModel.objects.filter(pk__in=result_ids).order_by('brand', 'year', 'number', 'model_name')
+        elif selected_model:
+            queryset = HotWheelsModel.objects.filter(pk=selected_model.pk)
+
+        self.fields['model'].queryset = queryset
+        self.fields['model'].empty_label = 'Wybierz model z wyników wyszukiwania'
         self.build_variant_sections()
 
     def clean(self):

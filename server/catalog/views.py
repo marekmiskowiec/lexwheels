@@ -82,6 +82,8 @@ class ModelListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        filtered_count = context['page_obj'].paginator.count if context.get('page_obj') else len(context['models'])
+        total_queryset = HotWheelsModel.objects.all()
         context['query'] = self.request.GET.get('q', '').strip()
         context['selected_brand'] = self.request.GET.get('brand', '').strip()
         context['selected_series'] = self.request.GET.get('series', '').strip()
@@ -113,6 +115,13 @@ class ModelListView(ListView):
             .distinct()
             .order_by('category')
         )
+        context['catalog_stats'] = {
+            'total_models': total_queryset.count(),
+            'filtered_models': filtered_count,
+            'brand_count': total_queryset.exclude(brand='').values('brand').distinct().count(),
+            'year_count': total_queryset.exclude(year__isnull=True).values('year').distinct().count(),
+            'category_count': total_queryset.exclude(category='').values('category').distinct().count(),
+        }
         if self.request.user.is_authenticated:
             context['batch_add_form'] = CollectionBatchAddForm(owner=self.request.user, initial={'next': self.request.get_full_path()})
             context['quick_add_form'] = CatalogQuickAddForm(owner=self.request.user, initial={'next': self.request.get_full_path()})
