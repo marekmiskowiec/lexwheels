@@ -3,6 +3,33 @@
 {% block content %}
 <section class="panel hero">
   <h1>Katalog modeli Hot Wheels</h1>
+  {% if user.is_authenticated %}
+    <div class="list-item" style="margin-bottom:18px;">
+      <p style="margin:0 0 8px;">
+        <strong>Widok katalogu:</strong>
+        {% if selected_scope == 'profile' %}
+          <span class="badge">Mój zakres</span>
+        {% else %}
+          <span class="badge">Wszystko</span>
+        {% endif %}
+      </p>
+      {% if selected_scope == 'profile' %}
+        <p class="meta" style="margin:0 0 10px;">Katalog jest ograniczony do Twoich preferencji kolekcjonowania.</p>
+        {% if scope_summary %}
+          <p class="meta" style="margin:0 0 10px;">{{ scope_summary|join:' | ' }}</p>
+        {% endif %}
+        <a class="button secondary" href="{% url 'catalog:model-list' %}?scope=all">Pokaż cały katalog</a>
+      {% else %}
+        {% if user.catalog_scope_enabled %}
+          <p class="meta" style="margin:0 0 10px;">Masz zapisany własny zakres kolekcjonowania. Możesz przełączyć katalog na ten widok.</p>
+          <a class="button secondary" href="{% url 'catalog:model-list' %}?scope=profile">Pokaż mój zakres</a>
+        {% else %}
+          <p class="meta" style="margin:0 0 10px;">Skonfiguruj swój zakres kolekcjonowania, aby ukrywać niechciane marki i kategorie.</p>
+        {% endif %}
+      {% endif %}
+      <a class="button secondary" href="{% url 'accounts:profile-edit' %}" style="margin-left:8px;">Ustaw zakres</a>
+    </div>
+  {% endif %}
   <div class="stats-strip" style="margin-bottom:18px;">
     <article class="stat-card">
       <span class="stat-label">Modele w bazie</span>
@@ -26,6 +53,7 @@
     </article>
   </div>
   <form method="get" class="filters">
+    <input type="hidden" name="scope" value="{{ selected_scope }}">
     <div style="flex: 2 1 300px;">
       <label for="q">Szukaj</label>
       <input id="q" type="search" name="q" value="{{ query }}" placeholder='Np. honda civic custom y:2022 c:mainline x:"Walmart Exclusive"'>
@@ -41,7 +69,7 @@
     <div><button type="submit">Filtruj</button></div>
     <div><button type="submit" name="save_filters" value="1" class="secondary">Zapisz filtry</button></div>
     {% if saved_filters %}<div><a class="button secondary" href="{% url 'catalog:model-list' %}?apply_saved_filters=1">Przywróć zapisane</a></div><div><a class="button secondary" href="{% url 'catalog:model-list' %}?clear_saved_filters=1">Usuń zapisane</a></div>{% endif %}
-    {% if query or selected_brand or selected_series or selected_year or selected_category or selected_exclusive_store or selected_special_tag or selected_sort != 'number' %}<div><a class="button secondary" href="{% url 'catalog:model-list' %}">Usuń wszystkie filtry</a></div>{% endif %}
+    {% if query or selected_brand or selected_series or selected_year or selected_category or selected_exclusive_store or selected_special_tag or selected_sort != 'number' %}<div><a class="button secondary" href="{% url 'catalog:model-list' %}?scope={{ selected_scope }}">Usuń wszystkie filtry</a></div>{% endif %}
   </form>
   {% if user.is_authenticated %}
     {% if batch_add_form.fields.collection.queryset %}
@@ -198,8 +226,8 @@
 </script>
 {% if is_paginated %}
   <div class="pagination">
-    {% if page_obj.has_previous %}<a class="button secondary" href="?q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
-    {% if page_obj.has_next %}<a class="button secondary" href="?q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&sort={{ selected_sort }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+    {% if page_obj.has_previous %}<a class="button secondary" href="?scope={{ selected_scope }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+    {% if page_obj.has_next %}<a class="button secondary" href="?scope={{ selected_scope }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
   </div>
 {% endif %}
 {% endblock %}

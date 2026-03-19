@@ -944,3 +944,97 @@ class CatalogDedupeCommandTests(TestCase):
         self.assertIn('canon', item.notes)
         self.assertIn('dupe', item.notes)
         self.assertFalse(CollectionItem.objects.filter(model=duplicate).exists())
+
+
+class CatalogScopeTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='scope@example.com', password='ComplexPass123', login='scopeuser')
+        HotWheelsModel.objects.create(
+            app_id='scope-1',
+            brand='Hot Wheels',
+            toy='AAA01',
+            number='001',
+            model_name='Premium Supra',
+            year=2025,
+            category='Premium',
+            series='Car Culture',
+            series_number='1/5',
+            photo_url='https://example.com/supra.jpg',
+        )
+        HotWheelsModel.objects.create(
+            app_id='scope-2',
+            brand='Hot Wheels',
+            toy='AAA02',
+            number='002',
+            model_name='RLC Camaro',
+            year=2025,
+            category='RLC',
+            series='2025 RLC Exclusive',
+            series_number='',
+            photo_url='https://example.com/camaro.jpg',
+        )
+        HotWheelsModel.objects.create(
+            app_id='scope-3',
+            brand='Matchbox',
+            toy='MBX01',
+            number='003',
+            model_name='Matchbox Porsche',
+            year=2025,
+            category='Collectors',
+            series='Matchbox Collectors',
+            series_number='3/6',
+            photo_url='https://example.com/porsche.jpg',
+        )
+
+    def test_catalog_uses_user_scope_by_default_when_enabled(self):
+        self.user.catalog_scope_enabled = True
+        self.user.catalog_scope_brands = ['Hot Wheels']
+        self.user.catalog_scope_categories = ['Premium']
+        self.user.save()
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('catalog:model-list'))
+
+        self.assertContains(response, 'Premium Supra')
+        self.assertNotContains(response, 'RLC Camaro')
+        self.assertNotContains(response, 'Matchbox Porsche')
+        self.assertContains(response, 'Mój zakres')
+
+    def test_catalog_can_switch_back_to_full_view(self):
+        self.user.catalog_scope_enabled = True
+        self.user.catalog_scope_brands = ['Hot Wheels']
+        self.user.catalog_scope_categories = ['Premium']
+        self.user.save()
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('catalog:model-list'), {'scope': 'all'})
+
+        self.assertContains(response, 'Premium Supra')
+        self.assertContains(response, 'RLC Camaro')
+        self.assertContains(response, 'Matchbox Porsche')
+        self.assertContains(response, 'Pokaż mój zakres')
+
+    def test_catalog_scope_can_filter_by_year_range(self):
+        self.user.catalog_scope_enabled = True
+        self.user.catalog_scope_brands = ['Hot Wheels']
+        self.user.catalog_scope_year_from = 2025
+        self.user.catalog_scope_year_to = 2025
+        self.user.save()
+        older_model = HotWheelsModel.objects.create(
+            app_id='scope-4',
+            brand='Hot Wheels',
+            toy='AAA03',
+            number='004',
+            model_name='Old Firebird',
+            year=2024,
+            category='Premium',
+            series='Retro',
+            series_number='4/5',
+            photo_url='https://example.com/old.jpg',
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('catalog:model-list'))
+
+        self.assertContains(response, 'Premium Supra')
+        self.assertNotContains(response, older_model.model_name)

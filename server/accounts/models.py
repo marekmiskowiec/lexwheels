@@ -70,6 +70,11 @@ class User(AbstractUser):
     display_name = models.CharField(max_length=80, blank=True)
     bio = models.TextField(blank=True)
     avatar_key = models.CharField(max_length=32, choices=AVATAR_CHOICES, default='flame-red')
+    catalog_scope_enabled = models.BooleanField(default=False)
+    catalog_scope_brands = models.JSONField(default=list, blank=True)
+    catalog_scope_categories = models.JSONField(default=list, blank=True)
+    catalog_scope_year_from = models.PositiveIntegerField(blank=True, null=True)
+    catalog_scope_year_to = models.PositiveIntegerField(blank=True, null=True)
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
@@ -85,3 +90,44 @@ class User(AbstractUser):
     @property
     def avatar_static_path(self) -> str:
         return f'accounts/avatars/{self.avatar_key}.svg'
+
+    @staticmethod
+    def normalize_scope_values(values) -> list[str]:
+        normalized = []
+        for value in values or []:
+            cleaned = str(value).strip()
+            if cleaned and cleaned not in normalized:
+                normalized.append(cleaned)
+        return normalized
+
+    def apply_catalog_scope(self, queryset):
+        if not self.catalog_scope_enabled:
+            return queryset
+
+        brands = self.normalize_scope_values(self.catalog_scope_brands)
+        categories = self.normalize_scope_values(self.catalog_scope_categories)
+
+        if brands:
+            queryset = queryset.filter(brand__in=brands)
+        if categories:
+            queryset = queryset.filter(category__in=categories)
+        if self.catalog_scope_year_from:
+            queryset = queryset.filter(year__gte=self.catalog_scope_year_from)
+        if self.catalog_scope_year_to:
+            queryset = queryset.filter(year__lte=self.catalog_scope_year_to)
+        return queryset
+
+    @property
+    def catalog_scope_summary(self) -> list[str]:
+        summary = []
+        brands = self.normalize_scope_values(self.catalog_scope_brands)
+        categories = self.normalize_scope_values(self.catalog_scope_categories)
+        if brands:
+            summary.append(f"Marki: {', '.join(brands)}")
+        if categories:
+            summary.append(f"Kategorie: {', '.join(categories)}")
+        if self.catalog_scope_year_from or self.catalog_scope_year_to:
+            summary.append(
+                f"Lata: {self.catalog_scope_year_from or 'od początku'} - {self.catalog_scope_year_to or 'bez końca'}"
+            )
+        return summary

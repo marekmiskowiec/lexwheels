@@ -11,6 +11,8 @@ from .models import HotWheelsModel
 
 
 CATALOG_FILTER_SESSION_KEY = 'catalog_filters'
+CATALOG_SCOPE_PROFILE = 'profile'
+CATALOG_SCOPE_ALL = 'all'
 
 
 class ModelListView(ListView):
@@ -24,7 +26,9 @@ class ModelListView(ListView):
         if request.GET.get('save_filters') == '1':
             filters = {
                 key: request.GET.get(key, '').strip()
-                for key in ('q', 'brand', 'series', 'year', 'category', 'exclusive_store', 'special_tag', 'sort')
+                for key in (
+                    'q', 'brand', 'series', 'year', 'category', 'exclusive_store', 'special_tag', 'sort', 'scope'
+                )
                 if request.GET.get(key, '').strip()
             }
             request.session[CATALOG_FILTER_SESSION_KEY] = filters
@@ -47,8 +51,24 @@ class ModelListView(ListView):
 
         return super().get(request, *args, **kwargs)
 
+    def get_scope_mode(self) -> str:
+        requested_scope = self.request.GET.get('scope', '').strip().lower()
+        if requested_scope in {CATALOG_SCOPE_ALL, CATALOG_SCOPE_PROFILE}:
+            return requested_scope
+        if self.request.user.is_authenticated and self.request.user.catalog_scope_enabled:
+            return CATALOG_SCOPE_PROFILE
+        return CATALOG_SCOPE_ALL
+
+    def apply_profile_scope(self, queryset):
+        if self.get_scope_mode() != CATALOG_SCOPE_PROFILE:
+            return queryset
+        if not self.request.user.is_authenticated:
+            return queryset
+        return self.request.user.apply_catalog_scope(queryset)
+
     def get_queryset(self):
         queryset = HotWheelsModel.objects.all()
+        queryset = self.apply_profile_scope(queryset)
         raw_query = self.request.GET.get('q', '').strip()
         parsed_query = self.parse_search_query(raw_query)
         query = parsed_query['text']
@@ -142,9 +162,13 @@ class ModelListView(ListView):
         context = super().get_context_data(**kwargs)
         filtered_count = context['page_obj'].paginator.count if context.get('page_obj') else len(context['models'])
         total_queryset = HotWheelsModel.objects.all()
+        scope_mode = self.get_scope_mode()
+        scoped_total_queryset = self.apply_profile_scope(HotWheelsModel.objects.all())
+        filter_options_queryset = scoped_total_queryset if scope_mode == CATALOG_SCOPE_PROFILE else total_queryset
         raw_query = self.request.GET.get('q', '').strip()
         parsed_query = self.parse_search_query(raw_query)
         context['query'] = raw_query
+        context['selected_scope'] = scope_mode
         context['selected_brand'] = self.request.GET.get('brand', '').strip() or parsed_query['brand']
         context['selected_series'] = self.request.GET.get('series', '').strip() or parsed_query['series']
         context['selected_year'] = self.request.GET.get('year', '').strip() or parsed_query['year']
@@ -154,48 +178,52 @@ class ModelListView(ListView):
         context['selected_sort'] = self.request.GET.get('sort', 'number').strip() or 'number'
         context['current_path'] = self.request.get_full_path()
         context['series_options'] = (
-            HotWheelsModel.objects.exclude(series='')
+            filter_options_queryset.exclude(series='')
             .values_list('series', flat=True)
             .distinct()
             .order_by('series')
         )
         context['brand_options'] = (
-            HotWheelsModel.objects.exclude(brand='')
+            filter_options_queryset.exclude(brand='')
             .values_list('brand', flat=True)
             .distinct()
             .order_by('brand')
         )
         context['year_options'] = (
-            HotWheelsModel.objects.exclude(year__isnull=True)
+            filter_options_queryset.exclude(year__isnull=True)
             .values_list('year', flat=True)
             .distinct()
             .order_by('year')
         )
         context['category_options'] = (
-            HotWheelsModel.objects.exclude(category='')
+            filter_options_queryset.exclude(category='')
             .values_list('category', flat=True)
             .distinct()
             .order_by('category')
         )
         context['exclusive_store_options'] = (
-            HotWheelsModel.objects.exclude(exclusive_store='')
+            filter_options_queryset.exclude(exclusive_store='')
             .values_list('exclusive_store', flat=True)
             .distinct()
             .order_by('exclusive_store')
         )
         context['special_tag_options'] = (
-            HotWheelsModel.objects.exclude(special_tag='')
+            filter_options_queryset.exclude(special_tag='')
             .values_list('special_tag', flat=True)
             .distinct()
             .order_by('special_tag')
         )
+        stats_queryset = scoped_total_queryset if scope_mode == CATALOG_SCOPE_PROFILE else total_queryset
         context['catalog_stats'] = {
-            'total_models': total_queryset.count(),
+            'total_models': stats_queryset.count(),
             'filtered_models': filtered_count,
-            'brand_count': total_queryset.exclude(brand='').values('brand').distinct().count(),
-            'year_count': total_queryset.exclude(year__isnull=True).values('year').distinct().count(),
-            'category_count': total_queryset.exclude(category='').values('category').distinct().count(),
+            'brand_count': stats_queryset.exclude(brand='').values('brand').distinct().count(),
+            'year_count': stats_queryset.exclude(year__isnull=True).values('year').distinct().count(),
+            'category_count': stats_queryset.exclude(category='').values('category').distinct().count(),
         }
+        context['scope_summary'] = self.request.user.catalog_scope_summary if (
+            self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
+        ) else []
         if self.request.user.is_authenticated:
             context['batch_add_form'] = CollectionBatchAddForm(owner=self.request.user, initial={'next': self.request.get_full_path()})
             context['quick_add_form'] = CatalogQuickAddForm(owner=self.request.user, initial={'next': self.request.get_full_path()})

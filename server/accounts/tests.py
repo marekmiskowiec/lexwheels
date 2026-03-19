@@ -3,10 +3,38 @@ from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils import timezone
 
+from catalog.models import HotWheelsModel
+
 from .models import User
 
 
 class AccountTests(TestCase):
+    def setUp(self):
+        HotWheelsModel.objects.create(
+            app_id='profile-test-1',
+            brand='Hot Wheels',
+            toy='HCT05',
+            number='001',
+            model_name='1970 Pontiac Firebird',
+            year=2022,
+            category='Mainline',
+            series='HW Dream Garage',
+            series_number='1/5',
+            photo_url='https://example.com/firebird.jpg',
+        )
+        HotWheelsModel.objects.create(
+            app_id='profile-test-2',
+            brand='Matchbox',
+            toy='MBX01',
+            number='002',
+            model_name='Custom Mustang',
+            year=2023,
+            category='Collectors',
+            series='MBX Road Trip',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+
     def test_register_creates_user(self):
         response = self.client.post(reverse('accounts:register'), {
             'email': 'test@example.com',
@@ -25,12 +53,22 @@ class AccountTests(TestCase):
             'display_name': 'Lex',
             'bio': 'Collector profile',
             'avatar_key': 'garage-blue',
+            'catalog_scope_enabled': 'on',
+            'catalog_scope_brands': ['Hot Wheels'],
+            'catalog_scope_categories': ['Mainline'],
+            'catalog_scope_year_from': '2022',
+            'catalog_scope_year_to': '2023',
         })
         self.assertRedirects(response, reverse('accounts:profile'))
         user.refresh_from_db()
         self.assertEqual(user.login, 'Lex')
         self.assertEqual(user.display_name, 'Lex')
         self.assertEqual(user.avatar_key, 'garage-blue')
+        self.assertTrue(user.catalog_scope_enabled)
+        self.assertEqual(user.catalog_scope_brands, ['Hot Wheels'])
+        self.assertEqual(user.catalog_scope_categories, ['Mainline'])
+        self.assertEqual(user.catalog_scope_year_from, 2022)
+        self.assertEqual(user.catalog_scope_year_to, 2023)
 
     def test_profile_update_keeps_display_name_and_login_in_sync(self):
         user = User.objects.create_user(email='test@example.com', login='Start', password='ComplexPass123')
@@ -40,6 +78,8 @@ class AccountTests(TestCase):
             'display_name': 'NowyLogin',
             'bio': 'Collector profile',
             'avatar_key': 'garage-blue',
+            'catalog_scope_brands': [],
+            'catalog_scope_categories': [],
         })
 
         self.assertRedirects(response, reverse('accounts:profile'))
@@ -110,3 +150,18 @@ class AccountTests(TestCase):
 
         self.assertContains(response, user.login)
         self.assertNotContains(response, user.email)
+
+    def test_profile_edit_shows_catalog_scope_fields(self):
+        user = User.objects.create_user(email='test@example.com', login='tester', password='ComplexPass123')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('accounts:profile-edit'))
+
+        self.assertContains(response, 'Domyślnie używaj mojego zakresu w katalogu')
+        self.assertContains(response, 'Pokazuj tylko marki')
+        self.assertNotContains(response, 'Ukryj kategorie')
+        self.assertContains(response, 'value="2022"')
+        self.assertContains(response, 'value="2023"')
+        self.assertContains(response, 'type="checkbox"')
+        self.assertContains(response, 'Mainline')
+        self.assertContains(response, 'Collectors')

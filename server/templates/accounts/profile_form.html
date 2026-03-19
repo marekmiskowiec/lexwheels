@@ -23,6 +23,22 @@
           </div>
           {% if field.errors %}<p class="meta">{{ field.errors|join:', ' }}</p>{% endif %}
         </div>
+      {% elif field.name == 'catalog_scope_categories' %}
+        <div>
+          <label>{{ field.label }}</label>
+          <div class="list" style="margin-top:10px;">
+            {% for checkbox in field %}
+              <label class="list-item" style="display:flex; align-items:center; gap:10px; padding:10px 12px;">
+                {{ checkbox.tag }}
+                <span>{{ checkbox.choice_label }}</span>
+              </label>
+            {% empty %}
+              <p class="meta">Brak kategorii w bazie.</p>
+            {% endfor %}
+          </div>
+          {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
+          {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
+        </div>
       {% else %}
         <p>
           {{ field.label_tag }}
