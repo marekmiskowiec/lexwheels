@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Statystyki | LexWheels{% endblock %}
+{% block content %}
+<section class="panel hero">
+  <h1>Moje statystyki</h1>
+  <p class="meta">Oddzielony widok analityczny dla wszystkich kolekcji, wishlist albo jednej wybranej kolekcji.</p>
+  <form method="get" class="filters" style="margin-top:18px;">
+    <div style="flex: 1 1 220px;">
+      <label for="scope">Zakres</label>
+      <select id="scope" name="scope">
+        <option value="all" {% if selected_scope == 'all' %}selected{% endif %}>Wszystkie moje kolekcje</option>
+        <option value="owned" {% if selected_scope == 'owned' %}selected{% endif %}>Tylko kolekcje</option>
+        <option value="wishlist" {% if selected_scope == 'wishlist' %}selected{% endif %}>Tylko wishlisty</option>
+      </select>
+    </div>
+    <div style="flex: 1 1 320px;">
+      <label for="collection">Jedna kolekcja</label>
+      <select id="collection" name="collection">
+        <option value="">Wszystkie kolekcje</option>
+        {% for collection in collection_options %}
+          <option value="{{ collection.pk }}" {% if selected_collection_id == collection.pk|stringformat:"s" %}selected{% endif %}>{{ collection.name }} ({{ collection.get_kind_display }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div><button type="submit">Pokaż statystyki</button></div>
+    {% if selected_scope != 'all' or selected_collection_id %}
+      <div><a class="button secondary" href="{% url 'collections:stats' %}">Wyczyść</a></div>
+    {% endif %}
+  </form>
+  <div class="grid" style="margin-top:18px;">
+    <div class="card"><strong>{{ stats.item_count }}</strong><div class="meta">pozycje</div></div>
+    <div class="card"><strong>{{ stats.variant_count }}</strong><div class="meta">warianty</div></div>
+    <div class="card"><strong>{{ stats.total_quantity }}</strong><div class="meta">sztuk łącznie</div></div>
+    <div class="card"><strong>{{ stats.favorite_count }}</strong><div class="meta">ulubione</div></div>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Wykresy</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Marki</h3>
+      {% for row in charts.brands %}
+        <div style="margin-bottom:10px;">
+          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
+          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:var(--accent);"></div></div>
+        </div>
+      {% empty %}
+        <p class="meta">Brak danych.</p>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <h3>Roczniki</h3>
+      {% for row in charts.years %}
+        <div style="margin-bottom:10px;">
+          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
+          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:#8f806a;"></div></div>
+        </div>
+      {% empty %}
+        <p class="meta">Brak danych.</p>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <h3>Kategorie</h3>
+      {% for row in charts.categories %}
+        <div style="margin-bottom:10px;">
+          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
+          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:#c47b38;"></div></div>
+        </div>
+      {% empty %}
+        <p class="meta">Brak danych.</p>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <h3>Opakowanie</h3>
+      {% for row in charts.packaging %}
+        <div style="margin-bottom:10px;">
+          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
+          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:#5b8c5a;"></div></div>
+        </div>
+      {% empty %}
+        <p class="meta">Brak danych.</p>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <h3>Stan modeli</h3>
+      {% for row in charts.conditions %}
+        <div style="margin-bottom:10px;">
+          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
+          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:#4d7298;"></div></div>
+        </div>
+      {% empty %}
+        <p class="meta">Brak danych.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

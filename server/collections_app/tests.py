@@ -368,7 +368,18 @@ class CollectionTests(TestCase):
         self.client.force_login(self.owner)
         response = self.client.get(reverse('collections:dashboard'))
         self.assertContains(response, '3')
-        self.assertContains(response, 'Statystyki i wykresy')
+        self.assertContains(response, 'Zobacz pełne statystyki')
+        self.assertNotContains(response, 'Statystyki i wykresy')
+
+    def test_stats_page_shows_charts(self):
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=3, is_favorite=True)
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse('collections:stats'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Moje statystyki')
+        self.assertContains(response, 'Statystyki')
         self.assertContains(response, 'Marki')
         self.assertContains(response, 'Hot Wheels')
 
@@ -413,8 +424,15 @@ class CollectionTests(TestCase):
 
         self.assertContains(response, 'Rok: 2022')
         self.assertContains(response, 'Kategoria: Mainline')
-        self.assertContains(response, 'Statystyki i wykresy')
-        self.assertContains(response, 'Roczniki')
+        self.assertNotContains(response, 'Statystyki i wykresy')
+
+    def test_owner_collection_detail_shows_stats_link(self):
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj)
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse('collections:collection-detail', args=[self.private_collection.pk]))
+
+        self.assertContains(response, 'Statystyki tej kolekcji')
 
     def test_collection_detail_groups_variants_for_same_model(self):
         CollectionItem.objects.create(

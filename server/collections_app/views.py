@@ -66,6 +66,45 @@ def parse_boolean_filter(raw_value):
     return None
 
 
+def build_collection_stats_context(items_queryset):
+    packaging_labels = dict(CollectionItem.PACKAGING_CHOICES)
+    condition_labels = dict(CollectionItem.CONDITION_CHOICES)
+    stats = items_queryset.aggregate(
+        total_quantity=Sum('quantity'),
+        favorite_count=Count('id', filter=Q(is_favorite=True)),
+        variant_count=Count('id'),
+        item_count=Count('model_id', distinct=True),
+    )
+    charts = {
+        'brands': build_chart_rows(
+            items_queryset.values(label=F('model__brand')).annotate(value=Sum('quantity')).order_by('-value', 'label')[:6]
+        ),
+        'years': build_chart_rows(
+            items_queryset.values(label=F('model__year')).annotate(value=Sum('quantity')).order_by('-value', 'label')[:6]
+        ),
+        'categories': build_chart_rows(
+            items_queryset.values(label=F('model__category')).annotate(value=Sum('quantity')).order_by('-value', 'label')[:6]
+        ),
+        'packaging': build_chart_rows(
+            items_queryset.values(label=F('packaging_state')).annotate(value=Sum('quantity')).order_by('-value', 'label'),
+            label_map=packaging_labels,
+        ),
+        'conditions': build_chart_rows(
+            items_queryset.values(label=F('condition')).annotate(value=Sum('quantity')).order_by('-value', 'label'),
+            label_map=condition_labels,
+        ),
+    }
+    return {
+        'stats': {
+            'item_count': stats['item_count'] or 0,
+            'variant_count': stats['variant_count'] or 0,
+            'total_quantity': stats['total_quantity'] or 0,
+            'favorite_count': stats['favorite_count'] or 0,
+        },
+        'charts': charts,
+    }
+
+
 class DashboardView(LoginRequiredMixin, ListView):
     template_name = 'collections/dashboard.html'
     context_object_name = 'collections'
@@ -84,41 +123,54 @@ class DashboardView(LoginRequiredMixin, ListView):
             else:
                 owned.append(collection)
 
-        stats = owner_items.aggregate(
-            total_quantity=Sum('quantity'),
-            favorite_count=Count('id', filter=Q(is_favorite=True)),
-        )
         context['owned_collections'] = owned
         context['wishlist_collections'] = wishlist
-        packaging_labels = dict(CollectionItem.PACKAGING_CHOICES)
-        condition_labels = dict(CollectionItem.CONDITION_CHOICES)
+        stats_context = build_collection_stats_context(owner_items)
         context['stats'] = {
             'collection_count': len(owned),
             'wishlist_count': len(wishlist),
-            'item_count': owner_items.values('model_id').distinct().count(),
-            'variant_count': owner_items.count(),
-            'total_quantity': stats['total_quantity'] or 0,
-            'favorite_count': stats['favorite_count'] or 0,
+            'item_count': stats_context['stats']['item_count'],
+            'variant_count': stats_context['stats']['variant_count'],
+            'total_quantity': stats_context['stats']['total_quantity'],
+            'favorite_count': stats_context['stats']['favorite_count'],
         }
-        context['charts'] = {
-            'brands': build_chart_rows(
-                owner_items.values(label=F('model__brand')).annotate(value=Sum('quantity')).order_by('-value', 'label')[:6]
-            ),
-            'years': build_chart_rows(
-                owner_items.values(label=F('model__year')).annotate(value=Sum('quantity')).order_by('-value', 'label')[:6]
-            ),
-            'categories': build_chart_rows(
-                owner_items.values(label=F('model__category')).annotate(value=Sum('quantity')).order_by('-value', 'label')[:6]
-            ),
-            'packaging': build_chart_rows(
-                owner_items.values(label=F('packaging_state')).annotate(value=Sum('quantity')).order_by('-value', 'label'),
-                label_map=packaging_labels,
-            ),
-            'conditions': build_chart_rows(
-                owner_items.values(label=F('condition')).annotate(value=Sum('quantity')).order_by('-value', 'label'),
-                label_map=condition_labels,
-            ),
-        }
+        return context
+
+
+class CollectionStatsView(LoginRequiredMixin, ListView):
+    template_name = 'collections/stats.html'
+    context_object_name = 'collections'
+
+    def get_queryset(self):
+        return Collection.objects.filter(owner=self.request.user).prefetch_related('items')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        scope = self.request.GET.get('scope', '').strip()
+        collections = context['collections']
+        selected_collection_id = self.request.GET.get('collection', '').strip()
+        selected_kind = self.request.GET.get('kind', '').strip()
+
+        items = CollectionItem.objects.filter(collection__owner=self.request.user)
+        if selected_collection_id.isdigit():
+            items = items.filter(collection_id=int(selected_collection_id))
+            scope = 'collection'
+        elif selected_kind in {Collection.KIND_OWNED, Collection.KIND_WISHLIST}:
+            items = items.filter(collection__kind=selected_kind)
+            scope = selected_kind
+        elif scope == 'owned':
+            items = items.filter(collection__kind=Collection.KIND_OWNED)
+        elif scope == 'wishlist':
+            items = items.filter(collection__kind=Collection.KIND_WISHLIST)
+        else:
+            scope = 'all'
+
+        stats_context = build_collection_stats_context(items)
+        context.update(stats_context)
+        context['selected_scope'] = scope
+        context['selected_collection_id'] = selected_collection_id
+        context['selected_kind'] = selected_kind
+        context['collection_options'] = collections.order_by('kind', 'name')
         return context
 
 
@@ -249,33 +301,8 @@ class CollectionDetailView(DetailView):
                 }
             )
 
-        packaging_labels = dict(CollectionItem.PACKAGING_CHOICES)
-        condition_labels = dict(CollectionItem.CONDITION_CHOICES)
-        context['stats'] = {
-            'item_count': self.object.items.values('model_id').distinct().count(),
-            'variant_count': self.object.items.count(),
-            'total_quantity': sum(item.quantity for item in self.object.items.all()),
-            'favorite_count': sum(1 for item in self.object.items.all() if item.is_favorite),
-        }
-        context['charts'] = {
-            'brands': build_chart_rows(
-                self.object.items.values(label=F('model__brand')).annotate(value=Sum('quantity')).order_by('-value', 'label')[:6]
-            ),
-            'years': build_chart_rows(
-                self.object.items.values(label=F('model__year')).annotate(value=Sum('quantity')).order_by('-value', 'label')[:6]
-            ),
-            'categories': build_chart_rows(
-                self.object.items.values(label=F('model__category')).annotate(value=Sum('quantity')).order_by('-value', 'label')[:6]
-            ),
-            'packaging': build_chart_rows(
-                self.object.items.values(label=F('packaging_state')).annotate(value=Sum('quantity')).order_by('-value', 'label'),
-                label_map=packaging_labels,
-            ),
-            'conditions': build_chart_rows(
-                self.object.items.values(label=F('condition')).annotate(value=Sum('quantity')).order_by('-value', 'label'),
-                label_map=condition_labels,
-            ),
-        }
+        stats_context = build_collection_stats_context(self.object.items.all())
+        context['stats'] = stats_context['stats']
         context['items'] = grouped_items
         context['query'] = query
         context['selected_brand'] = selected_brand

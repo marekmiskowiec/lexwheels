@@ -14,6 +14,7 @@ from .views import (
     CollectionItemUpdateView,
     CollectionUpdateView,
     DashboardView,
+    CollectionStatsView,
     PublicCollectionListView,
 )
 
@@ -21,6 +22,7 @@ app_name = 'collections'
 
 urlpatterns = [
     path('', DashboardView.as_view(), name='dashboard'),
+    path('stats/', CollectionStatsView.as_view(), name='stats'),
     path('public/', PublicCollectionListView.as_view(), name='public-collections'),
     path('batch-add/', CollectionBatchAddView.as_view(), name='batch-add'),
     path('quick-add/', CatalogQuickAddView.as_view(), name='quick-add'),
