@@ -6,7 +6,7 @@ import json
 from accounts.models import User
 from catalog.models import HotWheelsModel
 
-from .models import Collection, CollectionItem
+from .models import Collection, CollectionItem, ImportBacklogEntry
 
 
 class CollectionTests(TestCase):
@@ -489,6 +489,7 @@ class CollectionTests(TestCase):
         self.assertContains(response, '3')
         self.assertContains(response, 'Zobacz pełne statystyki')
         self.assertContains(response, 'Importuj CSV')
+        self.assertContains(response, 'Braki z importów')
         self.assertNotContains(response, 'Statystyki i wykresy')
 
     def test_collection_import_preview_matches_rows_from_csv(self):
@@ -552,6 +553,55 @@ class CollectionTests(TestCase):
         self.assertEqual(item.quantity, 2)
         self.assertIn('Imported price: 20 zl', item.notes)
         self.assertIn('Imported location: Shelf A', item.notes)
+
+    def test_collection_import_preview_records_unmatched_backlog_entry(self):
+        self.client.force_login(self.owner)
+        payload = (
+            'ID,Name,Color,Year,Type,Series,Series Number,Price,Amount,Where\n'
+            '1,Unreleased Civic,Black,2026,Premium,Future Series,1/5,50 zl,1,Box B\n'
+        )
+
+        response = self.client.post(
+            reverse('collections:collection-import'),
+            {
+                'collection': self.private_collection.pk,
+                'new_collection_name': '',
+                'new_collection_kind': Collection.KIND_OWNED,
+                'new_collection_visibility': Collection.VISIBILITY_PRIVATE,
+                'default_condition': 'good',
+                'append_price_to_notes': 'on',
+                'append_location_to_notes': 'on',
+                'source_file': SimpleUploadedFile('collection.csv', payload.encode('utf-8'), content_type='text/csv'),
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        entry = ImportBacklogEntry.objects.get(owner=self.owner, model_name='Unreleased Civic')
+        self.assertEqual(entry.collection, self.private_collection)
+        self.assertEqual(entry.status, ImportBacklogEntry.STATUS_OPEN)
+        self.assertEqual(entry.import_count, 1)
+        self.assertEqual(entry.category, 'Premium')
+        self.assertEqual(entry.series, 'Future Series')
+
+    def test_import_backlog_view_lists_unmatched_models(self):
+        ImportBacklogEntry.objects.create(
+            owner=self.owner,
+            collection=self.private_collection,
+            model_name='Unreleased Civic',
+            year=2026,
+            category='Premium',
+            series='Future Series',
+            series_number='1/5',
+            location='Box B',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse('collections:import-backlog'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Braki z importów')
+        self.assertContains(response, 'Unreleased Civic')
+        self.assertContains(response, 'Future Series')
 
     def test_stats_page_shows_charts(self):
         CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=3, is_favorite=True)

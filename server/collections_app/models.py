@@ -116,3 +116,50 @@ class CollectionItem(models.Model):
         if self.has_cracked_blister:
             badges.append('Cracked blister')
         return badges
+
+
+class ImportBacklogEntry(models.Model):
+    STATUS_OPEN = 'open'
+    STATUS_RESOLVED = 'resolved'
+    STATUS_IGNORED = 'ignored'
+    STATUS_CHOICES = (
+        (STATUS_OPEN, 'Open'),
+        (STATUS_RESOLVED, 'Resolved'),
+        (STATUS_IGNORED, 'Ignored'),
+    )
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='import_backlog_entries')
+    collection = models.ForeignKey(Collection, on_delete=models.SET_NULL, null=True, blank=True, related_name='import_backlog_entries')
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_OPEN)
+    toy = models.CharField(max_length=64, blank=True)
+    model_name = models.CharField(max_length=255)
+    year = models.PositiveIntegerField(blank=True, null=True)
+    category = models.CharField(max_length=64, blank=True)
+    series = models.CharField(max_length=255, blank=True)
+    series_number = models.CharField(max_length=32, blank=True)
+    color = models.CharField(max_length=128, blank=True)
+    price = models.CharField(max_length=128, blank=True)
+    location = models.CharField(max_length=255, blank=True)
+    source_payload = models.JSONField(default=dict, blank=True)
+    import_count = models.PositiveIntegerField(default=1)
+    first_seen_at = models.DateTimeField(auto_now_add=True)
+    last_seen_at = models.DateTimeField(auto_now=True)
+    resolved_model = models.ForeignKey(
+        HotWheelsModel,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='resolved_import_backlog_entries',
+    )
+
+    class Meta:
+        ordering = ('status', '-last_seen_at', 'model_name')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('owner', 'toy', 'model_name', 'year', 'category', 'series', 'series_number'),
+                name='unique_import_backlog_entry_per_owner',
+            )
+        ]
+
+    def __str__(self) -> str:
+        return self.model_name

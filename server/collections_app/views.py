@@ -27,6 +27,7 @@ from .forms import (
     CollectionItemMultiVariantForm,
 )
 from .models import Collection, CollectionItem
+from .models import ImportBacklogEntry
 
 
 def build_chart_rows(rows, label_map=None):
@@ -142,6 +143,53 @@ def build_import_notes(row_data, include_price=True, include_location=True, incl
     if include_color and row_data.get('color'):
         notes.append(f"Imported color: {row_data['color']}")
     return '\n'.join(notes)
+
+
+def record_import_backlog(owner, collection, row_data):
+    defaults = {
+        'collection': collection,
+        'color': row_data.get('color', ''),
+        'price': row_data.get('price', ''),
+        'location': row_data.get('location', ''),
+        'source_payload': row_data,
+        'status': ImportBacklogEntry.STATUS_OPEN,
+    }
+    entry, created = ImportBacklogEntry.objects.get_or_create(
+        owner=owner,
+        toy=row_data.get('toy', ''),
+        model_name=row_data.get('model_name', '') or 'Unknown model',
+        year=row_data.get('year'),
+        category=row_data.get('category', ''),
+        series=row_data.get('series', ''),
+        series_number=row_data.get('series_number', ''),
+        defaults=defaults,
+    )
+    if created:
+        return entry
+
+    entry.collection = collection or entry.collection
+    entry.color = row_data.get('color', '') or entry.color
+    entry.price = row_data.get('price', '') or entry.price
+    entry.location = row_data.get('location', '') or entry.location
+    entry.source_payload = row_data
+    entry.import_count += 1
+    if entry.status == ImportBacklogEntry.STATUS_RESOLVED and entry.resolved_model_id:
+        entry.status = ImportBacklogEntry.STATUS_OPEN
+        entry.resolved_model = None
+    entry.save(
+        update_fields=[
+            'collection',
+            'color',
+            'price',
+            'location',
+            'source_payload',
+            'import_count',
+            'status',
+            'resolved_model',
+            'last_seen_at',
+        ]
+    )
+    return entry
 
 
 def match_import_row(row_data):
@@ -513,6 +561,11 @@ class CollectionImportView(LoginRequiredMixin, FormView):
                 ambiguous_count += 1
             else:
                 unmatched_count += 1
+                record_import_backlog(
+                    self.request.user,
+                    form.cleaned_data.get('collection'),
+                    row_data,
+                )
 
         preview_token = uuid.uuid4().hex
         previews = self.request.session.get(COLLECTION_IMPORT_SESSION_KEY, {})
@@ -539,6 +592,31 @@ class CollectionImportView(LoginRequiredMixin, FormView):
         self.request.session.modified = True
         messages.success(self.request, f'Wczytano plik. Dopasowano {matched_count} z {len(preview_rows)} wierszy.')
         return redirect(f"{reverse('collections:collection-import')}?preview={preview_token}")
+
+
+class ImportBacklogListView(LoginRequiredMixin, ListView):
+    model = ImportBacklogEntry
+    template_name = 'collections/import_backlog.html'
+    context_object_name = 'entries'
+    paginate_by = 50
+
+    def get_queryset(self):
+        status = self.request.GET.get('status', '').strip()
+        queryset = ImportBacklogEntry.objects.filter(owner=self.request.user).select_related('collection', 'resolved_model')
+        if status in {ImportBacklogEntry.STATUS_OPEN, ImportBacklogEntry.STATUS_RESOLVED, ImportBacklogEntry.STATUS_IGNORED}:
+            queryset = queryset.filter(status=status)
+        return queryset.order_by('status', '-last_seen_at', 'model_name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['selected_status'] = self.request.GET.get('status', '').strip()
+        context['status_options'] = ImportBacklogEntry.STATUS_CHOICES
+        context['backlog_stats'] = {
+            'open_count': ImportBacklogEntry.objects.filter(owner=self.request.user, status=ImportBacklogEntry.STATUS_OPEN).count(),
+            'resolved_count': ImportBacklogEntry.objects.filter(owner=self.request.user, status=ImportBacklogEntry.STATUS_RESOLVED).count(),
+            'ignored_count': ImportBacklogEntry.objects.filter(owner=self.request.user, status=ImportBacklogEntry.STATUS_IGNORED).count(),
+        }
+        return context
 
 
 class CollectionImportConfirmView(LoginRequiredMixin, View):
