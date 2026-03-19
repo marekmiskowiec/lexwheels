@@ -11,9 +11,28 @@ from catalog.models import HotWheelsModel
 
 class Command(BaseCommand):
     help = 'Import catalog models from one JSON file or from the full data/catalog tree.'
-    SERIES_MARKERS = (
-        'New for 2022!',
-        'New for 2023!',
+    SERIES_MARKER_PATTERN = re.compile(r'New for 20\d{2}!')
+    EXCLUSIVE_STORE_MARKERS = (
+        ('Dollar Tree/Family Dollar Exclusive', 'Dollar Tree/Family Dollar Exclusive'),
+        ('Family Dollar/Dollar Tree Exclusive', 'Dollar Tree/Family Dollar Exclusive'),
+        ('Dollar General Exclusive', 'Dollar General Exclusive'),
+        ('GameStop Exclusive', 'GameStop Exclusive'),
+        ('Kroger Exclusive', 'Kroger Exclusive'),
+        ('Target Exclusive', 'Target Exclusive'),
+        ('Walmart Exclusive', 'Walmart Exclusive'),
+        ('Best Buy Exclusive', 'Best Buy Exclusive'),
+        ('Walgreens Exclusive', 'Walgreens Exclusive'),
+        ('WalgreensExclusive', 'Walgreens Exclusive'),
+    )
+    SPECIAL_TAG_MARKERS = (
+        ('"From the Vault" Exclusive', 'From the Vault'),
+        ('Super Treasure Hunt', 'Super Treasure Hunt'),
+        ('Treasure Hunt', 'Treasure Hunt'),
+        ('Red Edition', 'Red Edition'),
+        ('ZAMAC', 'ZAMAC'),
+        ('Mail-In', 'Mail-In'),
+        ('Mail In', 'Mail-In'),
+        ('New in Mainline', 'New in Mainline'),
     )
     DEFAULT_DATASET_PATH = settings.PROJECT_ROOT / 'data' / 'catalog' / 'hot-wheels' / 'mainline' / '2022.json'
     DEFAULT_DATASET_ROOT = settings.PROJECT_ROOT / 'data' / 'catalog'
@@ -69,6 +88,9 @@ class Command(BaseCommand):
                 local_photo = self.clean_optional_text(row.get('Local Photo'))
                 photo_url = self.clean_optional_text(row.get('Photo'))
                 category = self.extract_category(row, metadata)
+                parsed_series = self.parse_series_metadata(row.get('Series', ''))
+                exclusive_store = self.clean_optional_text(row.get('Exclusive Store')) or parsed_series['exclusive_store']
+                special_tag = self.clean_optional_text(row.get('Special Tag')) or parsed_series['special_tag']
                 short_card_photo_url = self.clean_optional_text(row.get('Short Card Photo'))
                 long_card_photo_url = self.clean_optional_text(row.get('Long Card Photo')) or photo_url
                 loose_photo_url = self.clean_optional_text(row.get('Loose Photo')) or photo_url
@@ -85,7 +107,9 @@ class Command(BaseCommand):
                     'model_name': row.get('Model Name', ''),
                     'year': self.extract_year(row, metadata),
                     'category': category,
-                    'series': self.clean_series(row.get('Series', '')),
+                    'series': parsed_series['series'],
+                    'exclusive_store': exclusive_store,
+                    'special_tag': special_tag,
                     'series_number': row.get('Series Number', ''),
                     'photo_url': photo_url,
                     'local_photo_path': local_photo,
@@ -213,11 +237,16 @@ class Command(BaseCommand):
 
     @staticmethod
     def build_app_id(row: dict) -> str:
+        parsed_series = Command.parse_series_metadata(row.get('Series', ''))
+        exclusive_store = Command.clean_optional_text(row.get('Exclusive Store')) or parsed_series['exclusive_store']
+        special_tag = Command.clean_optional_text(row.get('Special Tag')) or parsed_series['special_tag']
         parts = [
             row.get('Toy', ''),
             row.get('Number', ''),
             row.get('Model Name', ''),
-            row.get('Series', ''),
+            parsed_series['series'],
+            exclusive_store,
+            special_tag,
             row.get('Series Number', ''),
         ]
         return hashlib.sha256('|'.join(parts).encode('utf-8')).hexdigest()[:24]
@@ -259,7 +288,33 @@ class Command(BaseCommand):
 
     @classmethod
     def clean_series(cls, value: str) -> str:
-        cleaned = value or ''
-        for marker in cls.SERIES_MARKERS:
-            cleaned = cleaned.replace(marker, ' ')
-        return re.sub(r'\s+', ' ', cleaned).strip()
+        return cls.parse_series_metadata(value).get('series', '')
+
+    @classmethod
+    def parse_series_metadata(cls, value: str) -> dict[str, str]:
+        raw = value or ''
+        cleaned = cls.SERIES_MARKER_PATTERN.sub(' ', raw)
+
+        exclusive_store = ''
+        for marker, normalized in cls.EXCLUSIVE_STORE_MARKERS:
+            if marker in cleaned:
+                cleaned = cleaned.replace(marker, ' ')
+                exclusive_store = normalized
+                break
+
+        special_tag = ''
+        for marker, normalized in cls.SPECIAL_TAG_MARKERS:
+            if marker in cleaned:
+                cleaned = cleaned.replace(marker, ' ')
+                special_tag = normalized
+                break
+
+        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+        if not cleaned and special_tag in {'Red Edition', 'ZAMAC', 'Mail-In', 'New in Mainline', 'From the Vault'}:
+            cleaned = special_tag
+
+        return {
+            'series': cleaned,
+            'exclusive_store': exclusive_store,
+            'special_tag': special_tag,
+        }

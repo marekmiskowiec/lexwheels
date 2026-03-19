@@ -3,7 +3,7 @@
     "Toy": "HCT05",
     "Number": "001",
     "Model Name": "1970 Pontiac Firebird",
-    "Series": "HW Dream GarageNew for 2022!",
+    "Series": "HW Dream Garage",
     "Series Number": "1/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5b/%2770PontiacFirebird.jpg/revision/latest?cb=20211012082657",
     "Local Photo": "images/hot-wheels/mainline/2022/001_1970_pontiac_firebird_7061d1e599.jpg",
@@ -21,7 +21,7 @@
     "Toy": "HCX22",
     "Number": "001",
     "Model Name": "1970 Pontiac Firebird(2nd Color)",
-    "Series": "HW Dream GarageNew for 2022!",
+    "Series": "HW Dream Garage",
     "Series Number": "1/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/0/0c/PontiacFirebird_Front.png/revision/latest?cb=20221004155332",
     "Local Photo": "images/hot-wheels/mainline/2022/001_1970_pontiac_firebird_2nd_color_8dc3677ed7.jpg",
@@ -147,7 +147,7 @@
     "Toy": "HCT32",
     "Number": "005",
     "Model Name": "Mighty K",
-    "Series": "HW MetroNew for 2022!Ryu's Rides",
+    "Series": "HW Metro Ryu's Rides",
     "Series Number": "1/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5c/MightyK.jpg/revision/latest?cb=20211004092006",
     "Local Photo": "images/hot-wheels/mainline/2022/005_mighty_k_707ab89969.jpg",
@@ -165,7 +165,7 @@
     "Toy": "HCW70",
     "Number": "005",
     "Model Name": "Mighty K(2nd Color)",
-    "Series": "HW MetroNew for 2022!Ryu's Rides",
+    "Series": "HW Metro Ryu's Rides",
     "Series Number": "1/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/4/4b/PinkMightyK.jpg/revision/latest?cb=20220712102933",
     "Local Photo": "images/hot-wheels/mainline/2022/005_mighty_k_2nd_color_eb94ef023d.jpg",
@@ -219,7 +219,7 @@
     "Toy": "HCX94",
     "Number": "007",
     "Model Name": "The Dark Knight Batmobile",
-    "Series": "BatmanTreasure Hunt",
+    "Series": "Batman",
     "Series Number": "1/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c1/The_Dark_Knight_Batmobile_-_2022_TH.jpg/revision/latest?cb=20220212021220",
     "Local Photo": "images/hot-wheels/mainline/2022/007_the_dark_knight_batmobile_5e5c56bfbe.jpg",
@@ -231,7 +231,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c1/The_Dark_Knight_Batmobile_-_2022_TH.jpg/revision/latest?cb=20220212021220",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/007_the_dark_knight_batmobile_5e5c56bfbe.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c1/The_Dark_Knight_Batmobile_-_2022_TH.jpg/revision/latest?cb=20220212021220",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/007_the_dark_knight_batmobile_5e5c56bfbe.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/007_the_dark_knight_batmobile_5e5c56bfbe.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCT55",
@@ -273,7 +274,7 @@
     "Toy": "HCT27",
     "Number": "010",
     "Model Name": "Tooned Volkswagen Golf Mk1",
-    "Series": "ToonedNew for 2022!Ryu's Rides",
+    "Series": "Tooned Ryu's Rides",
     "Series Number": "1/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/d/da/%27ToonedGolf.jpg/revision/latest?cb=20211005082946",
     "Local Photo": "images/hot-wheels/mainline/2022/010_tooned_volkswagen_golf_mk1_706da8a4c0.jpg",
@@ -291,7 +292,7 @@
     "Toy": "HCW71",
     "Number": "010",
     "Model Name": "Tooned Volkswagen Golf Mk1(2nd Color)",
-    "Series": "ToonedNew for 2022!Ryu's Rides",
+    "Series": "Tooned Ryu's Rides",
     "Series Number": "1/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/14/HCW71_Carded.jpg/revision/latest?cb=20220525121255",
     "Local Photo": "images/hot-wheels/mainline/2022/010_tooned_volkswagen_golf_mk1_2nd_color_8b6dc33c7c.jpg",
@@ -345,7 +346,7 @@
     "Toy": "HCT16",
     "Number": "012",
     "Model Name": "Porsche 935",
-    "Series": "HW TurboNew for 2022!",
+    "Series": "HW Turbo",
     "Series Number": "1/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/6e/%2719Porsche935.jpg/revision/latest?cb=20211004092126",
     "Local Photo": "images/hot-wheels/mainline/2022/012_porsche_935_24827d43ed.jpg",
@@ -363,7 +364,7 @@
     "Toy": "HCW73",
     "Number": "012",
     "Model Name": "Porsche 935(2nd Color)",
-    "Series": "HW TurboNew for 2022!",
+    "Series": "HW Turbo",
     "Series Number": "1/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e5/Porsche935_Front.png/revision/latest?cb=20221006183058",
     "Local Photo": "images/hot-wheels/mainline/2022/012_porsche_935_2nd_color_92b9ee02d1.jpg",
@@ -381,7 +382,7 @@
     "Toy": "HCY66",
     "Number": "012",
     "Model Name": "Porsche 935(3rd Color)",
-    "Series": "Red EditionNew for 2022!Target Exclusive",
+    "Series": "",
     "Series Number": "9/12",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/1e/RedEd935.jpg/revision/latest?cb=20221105071752",
     "Local Photo": "images/hot-wheels/mainline/2022/012_porsche_935_3rd_color_551543eeda.jpg",
@@ -393,7 +394,9 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/1e/RedEd935.jpg/revision/latest?cb=20221105071752",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/012_porsche_935_3rd_color_551543eeda.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/1e/RedEd935.jpg/revision/latest?cb=20221105071752",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/012_porsche_935_3rd_color_551543eeda.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/012_porsche_935_3rd_color_551543eeda.jpg",
+    "Exclusive Store": "Target Exclusive",
+    "Special Tag": "Red Edition"
   },
   {
     "Toy": "HCV25",
@@ -597,7 +600,7 @@
     "Toy": "HCY24",
     "Number": "018",
     "Model Name": "'19 Mercedes-Benz A-Class(2nd Color - Zamac)",
-    "Series": "HW HatchbacksWalmart Exclusive",
+    "Series": "HW Hatchbacks",
     "Series Number": "2/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/aa/2019_Mercedes_Zamac_Loose.JPG/revision/latest?cb=20220830031027",
     "Local Photo": "images/hot-wheels/mainline/2022/018_19_mercedes_benz_a_class_2nd_color_zamac_301d47cd98.jpg",
@@ -609,7 +612,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/aa/2019_Mercedes_Zamac_Loose.JPG/revision/latest?cb=20220830031027",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/018_19_mercedes_benz_a_class_2nd_color_zamac_301d47cd98.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/aa/2019_Mercedes_Zamac_Loose.JPG/revision/latest?cb=20220830031027",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/018_19_mercedes_benz_a_class_2nd_color_zamac_301d47cd98.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/018_19_mercedes_benz_a_class_2nd_color_zamac_301d47cd98.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCW78",
@@ -687,7 +691,7 @@
     "Toy": "HCY10",
     "Number": "020",
     "Model Name": "'55 Chevy",
-    "Series": "Chevy Bel AirSuper Treasure Hunt",
+    "Series": "Chevy Bel Air",
     "Series Number": "1/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/70/%2755_chevy.jpg/revision/latest?cb=20211115101135",
     "Local Photo": "images/hot-wheels/mainline/2022/020_55_chevy_eed69c6ee2.jpg",
@@ -699,7 +703,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/70/%2755_chevy.jpg/revision/latest?cb=20211115101135",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/020_55_chevy_eed69c6ee2.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/70/%2755_chevy.jpg/revision/latest?cb=20211115101135",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/020_55_chevy_eed69c6ee2.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/020_55_chevy_eed69c6ee2.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCW84",
@@ -741,7 +746,7 @@
     "Toy": "HCY60",
     "Number": "021",
     "Model Name": "'76 Greenwood Corvette(2nd Color)",
-    "Series": "Red EditionTarget Exclusive",
+    "Series": "",
     "Series Number": "3/12",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c3/76_Greenwood_Corvette_-_Red_Edition.jpg/revision/latest?cb=20220523193008",
     "Local Photo": "images/hot-wheels/mainline/2022/021_76_greenwood_corvette_2nd_color_d5f5079a4d.jpg",
@@ -753,7 +758,9 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c3/76_Greenwood_Corvette_-_Red_Edition.jpg/revision/latest?cb=20220523193008",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/021_76_greenwood_corvette_2nd_color_d5f5079a4d.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c3/76_Greenwood_Corvette_-_Red_Edition.jpg/revision/latest?cb=20220523193008",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/021_76_greenwood_corvette_2nd_color_d5f5079a4d.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/021_76_greenwood_corvette_2nd_color_d5f5079a4d.jpg",
+    "Exclusive Store": "Target Exclusive",
+    "Special Tag": "Red Edition"
   },
   {
     "Toy": "HCW80",
@@ -777,7 +784,7 @@
     "Toy": "HCT41",
     "Number": "022",
     "Model Name": "Roadster Bite",
-    "Series": "HW Speed TeamNew for 2022!",
+    "Series": "HW Speed Team",
     "Series Number": "1/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/af/RoadsterBite.jpg/revision/latest?cb=20211015081340",
     "Local Photo": "images/hot-wheels/mainline/2022/022_roadster_bite_952c48ef89.jpg",
@@ -795,7 +802,7 @@
     "Toy": "HCW81",
     "Number": "022",
     "Model Name": "Roadster Bite(2nd Color)",
-    "Series": "HW Speed TeamNew for 2022!",
+    "Series": "HW Speed Team",
     "Series Number": "1/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/83/SilverBite.jpg/revision/latest?cb=20220615103125",
     "Local Photo": "images/hot-wheels/mainline/2022/022_roadster_bite_2nd_color_7c9267884c.jpg",
@@ -867,7 +874,7 @@
     "Toy": "HCY26",
     "Number": "024",
     "Model Name": "Mazda REPU(2nd Color - Zamac)",
-    "Series": "HW Hot TrucksWalmart Exclusive",
+    "Series": "HW Hot Trucks",
     "Series Number": "2/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/92/Mazda_Repu_-_ZAMAC.jpg/revision/latest?cb=20220523193327",
     "Local Photo": "images/hot-wheels/mainline/2022/024_mazda_repu_2nd_color_zamac_a1535b55d9.jpg",
@@ -879,7 +886,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/92/Mazda_Repu_-_ZAMAC.jpg/revision/latest?cb=20220523193327",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/024_mazda_repu_2nd_color_zamac_a1535b55d9.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/92/Mazda_Repu_-_ZAMAC.jpg/revision/latest?cb=20220523193327",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/024_mazda_repu_2nd_color_zamac_a1535b55d9.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/024_mazda_repu_2nd_color_zamac_a1535b55d9.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCW82",
@@ -939,7 +947,7 @@
     "Toy": "HCY25",
     "Number": "026",
     "Model Name": "'20 Jeep Gladiator(2nd Color - Zamac)",
-    "Series": "Baja BlazersWalmart Exclusive",
+    "Series": "Baja Blazers",
     "Series Number": "4/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/b2/20_Jeep_Gladiator_-_ZAMAC.jpg/revision/latest?cb=20220523193927",
     "Local Photo": "images/hot-wheels/mainline/2022/026_20_jeep_gladiator_2nd_color_zamac_030218b2af.jpg",
@@ -951,7 +959,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/b2/20_Jeep_Gladiator_-_ZAMAC.jpg/revision/latest?cb=20220523193927",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/026_20_jeep_gladiator_2nd_color_zamac_030218b2af.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/b2/20_Jeep_Gladiator_-_ZAMAC.jpg/revision/latest?cb=20220523193927",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/026_20_jeep_gladiator_2nd_color_zamac_030218b2af.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/026_20_jeep_gladiator_2nd_color_zamac_030218b2af.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCW66",
@@ -975,7 +984,7 @@
     "Toy": "HCT36",
     "Number": "027",
     "Model Name": "Bricking Trails",
-    "Series": "ExperimotorsNew for 2022!",
+    "Series": "Experimotors",
     "Series Number": "2/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/50/BrickingTrails.jpg/revision/latest?cb=20211018101005",
     "Local Photo": "images/hot-wheels/mainline/2022/027_bricking_trails_0a40ac793a.jpg",
@@ -993,7 +1002,7 @@
     "Toy": "HCW86",
     "Number": "027",
     "Model Name": "Bricking Trails(2nd Color)",
-    "Series": "ExperimotorsNew for 2022!",
+    "Series": "Experimotors",
     "Series Number": "2/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/71/BrickingTrails2.jpg/revision/latest?cb=20230301224246",
     "Local Photo": "images/hot-wheels/mainline/2022/027_bricking_trails_2nd_color_765d8de930.jpg",
@@ -1191,7 +1200,7 @@
     "Toy": "HCT21",
     "Number": "033",
     "Model Name": "'87 Ford Sierra Cosworth",
-    "Series": "Retro RacersNew for 2022!Ryu's Rides",
+    "Series": "Retro Racers Ryu's Rides",
     "Series Number": "1/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e0/%2787FordSierra.jpg/revision/latest?cb=20211012082719",
     "Local Photo": "images/hot-wheels/mainline/2022/033_87_ford_sierra_cosworth_ec025140ab.jpg",
@@ -1209,7 +1218,7 @@
     "Toy": "HCW87",
     "Number": "033",
     "Model Name": "'87 Ford Sierra Cosworth(2nd Color)",
-    "Series": "Retro RacersNew for 2022!Ryu's Rides",
+    "Series": "Retro Racers Ryu's Rides",
     "Series Number": "1/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/1e/Pietervdw_HW_Ford_Sierra_blue.jpg/revision/latest?cb=20220321103007",
     "Local Photo": "images/hot-wheels/mainline/2022/033_87_ford_sierra_cosworth_2nd_color_b39fcbc66d.jpg",
@@ -1245,7 +1254,7 @@
     "Toy": "HCY20",
     "Number": "034",
     "Model Name": "'73 BMW 3.0 CSL Race Car",
-    "Series": "Retro RacersSuper Treasure Hunt",
+    "Series": "Retro Racers",
     "Series Number": "2/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/f1/2022-ML034_%28Large%29.JPG/revision/latest?cb=20220305032241",
     "Local Photo": "images/hot-wheels/mainline/2022/034_73_bmw_3_0_csl_race_car_b7034c8e95.jpg",
@@ -1257,13 +1266,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/f1/2022-ML034_%28Large%29.JPG/revision/latest?cb=20220305032241",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/034_73_bmw_3_0_csl_race_car_b7034c8e95.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/f1/2022-ML034_%28Large%29.JPG/revision/latest?cb=20220305032241",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/034_73_bmw_3_0_csl_race_car_b7034c8e95.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/034_73_bmw_3_0_csl_race_car_b7034c8e95.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCY58",
     "Number": "034",
     "Model Name": "'73 BMW 3.0 CSL Race Car(2nd Color)",
-    "Series": "Red EditionTarget Exclusive",
+    "Series": "",
     "Series Number": "1/12",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/0/02/2022_Hot_Wheels_73_BMW_Red_Edition_carded.jpg/revision/latest?cb=20220427090248",
     "Local Photo": "images/hot-wheels/mainline/2022/034_73_bmw_3_0_csl_race_car_2nd_color_d571fda519.jpg",
@@ -1275,7 +1285,9 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/0/02/2022_Hot_Wheels_73_BMW_Red_Edition_carded.jpg/revision/latest?cb=20220427090248",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/034_73_bmw_3_0_csl_race_car_2nd_color_d571fda519.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/0/02/2022_Hot_Wheels_73_BMW_Red_Edition_carded.jpg/revision/latest?cb=20220427090248",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/034_73_bmw_3_0_csl_race_car_2nd_color_d571fda519.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/034_73_bmw_3_0_csl_race_car_2nd_color_d571fda519.jpg",
+    "Exclusive Store": "Target Exclusive",
+    "Special Tag": "Red Edition"
   },
   {
     "Toy": "HCT56",
@@ -1335,7 +1347,7 @@
     "Toy": "HCX97",
     "Number": "037",
     "Model Name": "Quick Bite",
-    "Series": "Fast FoodieTreasure Hunt",
+    "Series": "Fast Foodie",
     "Series Number": "2/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/37/HCX97_037_Quick_Bite.jpg/revision/latest?cb=20211223222917",
     "Local Photo": "images/hot-wheels/mainline/2022/037_quick_bite_0c76e33e1b.jpg",
@@ -1347,7 +1359,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/37/HCX97_037_Quick_Bite.jpg/revision/latest?cb=20211223222917",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/037_quick_bite_0c76e33e1b.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/37/HCX97_037_Quick_Bite.jpg/revision/latest?cb=20211223222917",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/037_quick_bite_0c76e33e1b.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/037_quick_bite_0c76e33e1b.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCW49",
@@ -1443,7 +1456,7 @@
     "Toy": "HCY50",
     "Number": "041",
     "Model Name": "Ford Focus RS(2nd Color)",
-    "Series": "HW HatchbacksKroger Exclusive",
+    "Series": "HW Hatchbacks",
     "Series Number": "3/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7e/HCY50_-_Ford_Focus_RS-1.jpg/revision/latest?cb=20220830213952",
     "Local Photo": "images/hot-wheels/mainline/2022/041_ford_focus_rs_2nd_color_59d7ae0fd3.jpg",
@@ -1455,7 +1468,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7e/HCY50_-_Ford_Focus_RS-1.jpg/revision/latest?cb=20220830213952",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/041_ford_focus_rs_2nd_color_59d7ae0fd3.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7e/HCY50_-_Ford_Focus_RS-1.jpg/revision/latest?cb=20220830213952",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/041_ford_focus_rs_2nd_color_59d7ae0fd3.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/041_ford_focus_rs_2nd_color_59d7ae0fd3.jpg",
+    "Exclusive Store": "Kroger Exclusive"
   },
   {
     "Toy": "HCX73",
@@ -1497,7 +1511,7 @@
     "Toy": "HCY59",
     "Number": "042",
     "Model Name": "Volkswagen Beetle(2nd Color)",
-    "Series": "Red EditionTarget Exclusive",
+    "Series": "",
     "Series Number": "2/12",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/0/06/2022-042_HCY59_RED_Ed_VW_Bug_Black_open-4b.jpg/revision/latest?cb=20240118103147",
     "Local Photo": "images/hot-wheels/mainline/2022/042_volkswagen_beetle_2nd_color_79ad891f07.jpg",
@@ -1509,7 +1523,9 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/0/06/2022-042_HCY59_RED_Ed_VW_Bug_Black_open-4b.jpg/revision/latest?cb=20240118103147",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/042_volkswagen_beetle_2nd_color_79ad891f07.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/0/06/2022-042_HCY59_RED_Ed_VW_Bug_Black_open-4b.jpg/revision/latest?cb=20240118103147",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/042_volkswagen_beetle_2nd_color_79ad891f07.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/042_volkswagen_beetle_2nd_color_79ad891f07.jpg",
+    "Exclusive Store": "Target Exclusive",
+    "Special Tag": "Red Edition"
   },
   {
     "Toy": "HCW88",
@@ -1911,7 +1927,7 @@
     "Toy": "HCY16",
     "Number": "055",
     "Model Name": "Dodge Van",
-    "Series": "HW MetroSuper Treasure HuntRyu's Rides",
+    "Series": "HW Metro Ryu's Rides",
     "Series Number": "6/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/62/DODGE_VAN.jpg/revision/latest?cb=20211115101328",
     "Local Photo": "images/hot-wheels/mainline/2022/055_dodge_van_4db0bd9f27.jpg",
@@ -1923,13 +1939,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/62/DODGE_VAN.jpg/revision/latest?cb=20211115101328",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/055_dodge_van_4db0bd9f27.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/62/DODGE_VAN.jpg/revision/latest?cb=20211115101328",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/055_dodge_van_4db0bd9f27.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/055_dodge_van_4db0bd9f27.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HJP28",
     "Number": "055",
     "Model Name": "Dodge Van(2nd Color)",
-    "Series": "HW MetroBest Buy ExclusiveRyu's Rides",
+    "Series": "HW Metro Ryu's Rides",
     "Series Number": "6/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/f4/BestBuyVan.jpg/revision/latest?cb=20221105071813",
     "Local Photo": "images/hot-wheels/mainline/2022/055_dodge_van_2nd_color_929a08c411.jpg",
@@ -1941,7 +1958,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/f4/BestBuyVan.jpg/revision/latest?cb=20221105071813",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/055_dodge_van_2nd_color_929a08c411.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/f4/BestBuyVan.jpg/revision/latest?cb=20221105071813",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/055_dodge_van_2nd_color_929a08c411.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/055_dodge_van_2nd_color_929a08c411.jpg",
+    "Exclusive Store": "Best Buy Exclusive"
   },
   {
     "Toy": "HCT79",
@@ -1983,7 +2001,7 @@
     "Toy": "HCY51",
     "Number": "057",
     "Model Name": "McLaren F1 GTR(2nd Color)",
-    "Series": "Retro RacersKroger Exclusive",
+    "Series": "Retro Racers",
     "Series Number": "3/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/61/Kroger.jpeg/revision/latest?cb=20220803051427",
     "Local Photo": "images/hot-wheels/mainline/2022/057_mclaren_f1_gtr_2nd_color_7db04ce332.jpg",
@@ -1995,7 +2013,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/61/Kroger.jpeg/revision/latest?cb=20220803051427",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/057_mclaren_f1_gtr_2nd_color_7db04ce332.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/61/Kroger.jpeg/revision/latest?cb=20220803051427",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/057_mclaren_f1_gtr_2nd_color_7db04ce332.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/057_mclaren_f1_gtr_2nd_color_7db04ce332.jpg",
+    "Exclusive Store": "Kroger Exclusive"
   },
   {
     "Toy": "HCX86",
@@ -2109,7 +2128,7 @@
     "Toy": "HCT40",
     "Number": "061",
     "Model Name": "Sweet Driver",
-    "Series": "Fast FoodieNew for 2022!Ryu's Rides",
+    "Series": "Fast Foodie Ryu's Rides",
     "Series Number": "3/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/57/SweetDriver.jpg/revision/latest?cb=20211122061255",
     "Local Photo": "images/hot-wheels/mainline/2022/061_sweet_driver_a3c6b899c9.jpg",
@@ -2127,7 +2146,7 @@
     "Toy": "HCW95",
     "Number": "061",
     "Model Name": "Sweet Driver(2nd Color)",
-    "Series": "Fast FoodieNew for 2022!Ryu's Rides",
+    "Series": "Fast Foodie Ryu's Rides",
     "Series Number": "3/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a0/Sweet_Driver_Fast_Foodie_2022.PNG/revision/latest?cb=20231021123023",
     "Local Photo": "images/hot-wheels/mainline/2022/061_sweet_driver_2nd_color_4fc1cac2be.jpg",
@@ -2199,7 +2218,7 @@
     "Toy": "HCY52",
     "Number": "063",
     "Model Name": "'68 Dodge Dart(2nd Color)",
-    "Series": "HW Art CarsKroger Exclusive",
+    "Series": "HW Art Cars",
     "Series Number": "2/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e8/68_DODGE_DART_HCY52.jpg/revision/latest?cb=20221006160145",
     "Local Photo": "images/hot-wheels/mainline/2022/063_68_dodge_dart_2nd_color_64a707928b.jpg",
@@ -2211,7 +2230,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e8/68_DODGE_DART_HCY52.jpg/revision/latest?cb=20221006160145",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/063_68_dodge_dart_2nd_color_64a707928b.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e8/68_DODGE_DART_HCY52.jpg/revision/latest?cb=20221006160145",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/063_68_dodge_dart_2nd_color_64a707928b.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/063_68_dodge_dart_2nd_color_64a707928b.jpg",
+    "Exclusive Store": "Kroger Exclusive"
   },
   {
     "Toy": "HCW96",
@@ -2253,7 +2273,7 @@
     "Toy": "HCY27",
     "Number": "064",
     "Model Name": "Nissan R390 GT1(2nd Color - Zamac)",
-    "Series": "HW TurboRyu's RidesWalmart Exclusive",
+    "Series": "HW TurboRyu's Rides",
     "Series Number": "4/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5a/HW-2022-064-2-HCY27-Nissan_R390_GT1_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116115250",
     "Local Photo": "images/hot-wheels/mainline/2022/064_nissan_r390_gt1_2nd_color_zamac_33907c3d17.jpg",
@@ -2265,7 +2285,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5a/HW-2022-064-2-HCY27-Nissan_R390_GT1_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116115250",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/064_nissan_r390_gt1_2nd_color_zamac_33907c3d17.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5a/HW-2022-064-2-HCY27-Nissan_R390_GT1_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116115250",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/064_nissan_r390_gt1_2nd_color_zamac_33907c3d17.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/064_nissan_r390_gt1_2nd_color_zamac_33907c3d17.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCT67",
@@ -2307,7 +2328,7 @@
     "Toy": "HCY01",
     "Number": "066",
     "Model Name": "Pixel Shaker",
-    "Series": "HW Ride-OnsTreasure Hunt",
+    "Series": "HW Ride-Ons",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e4/PixelShaker.jpg/revision/latest?cb=20220825103002",
     "Local Photo": "images/hot-wheels/mainline/2022/066_pixel_shaker_5cfb3fb43e.jpg",
@@ -2319,7 +2340,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e4/PixelShaker.jpg/revision/latest?cb=20220825103002",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/066_pixel_shaker_5cfb3fb43e.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e4/PixelShaker.jpg/revision/latest?cb=20220825103002",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/066_pixel_shaker_5cfb3fb43e.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/066_pixel_shaker_5cfb3fb43e.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCV32",
@@ -2361,7 +2383,7 @@
     "Toy": "HCY64",
     "Number": "067",
     "Model Name": "Subaru WRX STI(3rd Color)",
-    "Series": "Red EditionTarget Exclusive",
+    "Series": "",
     "Series Number": "7/12",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/39/Subaru_wrx_sti_red_edition_2022.png/revision/latest?cb=20220926075210",
     "Local Photo": "images/hot-wheels/mainline/2022/067_subaru_wrx_sti_3rd_color_e9de47e3b6.jpg",
@@ -2373,7 +2395,9 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/39/Subaru_wrx_sti_red_edition_2022.png/revision/latest?cb=20220926075210",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/067_subaru_wrx_sti_3rd_color_e9de47e3b6.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/39/Subaru_wrx_sti_red_edition_2022.png/revision/latest?cb=20220926075210",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/067_subaru_wrx_sti_3rd_color_e9de47e3b6.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/067_subaru_wrx_sti_3rd_color_e9de47e3b6.jpg",
+    "Exclusive Store": "Target Exclusive",
+    "Special Tag": "Red Edition"
   },
   {
     "Toy": "HCT70",
@@ -2469,7 +2493,7 @@
     "Toy": "HCY43",
     "Number": "070",
     "Model Name": "'59 Chevy Impala(2nd Color)",
-    "Series": "Chevy Bel AirDollar General Exclusive",
+    "Series": "Chevy Bel Air",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/cb/59_CHEVY_IMPALA_HCY43.jpg/revision/latest?cb=20221006161720",
     "Local Photo": "images/hot-wheels/mainline/2022/070_59_chevy_impala_2nd_color_c8d3b789f8.jpg",
@@ -2481,13 +2505,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/cb/59_CHEVY_IMPALA_HCY43.jpg/revision/latest?cb=20221006161720",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/070_59_chevy_impala_2nd_color_c8d3b789f8.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/cb/59_CHEVY_IMPALA_HCY43.jpg/revision/latest?cb=20221006161720",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/070_59_chevy_impala_2nd_color_c8d3b789f8.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/070_59_chevy_impala_2nd_color_c8d3b789f8.jpg",
+    "Exclusive Store": "Dollar General Exclusive"
   },
   {
     "Toy": "HCT42",
     "Number": "071",
     "Model Name": "Mach It Go",
-    "Series": "HW Speed TeamNew for 2022!",
+    "Series": "HW Speed Team",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/57/MachItGo.jpg/revision/latest?cb=20211122061422",
     "Local Photo": "images/hot-wheels/mainline/2022/071_mach_it_go_9a692afbdc.jpg",
@@ -2505,7 +2530,7 @@
     "Toy": "HCW90",
     "Number": "071",
     "Model Name": "Mach It Go(2nd Color)",
-    "Series": "HW Speed TeamNew for 2022!",
+    "Series": "HW Speed Team",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/b8/HW-2022-071-2-HCW90-Mach_It_Go_%282nd_Colour%29.png/revision/latest?cb=20221116115352",
     "Local Photo": "images/hot-wheels/mainline/2022/071_mach_it_go_2nd_color_dbdcacf9c0.jpg",
@@ -2523,7 +2548,7 @@
     "Toy": "HCT18",
     "Number": "072",
     "Model Name": "'20 Toyota Tacoma",
-    "Series": "HW Hot TrucksNew for 2022!",
+    "Series": "HW Hot Trucks",
     "Series Number": "4/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/86/%2720ToyotaTacoma.jpg/revision/latest?cb=20211117081532",
     "Local Photo": "images/hot-wheels/mainline/2022/072_20_toyota_tacoma_529892ffce.jpg",
@@ -2541,7 +2566,7 @@
     "Toy": "HCX56",
     "Number": "072",
     "Model Name": "'20 Toyota Tacoma(2nd Color)",
-    "Series": "HW Hot TrucksNew for 2022!",
+    "Series": "HW Hot Trucks",
     "Series Number": "4/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/88/ToyotaTacoma.jpg/revision/latest?cb=20221112035604",
     "Local Photo": "images/hot-wheels/mainline/2022/072_20_toyota_tacoma_2nd_color_226e98628a.jpg",
@@ -2559,7 +2584,7 @@
     "Toy": "HCT06",
     "Number": "073",
     "Model Name": "Ford Mustang Mach-E 1400",
-    "Series": "HW Green SpeedNew for 2022!",
+    "Series": "HW Green Speed",
     "Series Number": "1/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e9/Mach-E1400.jpg/revision/latest?cb=20211117081457",
     "Local Photo": "images/hot-wheels/mainline/2022/073_ford_mustang_mach_e_1400_bcb3992cd6.jpg",
@@ -2577,7 +2602,7 @@
     "Toy": "HCX38",
     "Number": "073",
     "Model Name": "Ford Mustang Mach-E 1400(2nd Color)",
-    "Series": "HW Green SpeedNew for 2022!",
+    "Series": "HW Green Speed",
     "Series Number": "1/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/89/HCX38-01.JPG/revision/latest?cb=20220607000610",
     "Local Photo": "images/hot-wheels/mainline/2022/073_ford_mustang_mach_e_1400_2nd_color_eebd36f7ae.jpg",
@@ -2595,7 +2620,7 @@
     "Toy": "HCY30",
     "Number": "073",
     "Model Name": "Ford Mustang Mach-E 1400(3rd Color - Zamac)",
-    "Series": "HW Green SpeedNew for 2022!Walmart Exclusive",
+    "Series": "HW Green Speed",
     "Series Number": "1/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/1b/FORD_MUSTANG_MACH-E_1400_HCY30.jpg/revision/latest?cb=20221006194942",
     "Local Photo": "images/hot-wheels/mainline/2022/073_ford_mustang_mach_e_1400_3rd_color_zamac_27e2b00382.jpg",
@@ -2607,7 +2632,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/1b/FORD_MUSTANG_MACH-E_1400_HCY30.jpg/revision/latest?cb=20221006194942",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/073_ford_mustang_mach_e_1400_3rd_color_zamac_27e2b00382.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/1b/FORD_MUSTANG_MACH-E_1400_HCY30.jpg/revision/latest?cb=20221006194942",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/073_ford_mustang_mach_e_1400_3rd_color_zamac_27e2b00382.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/073_ford_mustang_mach_e_1400_3rd_color_zamac_27e2b00382.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCV15",
@@ -2631,7 +2657,7 @@
     "Toy": "HCY45",
     "Number": "074",
     "Model Name": "Custom Ford Bronco(2nd Color)",
-    "Series": "Baja BlazersDollar General Exclusive",
+    "Series": "Baja Blazers",
     "Series Number": "8/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/2d/Custom_Ford_Bronco_-_Yellow.jpg/revision/latest?cb=20220523194523",
     "Local Photo": "images/hot-wheels/mainline/2022/074_custom_ford_bronco_2nd_color_1beb2be1c0.jpg",
@@ -2643,7 +2669,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/2d/Custom_Ford_Bronco_-_Yellow.jpg/revision/latest?cb=20220523194523",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/074_custom_ford_bronco_2nd_color_1beb2be1c0.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/2d/Custom_Ford_Bronco_-_Yellow.jpg/revision/latest?cb=20220523194523",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/074_custom_ford_bronco_2nd_color_1beb2be1c0.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/074_custom_ford_bronco_2nd_color_1beb2be1c0.jpg",
+    "Exclusive Store": "Dollar General Exclusive"
   },
   {
     "Toy": "HCV47",
@@ -2685,7 +2712,7 @@
     "Toy": "HCY61",
     "Number": "076",
     "Model Name": "'56 Ford F-100(2nd Color)",
-    "Series": "Red EditionTarget Exclusive",
+    "Series": "",
     "Series Number": "4/12",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/ba/56_Ford_F-100_-_Red_Edition.jpg/revision/latest?cb=20220523194556",
     "Local Photo": "images/hot-wheels/mainline/2022/076_56_ford_f_100_2nd_color_34869ab2bf.jpg",
@@ -2697,7 +2724,9 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/ba/56_Ford_F-100_-_Red_Edition.jpg/revision/latest?cb=20220523194556",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/076_56_ford_f_100_2nd_color_34869ab2bf.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/ba/56_Ford_F-100_-_Red_Edition.jpg/revision/latest?cb=20220523194556",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/076_56_ford_f_100_2nd_color_34869ab2bf.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/076_56_ford_f_100_2nd_color_34869ab2bf.jpg",
+    "Exclusive Store": "Target Exclusive",
+    "Special Tag": "Red Edition"
   },
   {
     "Toy": "HCT89",
@@ -2739,7 +2768,7 @@
     "Toy": "HCT04",
     "Number": "078",
     "Model Name": "Classic TV Series Batmobile",
-    "Series": "BatmanNew for 2022!",
+    "Series": "Batman",
     "Series Number": "3/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/50/%27ToonedBatmobile.jpg/revision/latest?cb=20211202064206",
     "Local Photo": "images/hot-wheels/mainline/2022/078_classic_tv_series_batmobile_28cd547c96.jpg",
@@ -2757,7 +2786,7 @@
     "Toy": "HCW60",
     "Number": "078",
     "Model Name": "Classic TV Series Batmobile(2nd Color)",
-    "Series": "BatmanNew for 2022!",
+    "Series": "Batman",
     "Series Number": "3/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/b0/CLASSIC_TV_SERIES_BATMOBILE_HCW60.jpg/revision/latest?cb=20220706001314",
     "Local Photo": "images/hot-wheels/mainline/2022/078_classic_tv_series_batmobile_2nd_color_95ac081d2e.jpg",
@@ -2793,7 +2822,7 @@
     "Toy": "HCY28",
     "Number": "079",
     "Model Name": "'69 COPO Corvette(2nd Color - Zamac)",
-    "Series": "Retro RacersWalmart Exclusive",
+    "Series": "Retro Racers",
     "Series Number": "6/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/9d/69_Copo_Corvette_-_ZAMAC_Walmart_Exclusive.jpg/revision/latest?cb=20220516192704",
     "Local Photo": "images/hot-wheels/mainline/2022/079_69_copo_corvette_2nd_color_zamac_a167c2c175.jpg",
@@ -2805,7 +2834,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/9d/69_Copo_Corvette_-_ZAMAC_Walmart_Exclusive.jpg/revision/latest?cb=20220516192704",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/079_69_copo_corvette_2nd_color_zamac_a167c2c175.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/9d/69_Copo_Corvette_-_ZAMAC_Walmart_Exclusive.jpg/revision/latest?cb=20220516192704",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/079_69_copo_corvette_2nd_color_zamac_a167c2c175.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/079_69_copo_corvette_2nd_color_zamac_a167c2c175.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCV53",
@@ -2829,7 +2859,7 @@
     "Toy": "HCY08",
     "Number": "081",
     "Model Name": "Tooned Twin Mill",
-    "Series": "ToonedTreasure Hunt",
+    "Series": "Tooned",
     "Series Number": "3/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/25/Tooned_Twin_Mill_2022_1_TH_Sealed.jpg/revision/latest?cb=20220208224159",
     "Local Photo": "images/hot-wheels/mainline/2022/081_tooned_twin_mill_37df5b161d.jpg",
@@ -2841,7 +2871,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/25/Tooned_Twin_Mill_2022_1_TH_Sealed.jpg/revision/latest?cb=20220208224159",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/081_tooned_twin_mill_37df5b161d.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/25/Tooned_Twin_Mill_2022_1_TH_Sealed.jpg/revision/latest?cb=20220208224159",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/081_tooned_twin_mill_37df5b161d.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/081_tooned_twin_mill_37df5b161d.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCV51",
@@ -2883,7 +2914,7 @@
     "Toy": "HCT31",
     "Number": "083",
     "Model Name": "Count Muscula",
-    "Series": "HW Dream GarageNew for 2022!",
+    "Series": "HW Dream Garage",
     "Series Number": "2/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a0/CountMuscula.jpg/revision/latest?cb=20211210052342",
     "Local Photo": "images/hot-wheels/mainline/2022/083_count_muscula_ba55dd7cd1.jpg",
@@ -2901,7 +2932,7 @@
     "Toy": "HCX01",
     "Number": "083",
     "Model Name": "Count Muscula(2nd Color)",
-    "Series": "HW Dream GarageNew for 2022!",
+    "Series": "HW Dream Garage",
     "Series Number": "2/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/fa/COUNT_MUSCULA_HCX01.jpg/revision/latest?cb=20220717232658",
     "Local Photo": "images/hot-wheels/mainline/2022/083_count_muscula_2nd_color_c59713ee28.jpg",
@@ -2954,8 +2985,8 @@
   {
     "Toy": "HCT08",
     "Number": "085",
-    "Model Name": "Lamborghini Sián FKP 37",
-    "Series": "Factory FreshNew for 2022!",
+    "Model Name": "Lamborghini Si\u00e1n FKP 37",
+    "Series": "Factory Fresh",
     "Series Number": "1/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e6/LamborghiniSianFKP37_Front.png/revision/latest?cb=20221105163600",
     "Local Photo": "images/hot-wheels/mainline/2022/085_lamborghini_si_n_fkp_37_59e15d56e3.jpg",
@@ -2991,7 +3022,7 @@
     "Toy": "HCY42",
     "Number": "086",
     "Model Name": "Mercedes-Benz 500 E(2nd Color)",
-    "Series": "Factory FreshDollar General Exclusive",
+    "Series": "Factory Fresh",
     "Series Number": "2/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7d/2022HWMercedesBenz500EDGExclWhite-86.jpg/revision/latest?cb=20220715183115",
     "Local Photo": "images/hot-wheels/mainline/2022/086_mercedes_benz_500_e_2nd_color_a3f1a52360.jpg",
@@ -3003,7 +3034,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7d/2022HWMercedesBenz500EDGExclWhite-86.jpg/revision/latest?cb=20220715183115",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/086_mercedes_benz_500_e_2nd_color_a3f1a52360.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7d/2022HWMercedesBenz500EDGExclWhite-86.jpg/revision/latest?cb=20220715183115",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/086_mercedes_benz_500_e_2nd_color_a3f1a52360.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/086_mercedes_benz_500_e_2nd_color_a3f1a52360.jpg",
+    "Exclusive Store": "Dollar General Exclusive"
   },
   {
     "Toy": "HCT53",
@@ -3153,7 +3185,7 @@
     "Toy": "HCY57",
     "Number": "091",
     "Model Name": "Toyota Land Cruiser 80(2nd Color)",
-    "Series": "Mud StudsKroger Exclusive",
+    "Series": "Mud Studs",
     "Series Number": "2/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/39/KrogerCruiser.jpg/revision/latest?cb=20221105071831",
     "Local Photo": "images/hot-wheels/mainline/2022/091_toyota_land_cruiser_80_2nd_color_42d593fccb.jpg",
@@ -3165,7 +3197,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/39/KrogerCruiser.jpg/revision/latest?cb=20221105071831",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/091_toyota_land_cruiser_80_2nd_color_42d593fccb.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/39/KrogerCruiser.jpg/revision/latest?cb=20221105071831",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/091_toyota_land_cruiser_80_2nd_color_42d593fccb.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/091_toyota_land_cruiser_80_2nd_color_42d593fccb.jpg",
+    "Exclusive Store": "Kroger Exclusive"
   },
   {
     "Toy": "HCV22",
@@ -3207,7 +3240,7 @@
     "Toy": "HCY14",
     "Number": "093",
     "Model Name": "'63 Studebaker Champ",
-    "Series": "HW Hot TrucksSuper Treasure Hunt",
+    "Series": "HW Hot Trucks",
     "Series Number": "5/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/bf/%E2%80%9863_studebaker.jpg/revision/latest?cb=20220120045059",
     "Local Photo": "images/hot-wheels/mainline/2022/093_63_studebaker_champ_96017cb55e.jpg",
@@ -3219,7 +3252,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/bf/%E2%80%9863_studebaker.jpg/revision/latest?cb=20220120045059",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/093_63_studebaker_champ_96017cb55e.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/bf/%E2%80%9863_studebaker.jpg/revision/latest?cb=20220120045059",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/093_63_studebaker_champ_96017cb55e.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/093_63_studebaker_champ_96017cb55e.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCT57",
@@ -3351,7 +3385,7 @@
     "Toy": "HCY44",
     "Number": "098",
     "Model Name": "Custom '01 Acura Integra GSR(2nd Color)",
-    "Series": "HW J-ImportsDollar General Exclusive",
+    "Series": "HW J-Imports",
     "Series Number": "2/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/3c/2022HWCustom01AcuraIntegraGSRDGBlue-98.jpg/revision/latest?cb=20220811134644",
     "Local Photo": "images/hot-wheels/mainline/2022/098_custom_01_acura_integra_gsr_2nd_color_8c6bf087e5.jpg",
@@ -3363,7 +3397,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/3c/2022HWCustom01AcuraIntegraGSRDGBlue-98.jpg/revision/latest?cb=20220811134644",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/098_custom_01_acura_integra_gsr_2nd_color_8c6bf087e5.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/3c/2022HWCustom01AcuraIntegraGSRDGBlue-98.jpg/revision/latest?cb=20220811134644",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/098_custom_01_acura_integra_gsr_2nd_color_8c6bf087e5.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/098_custom_01_acura_integra_gsr_2nd_color_8c6bf087e5.jpg",
+    "Exclusive Store": "Dollar General Exclusive"
   },
   {
     "Toy": "HCT90",
@@ -3423,7 +3458,7 @@
     "Toy": "HCY53",
     "Number": "100",
     "Model Name": "Nissan Leaf NISMO RC_02(2nd Color)",
-    "Series": "HW Green SpeedKroger Exclusive",
+    "Series": "HW Green Speed",
     "Series Number": "2/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e6/2022_Nissan_Leaf_Black.jpg/revision/latest?cb=20220727100713",
     "Local Photo": "images/hot-wheels/mainline/2022/100_nissan_leaf_nismo_rc_02_2nd_color_6528d00bd1.jpg",
@@ -3435,7 +3470,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e6/2022_Nissan_Leaf_Black.jpg/revision/latest?cb=20220727100713",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/100_nissan_leaf_nismo_rc_02_2nd_color_6528d00bd1.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e6/2022_Nissan_Leaf_Black.jpg/revision/latest?cb=20220727100713",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/100_nissan_leaf_nismo_rc_02_2nd_color_6528d00bd1.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/100_nissan_leaf_nismo_rc_02_2nd_color_6528d00bd1.jpg",
+    "Exclusive Store": "Kroger Exclusive"
   },
   {
     "Toy": "HCX89",
@@ -3459,7 +3495,7 @@
     "Toy": "HCT38",
     "Number": "101",
     "Model Name": "Coupe Clip",
-    "Series": "ExperimotorsNew for 2022!",
+    "Series": "Experimotors",
     "Series Number": "6/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/55/CoupeClip.jpg/revision/latest?cb=20211210052618",
     "Local Photo": "images/hot-wheels/mainline/2022/101_coupe_clip_bed5fcb20f.jpg",
@@ -3477,7 +3513,7 @@
     "Toy": "HCX09",
     "Number": "101",
     "Model Name": "Coupe Clip(2nd Color)",
-    "Series": "ExperimotorsNew for 2022!",
+    "Series": "Experimotors",
     "Series Number": "6/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/0/02/HCX09.jpg/revision/latest?cb=20220411135922",
     "Local Photo": "images/hot-wheels/mainline/2022/101_coupe_clip_2nd_color_c0083ed77e.jpg",
@@ -3531,7 +3567,7 @@
     "Toy": "HCV69",
     "Number": "103",
     "Model Name": "Aston Martin Valhalla Concept",
-    "Series": "HW Screen TimeNew in Mainline",
+    "Series": "HW Screen Time",
     "Series Number": "6/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/d/d1/ValhallaBond.jpg/revision/latest?cb=20211231073921",
     "Local Photo": "images/hot-wheels/mainline/2022/103_aston_martin_valhalla_concept_e7d9d8b3c0.jpg",
@@ -3543,13 +3579,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/d/d1/ValhallaBond.jpg/revision/latest?cb=20211231073921",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/103_aston_martin_valhalla_concept_e7d9d8b3c0.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/d/d1/ValhallaBond.jpg/revision/latest?cb=20211231073921",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/103_aston_martin_valhalla_concept_e7d9d8b3c0.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/103_aston_martin_valhalla_concept_e7d9d8b3c0.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCT26",
     "Number": "104",
     "Model Name": "Toon'd '83 Chevy Silverado",
-    "Series": "ToonedNew for 2022!",
+    "Series": "Tooned",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e4/Toon%27dSilverado.jpg/revision/latest?cb=20211228053318",
     "Local Photo": "images/hot-wheels/mainline/2022/104_toon_d_83_chevy_silverado_eedec0717b.jpg",
@@ -3567,7 +3604,7 @@
     "Toy": "HCX11",
     "Number": "104",
     "Model Name": "Toon'd '83 Chevy Silverado(2nd Color)",
-    "Series": "ToonedNew for 2022!",
+    "Series": "Tooned",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/4/49/2022HWToond83ChevySilveradoRedUSA-104.jpg/revision/latest?cb=20220822190738",
     "Local Photo": "images/hot-wheels/mainline/2022/104_toon_d_83_chevy_silverado_2nd_color_87c99be3b4.jpg",
@@ -3639,7 +3676,7 @@
     "Toy": "HCW39",
     "Number": "106",
     "Model Name": "2020 Corvette",
-    "Series": "Factory FreshNew in Mainline",
+    "Series": "Factory Fresh",
     "Series Number": "3/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c0/%2720CorvetteC8.jpg/revision/latest?cb=20220327110322",
     "Local Photo": "images/hot-wheels/mainline/2022/106_2020_corvette_9e35e34a2e.jpg",
@@ -3651,13 +3688,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c0/%2720CorvetteC8.jpg/revision/latest?cb=20220327110322",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/106_2020_corvette_9e35e34a2e.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c0/%2720CorvetteC8.jpg/revision/latest?cb=20220327110322",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/106_2020_corvette_9e35e34a2e.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/106_2020_corvette_9e35e34a2e.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCY11",
     "Number": "106",
     "Model Name": "2020 Corvette",
-    "Series": "Factory FreshNew in MainlineSuper Treasure Hunt",
+    "Series": "Factory Fresh",
     "Series Number": "3/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/4/4c/2020_corvetteSTH.jpg/revision/latest?cb=20211115104454",
     "Local Photo": "images/hot-wheels/mainline/2022/106_2020_corvette_953a973e4e.jpg",
@@ -3669,7 +3707,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/4/4c/2020_corvetteSTH.jpg/revision/latest?cb=20211115104454",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/106_2020_corvette_953a973e4e.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/4/4c/2020_corvetteSTH.jpg/revision/latest?cb=20211115104454",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/106_2020_corvette_953a973e4e.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/106_2020_corvette_953a973e4e.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCT93",
@@ -3711,7 +3750,7 @@
     "Toy": "HJP31",
     "Number": "107",
     "Model Name": "McLaren F1(3rd Color)",
-    "Series": "Factory FreshBest Buy ExclusiveRyu's Rides",
+    "Series": "Factory Fresh Ryu's Rides",
     "Series Number": "4/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/2f/BestBuyMcLaren.jpg/revision/latest?cb=20221105071847",
     "Local Photo": "images/hot-wheels/mainline/2022/107_mclaren_f1_3rd_color_f0769a80d2.jpg",
@@ -3723,7 +3762,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/2f/BestBuyMcLaren.jpg/revision/latest?cb=20221105071847",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/107_mclaren_f1_3rd_color_f0769a80d2.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/2f/BestBuyMcLaren.jpg/revision/latest?cb=20221105071847",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/107_mclaren_f1_3rd_color_f0769a80d2.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/107_mclaren_f1_3rd_color_f0769a80d2.jpg",
+    "Exclusive Store": "Best Buy Exclusive"
   },
   {
     "Toy": "HCV74",
@@ -3783,7 +3823,7 @@
     "Toy": "HCY31",
     "Number": "109",
     "Model Name": "'71 Dodge Charger(2nd Color - Zamac)",
-    "Series": "HW Art CarsWalmart Exclusive",
+    "Series": "HW Art Cars",
     "Series Number": "5/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/99/Hot_Wheels_Skate_2023_-_71_Dodge_Charger_-_HW_Art_Cars_-_ZAMAC.png/revision/latest?cb=20221203034616",
     "Local Photo": "images/hot-wheels/mainline/2022/109_71_dodge_charger_2nd_color_zamac_eae66ccc8e.jpg",
@@ -3795,7 +3835,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/99/Hot_Wheels_Skate_2023_-_71_Dodge_Charger_-_HW_Art_Cars_-_ZAMAC.png/revision/latest?cb=20221203034616",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/109_71_dodge_charger_2nd_color_zamac_eae66ccc8e.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/99/Hot_Wheels_Skate_2023_-_71_Dodge_Charger_-_HW_Art_Cars_-_ZAMAC.png/revision/latest?cb=20221203034616",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/109_71_dodge_charger_2nd_color_zamac_eae66ccc8e.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/109_71_dodge_charger_2nd_color_zamac_eae66ccc8e.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCX14",
@@ -3819,7 +3860,7 @@
     "Toy": "HCT23",
     "Number": "110",
     "Model Name": "LB Super Silhouette Nissan Silvia (S15)",
-    "Series": "HW TurboNew for 2022!",
+    "Series": "HW Turbo",
     "Series Number": "6/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a1/LBWKSilvia.jpg/revision/latest?cb=20211231074315",
     "Local Photo": "images/hot-wheels/mainline/2022/110_lb_super_silhouette_nissan_silvia_s15_8c54418257.jpg",
@@ -3837,7 +3878,7 @@
     "Toy": "HCX15",
     "Number": "110",
     "Model Name": "LB Super Silhouette Nissan Silvia (S15)(2nd Color)",
-    "Series": "HW TurboNew for 2022!",
+    "Series": "HW Turbo",
     "Series Number": "6/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/1d/YellowLBWKSilvia.jpg/revision/latest?cb=20220721133328",
     "Local Photo": "images/hot-wheels/mainline/2022/110_lb_super_silhouette_nissan_silvia_s15_2nd_color_e55ebb213c.jpg",
@@ -3891,7 +3932,7 @@
     "Toy": "HCY56",
     "Number": "111",
     "Model Name": "'70 Chevelle SS Wagon(3rd Color)",
-    "Series": "HW WagonsKroger Exclusive",
+    "Series": "HW Wagons",
     "Series Number": "1/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/25/KrogerChevelle.jpg/revision/latest?cb=20221105071901",
     "Local Photo": "images/hot-wheels/mainline/2022/111_70_chevelle_ss_wagon_3rd_color_75b1c180c9.jpg",
@@ -3903,7 +3944,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/25/KrogerChevelle.jpg/revision/latest?cb=20221105071901",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/111_70_chevelle_ss_wagon_3rd_color_75b1c180c9.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/25/KrogerChevelle.jpg/revision/latest?cb=20221105071901",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/111_70_chevelle_ss_wagon_3rd_color_75b1c180c9.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/111_70_chevelle_ss_wagon_3rd_color_75b1c180c9.jpg",
+    "Exclusive Store": "Kroger Exclusive"
   },
   {
     "Toy": "HCV14",
@@ -3927,7 +3969,7 @@
     "Toy": "HCY29",
     "Number": "112",
     "Model Name": "Big-Air Bel-Air(2nd Color - Zamac)",
-    "Series": "Chevy Bel AirWalmart Exclusive",
+    "Series": "Chevy Bel Air",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/61/Big-Air_Bel-Air_-_Silver_-_ZAMAC.jpg/revision/latest?cb=20220523224732",
     "Local Photo": "images/hot-wheels/mainline/2022/112_big_air_bel_air_2nd_color_zamac_9bfe085121.jpg",
@@ -3939,7 +3981,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/61/Big-Air_Bel-Air_-_Silver_-_ZAMAC.jpg/revision/latest?cb=20220523224732",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/112_big_air_bel_air_2nd_color_zamac_9bfe085121.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/61/Big-Air_Bel-Air_-_Silver_-_ZAMAC.jpg/revision/latest?cb=20220523224732",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/112_big_air_bel_air_2nd_color_zamac_9bfe085121.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/112_big_air_bel_air_2nd_color_zamac_9bfe085121.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCX75",
@@ -3963,7 +4006,7 @@
     "Toy": "HCY05",
     "Number": "113",
     "Model Name": "Draftnator",
-    "Series": "HW Speed TeamTreasure Hunt",
+    "Series": "HW Speed Team",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c9/HCY05.jpg/revision/latest?cb=20220411220534",
     "Local Photo": "images/hot-wheels/mainline/2022/113_draftnator_b13450081a.jpg",
@@ -3975,7 +4018,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c9/HCY05.jpg/revision/latest?cb=20220411220534",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/113_draftnator_b13450081a.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c9/HCY05.jpg/revision/latest?cb=20220411220534",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/113_draftnator_b13450081a.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/113_draftnator_b13450081a.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCV33",
@@ -3999,7 +4043,7 @@
     "Toy": "HCY62",
     "Number": "114",
     "Model Name": "'83 Chevy Silverado(2nd Color)",
-    "Series": "Red EditionTarget Exclusive",
+    "Series": "",
     "Series Number": "5/12",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/9e/RedEdSilverado.jpg/revision/latest?cb=20221105071914",
     "Local Photo": "images/hot-wheels/mainline/2022/114_83_chevy_silverado_2nd_color_f8e8a6ff8b.jpg",
@@ -4011,13 +4055,15 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/9e/RedEdSilverado.jpg/revision/latest?cb=20221105071914",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/114_83_chevy_silverado_2nd_color_f8e8a6ff8b.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/9e/RedEdSilverado.jpg/revision/latest?cb=20221105071914",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/114_83_chevy_silverado_2nd_color_f8e8a6ff8b.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/114_83_chevy_silverado_2nd_color_f8e8a6ff8b.jpg",
+    "Exclusive Store": "Target Exclusive",
+    "Special Tag": "Red Edition"
   },
   {
     "Toy": "HCT33",
     "Number": "115",
     "Model Name": "Lolux",
-    "Series": "HW Hot TrucksNew for 2022!",
+    "Series": "HW Hot Trucks",
     "Series Number": "8/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/ff/Lolux.jpg/revision/latest?cb=20211230062719",
     "Local Photo": "images/hot-wheels/mainline/2022/115_lolux_af3e363028.jpg",
@@ -4035,7 +4081,7 @@
     "Toy": "HCX16",
     "Number": "115",
     "Model Name": "Lolux(2nd Color)",
-    "Series": "HW Hot TrucksNew for 2022!",
+    "Series": "HW Hot Trucks",
     "Series Number": "8/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/19/20221015_182532.jpg/revision/latest?cb=20221113031131",
     "Local Photo": "images/hot-wheels/mainline/2022/115_lolux_2nd_color_b679097f23.jpg",
@@ -4143,7 +4189,7 @@
     "Toy": "HCY33",
     "Number": "118",
     "Model Name": "Honda S2000(3rd Color - Zamac)",
-    "Series": "HW J-ImportsRyu's RidesWalmart Exclusive",
+    "Series": "HW J-ImportsRyu's Rides",
     "Series Number": "3/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/78/ZAMACS2000.jpg/revision/latest?cb=20221105071926",
     "Local Photo": "images/hot-wheels/mainline/2022/118_honda_s2000_3rd_color_zamac_b6afbbc0cd.jpg",
@@ -4155,7 +4201,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/78/ZAMACS2000.jpg/revision/latest?cb=20221105071926",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/118_honda_s2000_3rd_color_zamac_b6afbbc0cd.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/78/ZAMACS2000.jpg/revision/latest?cb=20221105071926",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/118_honda_s2000_3rd_color_zamac_b6afbbc0cd.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/118_honda_s2000_3rd_color_zamac_b6afbbc0cd.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCV77",
@@ -4287,7 +4334,7 @@
     "Toy": "HCT28",
     "Number": "123",
     "Model Name": "Glory Chaser",
-    "Series": "Retro RacersNew for 2022!",
+    "Series": "Retro Racers",
     "Series Number": "7/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/0/0d/GloryChaser.jpg/revision/latest?cb=20211230062658",
     "Local Photo": "images/hot-wheels/mainline/2022/123_glory_chaser_83bc6f9101.jpg",
@@ -4305,7 +4352,7 @@
     "Toy": "HCX20",
     "Number": "123",
     "Model Name": "Glory Chaser(2nd Color)",
-    "Series": "Retro RacersNew for 2022!",
+    "Series": "Retro Racers",
     "Series Number": "7/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/28/2022HWGloryChaserRedInt-123.jpg/revision/latest?cb=20220717175146",
     "Local Photo": "images/hot-wheels/mainline/2022/123_glory_chaser_2nd_color_dfc0b09a57.jpg",
@@ -4323,7 +4370,7 @@
     "Toy": "HCT13",
     "Number": "124",
     "Model Name": "Nissan Z Proto",
-    "Series": "Factory FreshNew for 2022!",
+    "Series": "Factory Fresh",
     "Series Number": "5/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/8a/NissanZProto.jpg/revision/latest?cb=20220122045509",
     "Local Photo": "images/hot-wheels/mainline/2022/124_nissan_z_proto_da21578c39.jpg",
@@ -4341,7 +4388,7 @@
     "Toy": "HCX34",
     "Number": "124",
     "Model Name": "Nissan Z Proto(2nd Color)",
-    "Series": "Factory FreshNew for 2022!",
+    "Series": "Factory Fresh",
     "Series Number": "5/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/af/ZProtoWhite.jpg/revision/latest?cb=20220618124153",
     "Local Photo": "images/hot-wheels/mainline/2022/124_nissan_z_proto_2nd_color_fa7d0a7577.jpg",
@@ -4377,7 +4424,7 @@
     "Toy": "HCY12",
     "Number": "125",
     "Model Name": "'99 Honda Civic Type R (EK9)",
-    "Series": "HW HatchbacksSuper Treasure HuntRyu's Rides",
+    "Series": "HW Hatchbacks Ryu's Rides",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/38/Civic_EK9.jpg/revision/latest?cb=20220120045142",
     "Local Photo": "images/hot-wheels/mainline/2022/125_99_honda_civic_type_r_ek9_677922fb3c.jpg",
@@ -4389,13 +4436,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/38/Civic_EK9.jpg/revision/latest?cb=20220120045142",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/125_99_honda_civic_type_r_ek9_677922fb3c.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/38/Civic_EK9.jpg/revision/latest?cb=20220120045142",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/125_99_honda_civic_type_r_ek9_677922fb3c.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/125_99_honda_civic_type_r_ek9_677922fb3c.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCY63",
     "Number": "125",
     "Model Name": "'99 Honda Civic Type R (EK9)(2nd Color)",
-    "Series": "Red EditionTarget ExclusiveRyu's Rides",
+    "Series": "Ryu's Rides",
     "Series Number": "6/12",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/20/RedEditionEK.jpg/revision/latest?cb=20220806125720",
     "Local Photo": "images/hot-wheels/mainline/2022/125_99_honda_civic_type_r_ek9_2nd_color_e0584087b1.jpg",
@@ -4407,13 +4455,15 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/20/RedEditionEK.jpg/revision/latest?cb=20220806125720",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/125_99_honda_civic_type_r_ek9_2nd_color_e0584087b1.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/20/RedEditionEK.jpg/revision/latest?cb=20220806125720",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/125_99_honda_civic_type_r_ek9_2nd_color_e0584087b1.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/125_99_honda_civic_type_r_ek9_2nd_color_e0584087b1.jpg",
+    "Exclusive Store": "Target Exclusive",
+    "Special Tag": "Red Edition"
   },
   {
     "Toy": "HCY03",
     "Number": "126",
     "Model Name": "'17 Jeep Wrangler",
-    "Series": "Mud StudsTreasure Hunt",
+    "Series": "Mud Studs",
     "Series Number": "3/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/33/17_JEEP_WRANGLER_HCY03_TH.jpg/revision/latest?cb=20220706134558",
     "Local Photo": "images/hot-wheels/mainline/2022/126_17_jeep_wrangler_31c3abbd07.jpg",
@@ -4425,7 +4475,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/33/17_JEEP_WRANGLER_HCY03_TH.jpg/revision/latest?cb=20220706134558",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/126_17_jeep_wrangler_31c3abbd07.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/33/17_JEEP_WRANGLER_HCY03_TH.jpg/revision/latest?cb=20220706134558",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/126_17_jeep_wrangler_31c3abbd07.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/126_17_jeep_wrangler_31c3abbd07.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCW42",
@@ -4467,7 +4518,7 @@
     "Toy": "HCT39",
     "Number": "128",
     "Model Name": "Layin' Lowrider",
-    "Series": "ExperimotorsNew for 2022!",
+    "Series": "Experimotors",
     "Series Number": "7/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/21/Layin%27Lowrider.jpg/revision/latest?cb=20220122045205",
     "Local Photo": "images/hot-wheels/mainline/2022/128_layin_lowrider_2f892af2b6.jpg",
@@ -4485,7 +4536,7 @@
     "Toy": "HCX29",
     "Number": "128",
     "Model Name": "Layin' Lowrider(2nd Color)",
-    "Series": "ExperimotorsNew for 2022!",
+    "Series": "Experimotors",
     "Series Number": "7/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/bf/LayinLowriderBlue2022.jpg/revision/latest?cb=20230217235407",
     "Local Photo": "images/hot-wheels/mainline/2022/128_layin_lowrider_2nd_color_185b781c67.jpg",
@@ -4521,7 +4572,7 @@
     "Toy": "HCT03",
     "Number": "130",
     "Model Name": "GMC Hummer EV",
-    "Series": "HW Green SpeedNew for 2022!",
+    "Series": "HW Green Speed",
     "Series Number": "3/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a8/GMCHummerEV.jpg/revision/latest?cb=20220221084839",
     "Local Photo": "images/hot-wheels/mainline/2022/130_gmc_hummer_ev_a0fdaebf11.jpg",
@@ -4539,7 +4590,7 @@
     "Toy": "HCX41",
     "Number": "130",
     "Model Name": "GMC Hummer EV(2nd Color)",
-    "Series": "HW Green SpeedNew for 2022!",
+    "Series": "HW Green Speed",
     "Series Number": "3/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/59/HCX41.jpg/revision/latest?cb=20220613160742",
     "Local Photo": "images/hot-wheels/mainline/2022/130_gmc_hummer_ev_2nd_color_e39e298b51.jpg",
@@ -4611,7 +4662,7 @@
     "Toy": "HJP30",
     "Number": "132",
     "Model Name": "Porsche 935(2nd Color)",
-    "Series": "Retro RacersBest Buy Exclusive",
+    "Series": "Retro Racers",
     "Series Number": "8/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/cf/BestBuy935.jpg/revision/latest?cb=20221105071942",
     "Local Photo": "images/hot-wheels/mainline/2022/132_porsche_935_2nd_color_0de30c40e6.jpg",
@@ -4623,13 +4674,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/cf/BestBuy935.jpg/revision/latest?cb=20221105071942",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/132_porsche_935_2nd_color_0de30c40e6.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/cf/BestBuy935.jpg/revision/latest?cb=20221105071942",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/132_porsche_935_2nd_color_0de30c40e6.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/132_porsche_935_2nd_color_0de30c40e6.jpg",
+    "Exclusive Store": "Best Buy Exclusive"
   },
   {
     "Toy": "HCV39",
     "Number": "133",
     "Model Name": "K.I.T.T. Super Pursuit Mode",
-    "Series": "HW Screen TimeNew in Mainline",
+    "Series": "HW Screen Time",
     "Series Number": "7/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5a/KITTSPM.jpg/revision/latest?cb=20220311075259",
     "Local Photo": "images/hot-wheels/mainline/2022/133_k_i_t_t_super_pursuit_mode_074a2e09f2.jpg",
@@ -4641,13 +4693,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5a/KITTSPM.jpg/revision/latest?cb=20220311075259",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/133_k_i_t_t_super_pursuit_mode_074a2e09f2.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5a/KITTSPM.jpg/revision/latest?cb=20220311075259",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/133_k_i_t_t_super_pursuit_mode_074a2e09f2.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/133_k_i_t_t_super_pursuit_mode_074a2e09f2.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCT35",
     "Number": "134",
     "Model Name": "Barbie Extra",
-    "Series": "ToonedNew for 2022!",
+    "Series": "Tooned",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/98/BarbieExtraCar.jpg/revision/latest?cb=20220122050003",
     "Local Photo": "images/hot-wheels/mainline/2022/134_barbie_extra_b0cc1ce9e4.jpg",
@@ -4665,7 +4718,7 @@
     "Toy": "HCX32",
     "Number": "134",
     "Model Name": "Barbie Extra(2nd Color)",
-    "Series": "ToonedNew for 2022!",
+    "Series": "Tooned",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/54/BarbiePinkCar.jpg/revision/latest?cb=20220818101505",
     "Local Photo": "images/hot-wheels/mainline/2022/134_barbie_extra_2nd_color_77dcf678d7.jpg",
@@ -4791,7 +4844,7 @@
     "Toy": "HCT01",
     "Number": "138",
     "Model Name": "Koenigsegg Gemera",
-    "Series": "HW TurboNew for 2022!",
+    "Series": "HW Turbo",
     "Series Number": "8/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/3d/KoenigseggGemera.jpg/revision/latest?cb=20220221084857",
     "Local Photo": "images/hot-wheels/mainline/2022/138_koenigsegg_gemera_6948c28c87.jpg",
@@ -4809,7 +4862,7 @@
     "Toy": "HCX35",
     "Number": "138",
     "Model Name": "Koenigsegg Gemera(2nd Color)",
-    "Series": "HW TurboNew for 2022!",
+    "Series": "HW Turbo",
     "Series Number": "8/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/f2/KoenigseggGemera_Front.png/revision/latest?cb=20221107184108",
     "Local Photo": "images/hot-wheels/mainline/2022/138_koenigsegg_gemera_2nd_color_9dbea79716.jpg",
@@ -4827,7 +4880,7 @@
     "Toy": "HCY06",
     "Number": "139",
     "Model Name": "Duck N' Roll",
-    "Series": "Street BeastsTreasure HuntRyu's Rides",
+    "Series": "Street Beasts Ryu's Rides",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/33/2022-139_HCY06_TH_Duck_N%27_Roll_open-1.jpg/revision/latest?cb=20240303154514",
     "Local Photo": "images/hot-wheels/mainline/2022/139_duck_n_roll_c922eced98.jpg",
@@ -4839,7 +4892,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/33/2022-139_HCY06_TH_Duck_N%27_Roll_open-1.jpg/revision/latest?cb=20240303154514",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/139_duck_n_roll_c922eced98.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/33/2022-139_HCY06_TH_Duck_N%27_Roll_open-1.jpg/revision/latest?cb=20240303154514",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/139_duck_n_roll_c922eced98.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/139_duck_n_roll_c922eced98.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCV21",
@@ -4899,7 +4953,7 @@
     "Toy": "HJP32",
     "Number": "141",
     "Model Name": "Custom '70 Honda N600(2nd Color)",
-    "Series": "Compact KingsBest Buy ExclusiveRyu's Rides",
+    "Series": "Compact Kings Ryu's Rides",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5a/BestBuyN600.jpg/revision/latest?cb=20221105071955",
     "Local Photo": "images/hot-wheels/mainline/2022/141_custom_70_honda_n600_2nd_color_5c31774b51.jpg",
@@ -4911,12 +4965,13 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5a/BestBuyN600.jpg/revision/latest?cb=20221105071955",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/141_custom_70_honda_n600_2nd_color_5c31774b51.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5a/BestBuyN600.jpg/revision/latest?cb=20221105071955",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/141_custom_70_honda_n600_2nd_color_5c31774b51.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/141_custom_70_honda_n600_2nd_color_5c31774b51.jpg",
+    "Exclusive Store": "Best Buy Exclusive"
   },
   {
     "Toy": "HCW48",
     "Number": "142",
-    "Model Name": "Volkswagen Käfer Racer",
+    "Model Name": "Volkswagen K\u00e4fer Racer",
     "Series": "HW Contoured",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/60/VOLKSWAGEN_KAFER_RACER_HCW48.jpg/revision/latest?cb=20220706142307",
@@ -4934,8 +4989,8 @@
   {
     "Toy": "HCY09",
     "Number": "142",
-    "Model Name": "Volkswagen Käfer Racer",
-    "Series": "HW ContouredSuper Treasure Hunt",
+    "Model Name": "Volkswagen K\u00e4fer Racer",
+    "Series": "HW Contoured",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5d/2022-142_HCY09_K%C3%A4fer_Racer_STH_open-1.jpg/revision/latest?cb=20231130135235",
     "Local Photo": "images/hot-wheels/mainline/2022/142_volkswagen_k_fer_racer_f6f0c7103c.jpg",
@@ -4947,7 +5002,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5d/2022-142_HCY09_K%C3%A4fer_Racer_STH_open-1.jpg/revision/latest?cb=20231130135235",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/142_volkswagen_k_fer_racer_f6f0c7103c.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5d/2022-142_HCY09_K%C3%A4fer_Racer_STH_open-1.jpg/revision/latest?cb=20231130135235",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/142_volkswagen_k_fer_racer_f6f0c7103c.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/142_volkswagen_k_fer_racer_f6f0c7103c.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCV78",
@@ -4971,7 +5027,7 @@
     "Toy": "HCY54",
     "Number": "143",
     "Model Name": "Mazda RX-3(2nd Color)",
-    "Series": "HW J-ImportsKroger Exclusive",
+    "Series": "HW J-Imports",
     "Series Number": "5/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/0/0a/KrogerRX-3.jpg/revision/latest?cb=20221105072025",
     "Local Photo": "images/hot-wheels/mainline/2022/143_mazda_rx_3_2nd_color_7d93cf114a.jpg",
@@ -4983,7 +5039,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/0/0a/KrogerRX-3.jpg/revision/latest?cb=20221105072025",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/143_mazda_rx_3_2nd_color_7d93cf114a.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/0/0a/KrogerRX-3.jpg/revision/latest?cb=20221105072025",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/143_mazda_rx_3_2nd_color_7d93cf114a.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/143_mazda_rx_3_2nd_color_7d93cf114a.jpg",
+    "Exclusive Store": "Kroger Exclusive"
   },
   {
     "Toy": "HCV83",
@@ -5097,7 +5154,7 @@
     "Toy": "HCT24",
     "Number": "147",
     "Model Name": "Lucid Air",
-    "Series": "HW Green SpeedNew for 2022!",
+    "Series": "HW Green Speed",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/95/LucidAir_Front.png/revision/latest?cb=20221006182649",
     "Local Photo": "images/hot-wheels/mainline/2022/147_lucid_air_9590d203a6.jpg",
@@ -5115,7 +5172,7 @@
     "Toy": "HCX40",
     "Number": "147",
     "Model Name": "Lucid Air(2nd Color)",
-    "Series": "HW Green SpeedNew for 2022!",
+    "Series": "HW Green Speed",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/36/HCX40.jpg/revision/latest?cb=20220808122631",
     "Local Photo": "images/hot-wheels/mainline/2022/147_lucid_air_2nd_color_b0b0773f85.jpg",
@@ -5205,7 +5262,7 @@
     "Toy": "HCT10",
     "Number": "150",
     "Model Name": "'95 Jeep Cherokee",
-    "Series": "Baja BlazersNew for 2022!",
+    "Series": "Baja Blazers",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/bb/%2795JeepCherokee.jpg/revision/latest?cb=20220311075210",
     "Local Photo": "images/hot-wheels/mainline/2022/150_95_jeep_cherokee_059ca1efce.jpg",
@@ -5223,7 +5280,7 @@
     "Toy": "HCX28",
     "Number": "150",
     "Model Name": "'95 Jeep Cherokee(2nd Color)",
-    "Series": "Baja BlazersNew for 2022!",
+    "Series": "Baja Blazers",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/d/df/HCX28.jpg/revision/latest?cb=20220824151212",
     "Local Photo": "images/hot-wheels/mainline/2022/150_95_jeep_cherokee_2nd_color_4df9ce9510.jpg",
@@ -5313,7 +5370,7 @@
     "Toy": "HCT47",
     "Number": "153",
     "Model Name": "BMW R nineT Racer",
-    "Series": "Retro RacersNew for 2022!",
+    "Series": "Retro Racers",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/26/BMWRnineT.jpg/revision/latest?cb=20220311075121",
     "Local Photo": "images/hot-wheels/mainline/2022/153_bmw_r_ninet_racer_e71e4df7a5.jpg",
@@ -5331,7 +5388,7 @@
     "Toy": "HCX31",
     "Number": "153",
     "Model Name": "BMW R nineT Racer(2nd Color)",
-    "Series": "Retro RacersNew for 2022!",
+    "Series": "Retro Racers",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c5/HCX31.jpg/revision/latest?cb=20220802154004",
     "Local Photo": "images/hot-wheels/mainline/2022/153_bmw_r_ninet_racer_2nd_color_d6d61d93bf.jpg",
@@ -5439,7 +5496,7 @@
     "Toy": "HCY34",
     "Number": "156",
     "Model Name": "Alfa Romeo 8C Competizione(2nd Color - Zamac)",
-    "Series": "Factory FreshWalmart Exclusive",
+    "Series": "Factory Fresh",
     "Series Number": "7/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/3e/HW-2022-156-2-HCY34-Alfa_Romeo_8C_Competizione_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116120420",
     "Local Photo": "images/hot-wheels/mainline/2022/156_alfa_romeo_8c_competizione_2nd_color_zamac_302b7466a6.jpg",
@@ -5451,7 +5508,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/3e/HW-2022-156-2-HCY34-Alfa_Romeo_8C_Competizione_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116120420",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/156_alfa_romeo_8c_competizione_2nd_color_zamac_302b7466a6.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/3e/HW-2022-156-2-HCY34-Alfa_Romeo_8C_Competizione_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116120420",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/156_alfa_romeo_8c_competizione_2nd_color_zamac_302b7466a6.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/156_alfa_romeo_8c_competizione_2nd_color_zamac_302b7466a6.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCW47",
@@ -5475,7 +5533,7 @@
     "Toy": "HCY70",
     "Number": "157",
     "Model Name": "'17 Ford GT(2nd Color)",
-    "Series": "HW TurboWalgreens Exclusive",
+    "Series": "HW Turbo",
     "Series Number": "9/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/80/GreenieFordGT.jpg/revision/latest?cb=20221105065918",
     "Local Photo": "images/hot-wheels/mainline/2022/157_17_ford_gt_2nd_color_16eb67ed25.jpg",
@@ -5487,7 +5545,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/80/GreenieFordGT.jpg/revision/latest?cb=20221105065918",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/157_17_ford_gt_2nd_color_16eb67ed25.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/80/GreenieFordGT.jpg/revision/latest?cb=20221105065918",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/157_17_ford_gt_2nd_color_16eb67ed25.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/157_17_ford_gt_2nd_color_16eb67ed25.jpg",
+    "Exclusive Store": "Walgreens Exclusive"
   },
   {
     "Toy": "HCT71",
@@ -5511,7 +5570,7 @@
     "Toy": "HCY17",
     "Number": "158",
     "Model Name": "2020 Jaguar F-Type",
-    "Series": "HW TurboSuper Treasure Hunt",
+    "Series": "HW Turbo",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/1c/HW-2022-158-2-HCY17-2020_Jaguar_F-Type.png/revision/latest?cb=20221116120509",
     "Local Photo": "images/hot-wheels/mainline/2022/158_2020_jaguar_f_type_2f952114fa.jpg",
@@ -5523,7 +5582,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/1c/HW-2022-158-2-HCY17-2020_Jaguar_F-Type.png/revision/latest?cb=20221116120509",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/158_2020_jaguar_f_type_2f952114fa.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/1c/HW-2022-158-2-HCY17-2020_Jaguar_F-Type.png/revision/latest?cb=20221116120509",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/158_2020_jaguar_f_type_2f952114fa.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/158_2020_jaguar_f_type_2f952114fa.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCT76",
@@ -5565,7 +5625,7 @@
     "Toy": "HCW52",
     "Number": "160",
     "Model Name": "Volkswagen \"Baja Bug\"",
-    "Series": "Mud StudsNew in Mainline",
+    "Series": "Mud Studs",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/cc/BajaBug.jpg/revision/latest?cb=20221112035123",
     "Local Photo": "images/hot-wheels/mainline/2022/160_volkswagen_baja_bug_acfd03ffa5.jpg",
@@ -5577,13 +5637,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/cc/BajaBug.jpg/revision/latest?cb=20221112035123",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/160_volkswagen_baja_bug_acfd03ffa5.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/cc/BajaBug.jpg/revision/latest?cb=20221112035123",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/160_volkswagen_baja_bug_acfd03ffa5.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/160_volkswagen_baja_bug_acfd03ffa5.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCY35",
     "Number": "160",
     "Model Name": "Volkswagen \"Baja Bug\"(2nd Color - Zamac)",
-    "Series": "Mud StudsNew in MainlineWalmart Exclusive",
+    "Series": "Mud Studs",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/92/2022-160_HCY35_Zamak_Baja_OR6sp_RARE_open-1.jpg/revision/latest?cb=20240109135727",
     "Local Photo": "images/hot-wheels/mainline/2022/160_volkswagen_baja_bug_2nd_color_zamac_6c720d2bd9.jpg",
@@ -5595,13 +5656,15 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/92/2022-160_HCY35_Zamak_Baja_OR6sp_RARE_open-1.jpg/revision/latest?cb=20240109135727",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/160_volkswagen_baja_bug_2nd_color_zamac_6c720d2bd9.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/92/2022-160_HCY35_Zamak_Baja_OR6sp_RARE_open-1.jpg/revision/latest?cb=20240109135727",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/160_volkswagen_baja_bug_2nd_color_zamac_6c720d2bd9.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/160_volkswagen_baja_bug_2nd_color_zamac_6c720d2bd9.jpg",
+    "Exclusive Store": "Walmart Exclusive",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCX74",
     "Number": "160",
     "Model Name": "Volkswagen \"Baja Bug\"(3rd Color)",
-    "Series": "Mud StudsNew in Mainline",
+    "Series": "Mud Studs",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c9/2022-160_HCX74_Baja_Bug_Mint_open-1.jpg/revision/latest?cb=20240110033205",
     "Local Photo": "images/hot-wheels/mainline/2022/160_volkswagen_baja_bug_3rd_color_ba329fcf1f.jpg",
@@ -5613,13 +5676,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c9/2022-160_HCX74_Baja_Bug_Mint_open-1.jpg/revision/latest?cb=20240110033205",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/160_volkswagen_baja_bug_3rd_color_ba329fcf1f.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c9/2022-160_HCX74_Baja_Bug_Mint_open-1.jpg/revision/latest?cb=20240110033205",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/160_volkswagen_baja_bug_3rd_color_ba329fcf1f.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/160_volkswagen_baja_bug_3rd_color_ba329fcf1f.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCY07",
     "Number": "161",
     "Model Name": "Morris Mini",
-    "Series": "Compact KingsTreasure Hunt",
+    "Series": "Compact Kings",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c6/RiehlmanMini.jpg/revision/latest?cb=20221020100549",
     "Local Photo": "images/hot-wheels/mainline/2022/161_morris_mini_bc53bc5735.jpg",
@@ -5631,13 +5695,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c6/RiehlmanMini.jpg/revision/latest?cb=20221020100549",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/161_morris_mini_bc53bc5735.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c6/RiehlmanMini.jpg/revision/latest?cb=20221020100549",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/161_morris_mini_bc53bc5735.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/161_morris_mini_bc53bc5735.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCV04",
     "Number": "162",
     "Model Name": "Tesla Roadster",
-    "Series": "HW ExoticsNew in Mainline",
+    "Series": "HW Exotics",
     "Series Number": "1/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c4/2022TeslaRoadster_Front.png/revision/latest?cb=20221107183942",
     "Local Photo": "images/hot-wheels/mainline/2022/162_tesla_roadster_81b70c9c8b.jpg",
@@ -5649,13 +5714,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c4/2022TeslaRoadster_Front.png/revision/latest?cb=20221107183942",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/162_tesla_roadster_81b70c9c8b.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/c4/2022TeslaRoadster_Front.png/revision/latest?cb=20221107183942",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/162_tesla_roadster_81b70c9c8b.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/162_tesla_roadster_81b70c9c8b.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCT34",
     "Number": "163",
     "Model Name": "Dimachinni Veloce",
-    "Series": "HW DaredevilsNew for 2022!",
+    "Series": "HW Daredevils",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/6e/DimachinniVeloce.jpg/revision/latest?cb=20220310063741",
     "Local Photo": "images/hot-wheels/mainline/2022/163_dimachinni_veloce_0943d1e69d.jpg",
@@ -5673,7 +5739,7 @@
     "Toy": "HCX57",
     "Number": "163",
     "Model Name": "Dimachinni Veloce(2nd Color)",
-    "Series": "HW DaredevilsNew for 2022!",
+    "Series": "HW Daredevils",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/26/HW-2022-163-2-HCX57-Dimachinni_Veloce_%282nd_Colour%29.png/revision/latest?cb=20221116120551",
     "Local Photo": "images/hot-wheels/mainline/2022/163_dimachinni_veloce_2nd_color_a4ce79eba9.jpg",
@@ -5727,7 +5793,7 @@
     "Toy": "HCT37",
     "Number": "165",
     "Model Name": "Bricking Speed",
-    "Series": "ExperimotorsNew for 2022!",
+    "Series": "Experimotors",
     "Series Number": "9/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/96/BrickingSpeed.jpg/revision/latest?cb=20220414040328",
     "Local Photo": "images/hot-wheels/mainline/2022/165_bricking_speed_6a20a17626.jpg",
@@ -5745,7 +5811,7 @@
     "Toy": "HCX30",
     "Number": "165",
     "Model Name": "Bricking Speed(2nd Color)",
-    "Series": "ExperimotorsNew for 2022!",
+    "Series": "Experimotors",
     "Series Number": "9/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/0/0d/HW-2022-165-2-HCX30-Bricking_Speed_%282nd_Colour%29.png/revision/latest?cb=20221116120714",
     "Local Photo": "images/hot-wheels/mainline/2022/165_bricking_speed_2nd_color_891f60f759.jpg",
@@ -5763,7 +5829,7 @@
     "Toy": "HCX96",
     "Number": "166",
     "Model Name": "Gotta Go",
-    "Series": "ExperimotorsTreasure Hunt",
+    "Series": "Experimotors",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a1/GOTTA_GO_HCX96_TH.jpg/revision/latest?cb=20220623132049",
     "Local Photo": "images/hot-wheels/mainline/2022/166_gotta_go_df16d3053a.jpg",
@@ -5775,7 +5841,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a1/GOTTA_GO_HCX96_TH.jpg/revision/latest?cb=20220623132049",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/166_gotta_go_df16d3053a.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a1/GOTTA_GO_HCX96_TH.jpg/revision/latest?cb=20220623132049",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/166_gotta_go_df16d3053a.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/166_gotta_go_df16d3053a.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCV54",
@@ -5835,7 +5902,7 @@
     "Toy": "HCT46",
     "Number": "169",
     "Model Name": "Honda Super Cub",
-    "Series": "Factory FreshNew for 2022!",
+    "Series": "Factory Fresh",
     "Series Number": "8/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7b/HondaSuperCub.jpg/revision/latest?cb=20220416051503",
     "Local Photo": "images/hot-wheels/mainline/2022/169_honda_super_cub_be02b20167.jpg",
@@ -5853,7 +5920,7 @@
     "Toy": "HCX21",
     "Number": "169",
     "Model Name": "Honda Super Cub(2nd Color)",
-    "Series": "Factory FreshNew for 2022!",
+    "Series": "Factory Fresh",
     "Series Number": "8/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/b5/HW-2022-169-2-HCX21-Honda_Super_Cub_%282nd_Colour%29.png/revision/latest?cb=20221116120744",
     "Local Photo": "images/hot-wheels/mainline/2022/169_honda_super_cub_2nd_color_496d2a3225.jpg",
@@ -5907,7 +5974,7 @@
     "Toy": "HCV89",
     "Number": "171",
     "Model Name": "Automobili Pininfarina Battista",
-    "Series": "HW ExoticsNew in Mainline",
+    "Series": "HW Exotics",
     "Series Number": "2/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7d/PinifariniBattista_Front.png/revision/latest?cb=20221107183858",
     "Local Photo": "images/hot-wheels/mainline/2022/171_automobili_pininfarina_battista_1488861cce.jpg",
@@ -5919,13 +5986,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7d/PinifariniBattista_Front.png/revision/latest?cb=20221107183858",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/171_automobili_pininfarina_battista_1488861cce.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7d/PinifariniBattista_Front.png/revision/latest?cb=20221107183858",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/171_automobili_pininfarina_battista_1488861cce.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/171_automobili_pininfarina_battista_1488861cce.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCY65",
     "Number": "171",
     "Model Name": "Automobili Pininfarina Battista(2nd Color)",
-    "Series": "Red EditionTarget ExclusiveNew in Mainline",
+    "Series": "New in Mainline",
     "Series Number": "8/12",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7a/RossoBattista.jpg/revision/latest?cb=20221105072042",
     "Local Photo": "images/hot-wheels/mainline/2022/171_automobili_pininfarina_battista_2nd_color_46131af90e.jpg",
@@ -5937,13 +6005,15 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7a/RossoBattista.jpg/revision/latest?cb=20221105072042",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/171_automobili_pininfarina_battista_2nd_color_46131af90e.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7a/RossoBattista.jpg/revision/latest?cb=20221105072042",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/171_automobili_pininfarina_battista_2nd_color_46131af90e.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/171_automobili_pininfarina_battista_2nd_color_46131af90e.jpg",
+    "Exclusive Store": "Target Exclusive",
+    "Special Tag": "Red Edition"
   },
   {
     "Toy": "HCX53",
     "Number": "171",
     "Model Name": "Automobili Pininfarina Battista(3rd Color)",
-    "Series": "HW ExoticsNew in Mainline",
+    "Series": "HW Exotics",
     "Series Number": "2/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/80/BattistaBluIconica.jpg/revision/latest?cb=20220806122354",
     "Local Photo": "images/hot-wheels/mainline/2022/171_automobili_pininfarina_battista_3rd_color_c25f2879e0.jpg",
@@ -5955,12 +6025,13 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/80/BattistaBluIconica.jpg/revision/latest?cb=20220806122354",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/171_automobili_pininfarina_battista_3rd_color_c25f2879e0.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/80/BattistaBluIconica.jpg/revision/latest?cb=20220806122354",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/171_automobili_pininfarina_battista_3rd_color_c25f2879e0.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/171_automobili_pininfarina_battista_3rd_color_c25f2879e0.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCT97",
     "Number": "172",
-    "Model Name": "LB-WORKS Lamborghini Huracán Coupé",
+    "Model Name": "LB-WORKS Lamborghini Hurac\u00e1n Coup\u00e9",
     "Series": "HW Exotics",
     "Series Number": "3/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/8f/LB-WorksLamborghiniHuracanCoupe_Front.png/revision/latest?cb=20221107183811",
@@ -5978,8 +6049,8 @@
   {
     "Toy": "HCY55",
     "Number": "172",
-    "Model Name": "LB-WORKS Lamborghini Huracán Coupé(2nd Color)",
-    "Series": "HW ExoticsKroger Exclusive",
+    "Model Name": "LB-WORKS Lamborghini Hurac\u00e1n Coup\u00e9(2nd Color)",
+    "Series": "HW Exotics",
     "Series Number": "3/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/28/KrogerLambo.jpg/revision/latest?cb=20221105072055",
     "Local Photo": "images/hot-wheels/mainline/2022/172_lb_works_lamborghini_hurac_n_coup_2nd_color_0f4967a5a3.jpg",
@@ -5991,13 +6062,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/28/KrogerLambo.jpg/revision/latest?cb=20221105072055",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/172_lb_works_lamborghini_hurac_n_coup_2nd_color_0f4967a5a3.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/28/KrogerLambo.jpg/revision/latest?cb=20221105072055",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/172_lb_works_lamborghini_hurac_n_coup_2nd_color_0f4967a5a3.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/172_lb_works_lamborghini_hurac_n_coup_2nd_color_0f4967a5a3.jpg",
+    "Exclusive Store": "Kroger Exclusive"
   },
   {
     "Toy": "HCT15",
     "Number": "173",
     "Model Name": "1986 Toyota Van",
-    "Series": "HW J-ImportsNew for 2022!",
+    "Series": "HW J-Imports",
     "Series Number": "7/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/60/ToyotaVan.jpg/revision/latest?cb=20220409072344",
     "Local Photo": "images/hot-wheels/mainline/2022/173_1986_toyota_van_07651d3181.jpg",
@@ -6015,7 +6087,7 @@
     "Toy": "HCX37",
     "Number": "173",
     "Model Name": "1986 Toyota Van(2nd Color)",
-    "Series": "HW J-ImportsNew for 2022!",
+    "Series": "HW J-Imports",
     "Series Number": "7/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/bc/HW-2022-173-2-HCX37-1986_Toyota_Van_%282nd_Colour%29.png/revision/latest?cb=20221116121010",
     "Local Photo": "images/hot-wheels/mainline/2022/173_1986_toyota_van_2nd_color_238340b105.jpg",
@@ -6033,7 +6105,7 @@
     "Toy": "HCW32",
     "Number": "174",
     "Model Name": "Nissan Skyline 2000GT-R LBWK",
-    "Series": "HW J-ImportsNew in Mainline",
+    "Series": "HW J-Imports",
     "Series Number": "8/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/bd/KatoSkyline.jpg/revision/latest?cb=20220414040537",
     "Local Photo": "images/hot-wheels/mainline/2022/174_nissan_skyline_2000gt_r_lbwk_2e0b68647e.jpg",
@@ -6045,7 +6117,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/bd/KatoSkyline.jpg/revision/latest?cb=20220414040537",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/174_nissan_skyline_2000gt_r_lbwk_2e0b68647e.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/bd/KatoSkyline.jpg/revision/latest?cb=20220414040537",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/174_nissan_skyline_2000gt_r_lbwk_2e0b68647e.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/174_nissan_skyline_2000gt_r_lbwk_2e0b68647e.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCV87",
@@ -6069,7 +6142,7 @@
     "Toy": "HCY18",
     "Number": "175",
     "Model Name": "Custom '18 Ford Mustang GT",
-    "Series": "Spoiler AlertSuper Treasure Hunt",
+    "Series": "Spoiler Alert",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/57/Custom%2718MustangGT.jpg/revision/latest?cb=20220329011512",
     "Local Photo": "images/hot-wheels/mainline/2022/175_custom_18_ford_mustang_gt_cdbc94a9b5.jpg",
@@ -6081,13 +6154,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/57/Custom%2718MustangGT.jpg/revision/latest?cb=20220329011512",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/175_custom_18_ford_mustang_gt_cdbc94a9b5.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/57/Custom%2718MustangGT.jpg/revision/latest?cb=20220329011512",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/175_custom_18_ford_mustang_gt_cdbc94a9b5.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/175_custom_18_ford_mustang_gt_cdbc94a9b5.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCR99",
     "Number": "176",
     "Model Name": "Audi RS e-tron GT",
-    "Series": "HW Green SpeedNew for 2022!",
+    "Series": "HW Green Speed",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7d/AudiRSetronGT_Front.png/revision/latest?cb=20221105164120",
     "Local Photo": "images/hot-wheels/mainline/2022/176_audi_rs_e_tron_gt_df93ea72db.jpg",
@@ -6105,7 +6179,7 @@
     "Toy": "HCX39",
     "Number": "176",
     "Model Name": "Audi RS e-tron GT(2nd Color)",
-    "Series": "HW Green SpeedNew for 2022!",
+    "Series": "HW Green Speed",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/bc/HCX39.jpg/revision/latest?cb=20220917104139",
     "Local Photo": "images/hot-wheels/mainline/2022/176_audi_rs_e_tron_gt_2nd_color_f651beb47e.jpg",
@@ -6177,7 +6251,7 @@
     "Toy": "HCY36",
     "Number": "178",
     "Model Name": "Batmobile(2nd Color - Zamac)",
-    "Series": "BatmanWalmart Exclusive",
+    "Series": "Batman",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/ab/HW-2022-178-2-HCY36-Batmobile_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116121132",
     "Local Photo": "images/hot-wheels/mainline/2022/178_batmobile_2nd_color_zamac_ecf905fa1f.jpg",
@@ -6189,7 +6263,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/ab/HW-2022-178-2-HCY36-Batmobile_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116121132",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/178_batmobile_2nd_color_zamac_ecf905fa1f.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/ab/HW-2022-178-2-HCY36-Batmobile_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116121132",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/178_batmobile_2nd_color_zamac_ecf905fa1f.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/178_batmobile_2nd_color_zamac_ecf905fa1f.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCW62",
@@ -6213,7 +6288,7 @@
     "Toy": "HCT14",
     "Number": "179",
     "Model Name": "Armadillo",
-    "Series": "HW Screen TimeNew for 2022!",
+    "Series": "HW Screen Time",
     "Series Number": "9/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/7b/Armadillo.jpg/revision/latest?cb=20220429101030",
     "Local Photo": "images/hot-wheels/mainline/2022/179_armadillo_3b6ae6caa9.jpg",
@@ -6267,7 +6342,7 @@
     "Toy": "HCY39",
     "Number": "180",
     "Model Name": "'84 Audi Sport quattro(3rd Color - Zamac)",
-    "Series": "Rally ChampsWalmart Exclusive",
+    "Series": "Rally Champs",
     "Series Number": "1/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/6e/HW-2022-180-3-HCY39-84_Audi_Sport_Quattro_%283rd_Colour_-_Zamac%29.png/revision/latest?cb=20221116121253",
     "Local Photo": "images/hot-wheels/mainline/2022/180_84_audi_sport_quattro_3rd_color_zamac_b1ac3a8ebd.jpg",
@@ -6279,7 +6354,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/6e/HW-2022-180-3-HCY39-84_Audi_Sport_Quattro_%283rd_Colour_-_Zamac%29.png/revision/latest?cb=20221116121253",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/180_84_audi_sport_quattro_3rd_color_zamac_b1ac3a8ebd.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/6e/HW-2022-180-3-HCY39-84_Audi_Sport_Quattro_%283rd_Colour_-_Zamac%29.png/revision/latest?cb=20221116121253",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/180_84_audi_sport_quattro_3rd_color_zamac_b1ac3a8ebd.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/180_84_audi_sport_quattro_3rd_color_zamac_b1ac3a8ebd.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCV92",
@@ -6339,7 +6415,7 @@
     "Toy": "HCY37",
     "Number": "182",
     "Model Name": "'06 Pontiac GTO(2nd Color - Zamac)",
-    "Series": "HW Drag StripWalmart Exclusive",
+    "Series": "HW Drag Strip",
     "Series Number": "2/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/3f/HW-2022-182-2-HCY37-06_Pontiac_GTO_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116121611",
     "Local Photo": "images/hot-wheels/mainline/2022/182_06_pontiac_gto_2nd_color_zamac_98fcbd045e.jpg",
@@ -6351,7 +6427,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/3f/HW-2022-182-2-HCY37-06_Pontiac_GTO_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116121611",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/182_06_pontiac_gto_2nd_color_zamac_98fcbd045e.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/3f/HW-2022-182-2-HCY37-06_Pontiac_GTO_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116121611",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/182_06_pontiac_gto_2nd_color_zamac_98fcbd045e.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/182_06_pontiac_gto_2nd_color_zamac_98fcbd045e.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCX70",
@@ -6447,7 +6524,7 @@
     "Toy": "HCR98",
     "Number": "185",
     "Model Name": "HW K.I.T.T. Concept",
-    "Series": "HW ExoticsNew for 2022!",
+    "Series": "HW Exotics",
     "Series Number": "4/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/bc/KITTConcept.jpg/revision/latest?cb=20220427110357",
     "Local Photo": "images/hot-wheels/mainline/2022/185_hw_k_i_t_t_concept_57681666f5.jpg",
@@ -6465,7 +6542,7 @@
     "Toy": "HCX99",
     "Number": "186",
     "Model Name": "'87 Dodge D100",
-    "Series": "HW DaredevilsTreasure Hunt",
+    "Series": "HW Daredevils",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/b3/HW-2022-186-1-HCX99-87_Dodge_D100.png/revision/latest?cb=20221116121909",
     "Local Photo": "images/hot-wheels/mainline/2022/186_87_dodge_d100_c456d3c59b.jpg",
@@ -6477,7 +6554,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/b3/HW-2022-186-1-HCX99-87_Dodge_D100.png/revision/latest?cb=20221116121909",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/186_87_dodge_d100_c456d3c59b.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/b/b3/HW-2022-186-1-HCX99-87_Dodge_D100.png/revision/latest?cb=20221116121909",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/186_87_dodge_d100_c456d3c59b.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/186_87_dodge_d100_c456d3c59b.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCV11",
@@ -6501,7 +6579,7 @@
     "Toy": "HCY15",
     "Number": "187",
     "Model Name": "Nissan Skyline HT 2000GT-X",
-    "Series": "HW J-ImportsSuper Treasure Hunt",
+    "Series": "HW J-Imports",
     "Series Number": "9/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/81/HakoSuper.jpg/revision/latest?cb=20220715051843",
     "Local Photo": "images/hot-wheels/mainline/2022/187_nissan_skyline_ht_2000gt_x_028a505ed1.jpg",
@@ -6513,7 +6591,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/81/HakoSuper.jpg/revision/latest?cb=20220715051843",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/187_nissan_skyline_ht_2000gt_x_028a505ed1.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/81/HakoSuper.jpg/revision/latest?cb=20220715051843",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/187_nissan_skyline_ht_2000gt_x_028a505ed1.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/187_nissan_skyline_ht_2000gt_x_028a505ed1.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCW25",
@@ -6537,7 +6616,7 @@
     "Toy": "HCT30",
     "Number": "189",
     "Model Name": "Turbine Sublime",
-    "Series": "X-RaycersNew for 2022!",
+    "Series": "X-Raycers",
     "Series Number": "3/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/ca/TurbineSublime.jpg/revision/latest?cb=20220414040204",
     "Local Photo": "images/hot-wheels/mainline/2022/189_turbine_sublime_6de9544913.jpg",
@@ -6555,7 +6634,7 @@
     "Toy": "HCX42",
     "Number": "189",
     "Model Name": "Turbine Sublime(2nd Color)",
-    "Series": "X-RaycersNew for 2022!",
+    "Series": "X-Raycers",
     "Series Number": "3/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/36/TurbineSublimeOrange.jpg/revision/latest?cb=20220806085232",
     "Local Photo": "images/hot-wheels/mainline/2022/189_turbine_sublime_2nd_color_96c2747b61.jpg",
@@ -6627,7 +6706,7 @@
     "Toy": "HCY68",
     "Number": "192",
     "Model Name": "'65 Mustang 2+2 Fastback(2nd Color)",
-    "Series": "Red EditionTarget Exclusive",
+    "Series": "",
     "Series Number": "11/12",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a2/HW-2022-192-3-HCY68-65_Mustang_2%2B2_Fastback_%282nd_Colour%29.png/revision/latest?cb=20221116122054",
     "Local Photo": "images/hot-wheels/mainline/2022/192_65_mustang_2_2_fastback_2nd_color_3200c38f65.jpg",
@@ -6639,7 +6718,9 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a2/HW-2022-192-3-HCY68-65_Mustang_2%2B2_Fastback_%282nd_Colour%29.png/revision/latest?cb=20221116122054",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/192_65_mustang_2_2_fastback_2nd_color_3200c38f65.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a2/HW-2022-192-3-HCY68-65_Mustang_2%2B2_Fastback_%282nd_Colour%29.png/revision/latest?cb=20221116122054",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/192_65_mustang_2_2_fastback_2nd_color_3200c38f65.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/192_65_mustang_2_2_fastback_2nd_color_3200c38f65.jpg",
+    "Exclusive Store": "Target Exclusive",
+    "Special Tag": "Red Edition"
   },
   {
     "Toy": "HCX81",
@@ -6771,7 +6852,7 @@
     "Toy": "HCY38",
     "Number": "196",
     "Model Name": "'68 El Camino(2nd Color - Zamac)",
-    "Series": "Rod SquadWalmart Exclusive",
+    "Series": "Rod Squad",
     "Series Number": "3/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5a/Hot_Wheels_Skate_2022_-_68_El_Camino_-_Rod_Squad_-_ZAMAC.png/revision/latest?cb=20221203035215",
     "Local Photo": "images/hot-wheels/mainline/2022/196_68_el_camino_2nd_color_zamac_8e86cd4c3f.jpg",
@@ -6783,13 +6864,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5a/Hot_Wheels_Skate_2022_-_68_El_Camino_-_Rod_Squad_-_ZAMAC.png/revision/latest?cb=20221203035215",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/196_68_el_camino_2nd_color_zamac_8e86cd4c3f.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5a/Hot_Wheels_Skate_2022_-_68_El_Camino_-_Rod_Squad_-_ZAMAC.png/revision/latest?cb=20221203035215",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/196_68_el_camino_2nd_color_zamac_8e86cd4c3f.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/196_68_el_camino_2nd_color_zamac_8e86cd4c3f.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCT44",
     "Number": "197",
     "Model Name": "Hot Wired",
-    "Series": "HW Drag StripNew for 2022!",
+    "Series": "HW Drag Strip",
     "Series Number": "3/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5c/HotWired.jpg/revision/latest?cb=20220603060852",
     "Local Photo": "images/hot-wheels/mainline/2022/197_hot_wired_b4d4394eb5.jpg",
@@ -6825,7 +6907,7 @@
     "Toy": "HCY69",
     "Number": "198",
     "Model Name": "'18 Dodge Challenger SRT Demon(2nd Color)",
-    "Series": "Red EditionTarget Exclusive",
+    "Series": "",
     "Series Number": "12/12",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/72/HW-2022-198-2-HCY69-18_Dodge_Challenger_SRT_Demon_%282nd_Colour%29.png/revision/latest?cb=20241123005008",
     "Local Photo": "images/hot-wheels/mainline/2022/198_18_dodge_challenger_srt_demon_2nd_color_79f4be5510.jpg",
@@ -6837,13 +6919,15 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/72/HW-2022-198-2-HCY69-18_Dodge_Challenger_SRT_Demon_%282nd_Colour%29.png/revision/latest?cb=20241123005008",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/198_18_dodge_challenger_srt_demon_2nd_color_79f4be5510.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/72/HW-2022-198-2-HCY69-18_Dodge_Challenger_SRT_Demon_%282nd_Colour%29.png/revision/latest?cb=20241123005008",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/198_18_dodge_challenger_srt_demon_2nd_color_79f4be5510.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/198_18_dodge_challenger_srt_demon_2nd_color_79f4be5510.jpg",
+    "Exclusive Store": "Target Exclusive",
+    "Special Tag": "Red Edition"
   },
   {
     "Toy": "HCT22",
     "Number": "199",
     "Model Name": "Porsche 911 GT3",
-    "Series": "Factory FreshNew for 2022!",
+    "Series": "Factory Fresh",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e8/Porsche911GT3_Front.png/revision/latest?cb=20221107183607",
     "Local Photo": "images/hot-wheels/mainline/2022/199_porsche_911_gt3_09a0c71192.jpg",
@@ -6861,7 +6945,7 @@
     "Toy": "HCX85",
     "Number": "199",
     "Model Name": "Porsche 911 GT3(2nd Color)",
-    "Series": "Factory FreshNew for 2022!",
+    "Series": "Factory Fresh",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/82/HW-2022-199-2-HCX85-Porsche_911_GT3_%282nd_Colour%29.png/revision/latest?cb=20221116122347",
     "Local Photo": "images/hot-wheels/mainline/2022/199_porsche_911_gt3_2nd_color_cdc49d469c.jpg",
@@ -6879,7 +6963,7 @@
     "Toy": "HCX98",
     "Number": "200",
     "Model Name": "'58 Impala",
-    "Series": "HW Art CarsTreasure Hunt",
+    "Series": "HW Art Cars",
     "Series Number": "8/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5c/DayOfTheDeadImpala.jpg/revision/latest?cb=20220818101000",
     "Local Photo": "images/hot-wheels/mainline/2022/200_58_impala_7e666e978a.jpg",
@@ -6891,7 +6975,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5c/DayOfTheDeadImpala.jpg/revision/latest?cb=20220818101000",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/200_58_impala_7e666e978a.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/5c/DayOfTheDeadImpala.jpg/revision/latest?cb=20220818101000",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/200_58_impala_7e666e978a.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/200_58_impala_7e666e978a.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCV20",
@@ -6933,7 +7018,7 @@
     "Toy": "HCV34",
     "Number": "202",
     "Model Name": "'71 Lamborghini Miura SV",
-    "Series": "HW ExoticsNew in Mainline",
+    "Series": "HW Exotics",
     "Series Number": "5/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/8d/HCV34-LOOSE.jpg/revision/latest?cb=20220815120352",
     "Local Photo": "images/hot-wheels/mainline/2022/202_71_lamborghini_miura_sv_56343aafc6.jpg",
@@ -6945,13 +7030,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/8d/HCV34-LOOSE.jpg/revision/latest?cb=20220815120352",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/202_71_lamborghini_miura_sv_56343aafc6.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/8d/HCV34-LOOSE.jpg/revision/latest?cb=20220815120352",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/202_71_lamborghini_miura_sv_56343aafc6.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/202_71_lamborghini_miura_sv_56343aafc6.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCY13",
     "Number": "202",
     "Model Name": "'71 Lamborghini Miura SV",
-    "Series": "HW ExoticsNew in MainlineSuper Treasure Hunt",
+    "Series": "HW Exotics",
     "Series Number": "5/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/54/Lamborghini_Miura_STH_2022.jpg/revision/latest?cb=20220709153119",
     "Local Photo": "images/hot-wheels/mainline/2022/202_71_lamborghini_miura_sv_c7328be44e.jpg",
@@ -6963,13 +7049,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/54/Lamborghini_Miura_STH_2022.jpg/revision/latest?cb=20220709153119",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/202_71_lamborghini_miura_sv_c7328be44e.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/5/54/Lamborghini_Miura_STH_2022.jpg/revision/latest?cb=20220709153119",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/202_71_lamborghini_miura_sv_c7328be44e.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/202_71_lamborghini_miura_sv_c7328be44e.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCX02",
     "Number": "202",
     "Model Name": "'71 Lamborghini Miura SV(2nd Color)",
-    "Series": "HW ExoticsNew in Mainline",
+    "Series": "HW Exotics",
     "Series Number": "5/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/9f/2022MiuraBlue.jpg/revision/latest?cb=20230209035735",
     "Local Photo": "images/hot-wheels/mainline/2022/202_71_lamborghini_miura_sv_2nd_color_5974c97efd.jpg",
@@ -6981,13 +7068,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/9f/2022MiuraBlue.jpg/revision/latest?cb=20230209035735",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/202_71_lamborghini_miura_sv_2nd_color_5974c97efd.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/9/9f/2022MiuraBlue.jpg/revision/latest?cb=20230209035735",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/202_71_lamborghini_miura_sv_2nd_color_5974c97efd.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/202_71_lamborghini_miura_sv_2nd_color_5974c97efd.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCT09",
     "Number": "203",
     "Model Name": "McLaren Elva",
-    "Series": "HW ExoticsNew for 2022!",
+    "Series": "HW Exotics",
     "Series Number": "6/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/36/McLarenElva.jpg/revision/latest?cb=20220804105749",
     "Local Photo": "images/hot-wheels/mainline/2022/203_mclaren_elva_d7b96c271e.jpg",
@@ -7005,7 +7093,7 @@
     "Toy": "HCX54",
     "Number": "203",
     "Model Name": "McLaren Elva(2nd Color)",
-    "Series": "HW ExoticsNew for 2022!",
+    "Series": "HW Exotics",
     "Series Number": "6/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/6a/HW-2022-203-2-HCX54-McLaren_Elva_%282nd_Colour%29.png/revision/latest?cb=20221116122536",
     "Local Photo": "images/hot-wheels/mainline/2022/203_mclaren_elva_2nd_color_2e216fcb07.jpg",
@@ -7023,7 +7111,7 @@
     "Toy": "HCT11",
     "Number": "204",
     "Model Name": "Honda Civic Custom",
-    "Series": "HW J-ImportsNew for 2022!",
+    "Series": "HW J-Imports",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/eb/HondaCivicCustom.jpg/revision/latest?cb=20220528090159",
     "Local Photo": "images/hot-wheels/mainline/2022/204_honda_civic_custom_61b659db76.jpg",
@@ -7041,7 +7129,7 @@
     "Toy": "HCX78",
     "Number": "204",
     "Model Name": "Honda Civic Custom(2nd Color)",
-    "Series": "HW J-ImportsNew for 2022!",
+    "Series": "HW J-Imports",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/28/HW-2022-204-2-HCX78-Honda_Civic_Custom_%282nd_Colour%29.png/revision/latest?cb=20221116122600",
     "Local Photo": "images/hot-wheels/mainline/2022/204_honda_civic_custom_2nd_color_5ba12c18ce.jpg",
@@ -7167,7 +7255,7 @@
     "Toy": "HCY40",
     "Number": "208",
     "Model Name": "Dodge Viper RT/10(2nd Color - Zamac)",
-    "Series": "Then and NowWalmart Exclusive",
+    "Series": "Then and Now",
     "Series Number": "3/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e1/HW-2022-208-2-HCY40-Dodge_Viper_RT10_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116123511",
     "Local Photo": "images/hot-wheels/mainline/2022/208_dodge_viper_rt_10_2nd_color_zamac_c924f28b63.jpg",
@@ -7179,7 +7267,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e1/HW-2022-208-2-HCY40-Dodge_Viper_RT10_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116123511",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/208_dodge_viper_rt_10_2nd_color_zamac_c924f28b63.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/e1/HW-2022-208-2-HCY40-Dodge_Viper_RT10_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116123511",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/208_dodge_viper_rt_10_2nd_color_zamac_c924f28b63.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/208_dodge_viper_rt_10_2nd_color_zamac_c924f28b63.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCV71",
@@ -7221,7 +7310,7 @@
     "Toy": "HCV90",
     "Number": "211",
     "Model Name": "Supercharged",
-    "Series": "HW Drag StripNew in Mainline",
+    "Series": "HW Drag Strip",
     "Series Number": "5/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/fa/HCV90.jpg/revision/latest?cb=20220615161232",
     "Local Photo": "images/hot-wheels/mainline/2022/211_supercharged_8bdd6648cd.jpg",
@@ -7233,7 +7322,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/fa/HCV90.jpg/revision/latest?cb=20220615161232",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/211_supercharged_8bdd6648cd.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/fa/HCV90.jpg/revision/latest?cb=20220615161232",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/211_supercharged_8bdd6648cd.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/211_supercharged_8bdd6648cd.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCW50",
@@ -7275,7 +7365,7 @@
     "Toy": "HCT17",
     "Number": "214",
     "Model Name": "Nissan Maxima Drift Car",
-    "Series": "HW WagonsNew for 2022!",
+    "Series": "HW Wagons",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/2e/NissanMaximaDriftCar_Front.png/revision/latest?cb=20221107183344",
     "Local Photo": "images/hot-wheels/mainline/2022/214_nissan_maxima_drift_car_af772d6899.jpg",
@@ -7293,7 +7383,7 @@
     "Toy": "HCT02",
     "Number": "215",
     "Model Name": "Pagani Zonda R",
-    "Series": "HW ExoticsNew for 2022!",
+    "Series": "HW Exotics",
     "Series Number": "7/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/88/PaganiZondaR_Front.png/revision/latest?cb=20221107183508",
     "Local Photo": "images/hot-wheels/mainline/2022/215_pagani_zonda_r_ea250aee57.jpg",
@@ -7329,7 +7419,7 @@
     "Toy": "HCY02",
     "Number": "217",
     "Model Name": "HW Warp Speeder",
-    "Series": "X-RaycersTreasure Hunt",
+    "Series": "X-Raycers",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/63/HW_Warp_Speeder.jpg/revision/latest?cb=20220721004255",
     "Local Photo": "images/hot-wheels/mainline/2022/217_hw_warp_speeder_cddaa73b25.jpg",
@@ -7341,13 +7431,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/63/HW_Warp_Speeder.jpg/revision/latest?cb=20220721004255",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/217_hw_warp_speeder_cddaa73b25.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/63/HW_Warp_Speeder.jpg/revision/latest?cb=20220721004255",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/217_hw_warp_speeder_cddaa73b25.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/217_hw_warp_speeder_cddaa73b25.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCT45",
     "Number": "218",
     "Model Name": "Lightnin' Bug",
-    "Series": "X-RaycersNew for 2022!",
+    "Series": "X-Raycers",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/c/cb/Lightnin%27Bug.jpg/revision/latest?cb=20220628101527",
     "Local Photo": "images/hot-wheels/mainline/2022/218_lightnin_bug_d9367aa11a.jpg",
@@ -7383,7 +7474,7 @@
     "Toy": "HCY67",
     "Number": "219",
     "Model Name": "'18 Camaro SS(2nd Color)",
-    "Series": "Red EditionTarget Exclusive",
+    "Series": "",
     "Series Number": "10/12",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/70/HW-2022-219-2-HCY67-18_Camaro_SS_%282nd_Colour%29.png/revision/latest?cb=20221116123842",
     "Local Photo": "images/hot-wheels/mainline/2022/219_18_camaro_ss_2nd_color_07e269e799.jpg",
@@ -7395,7 +7486,9 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/70/HW-2022-219-2-HCY67-18_Camaro_SS_%282nd_Colour%29.png/revision/latest?cb=20221116123842",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/219_18_camaro_ss_2nd_color_07e269e799.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/70/HW-2022-219-2-HCY67-18_Camaro_SS_%282nd_Colour%29.png/revision/latest?cb=20221116123842",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/219_18_camaro_ss_2nd_color_07e269e799.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/219_18_camaro_ss_2nd_color_07e269e799.jpg",
+    "Exclusive Store": "Target Exclusive",
+    "Special Tag": "Red Edition"
   },
   {
     "Toy": "HCV16",
@@ -7419,7 +7512,7 @@
     "Toy": "HCW28",
     "Number": "221",
     "Model Name": "'84 Mustang SVO",
-    "Series": "Muscle ManiaNew in Mainline",
+    "Series": "Muscle Mania",
     "Series Number": "4/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/6d/%2784MustangSVO_Front.png/revision/latest?cb=20221107183223",
     "Local Photo": "images/hot-wheels/mainline/2022/221_84_mustang_svo_701adb4aad.jpg",
@@ -7431,13 +7524,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/6d/%2784MustangSVO_Front.png/revision/latest?cb=20221107183223",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/221_84_mustang_svo_701adb4aad.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/6d/%2784MustangSVO_Front.png/revision/latest?cb=20221107183223",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/221_84_mustang_svo_701adb4aad.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/221_84_mustang_svo_701adb4aad.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCY19",
     "Number": "221",
     "Model Name": "'84 Mustang SVO",
-    "Series": "Muscle ManiaNew in MainlineSuper Treasure Hunt",
+    "Series": "Muscle Mania",
     "Series Number": "4/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/f9/HW-2022-221-2-HCY19-84_Mustang_SVO.png/revision/latest?cb=20221116123920",
     "Local Photo": "images/hot-wheels/mainline/2022/221_84_mustang_svo_51cad4c722.jpg",
@@ -7449,7 +7543,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/f9/HW-2022-221-2-HCY19-84_Mustang_SVO.png/revision/latest?cb=20221116123920",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/221_84_mustang_svo_51cad4c722.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/f9/HW-2022-221-2-HCY19-84_Mustang_SVO.png/revision/latest?cb=20221116123920",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/221_84_mustang_svo_51cad4c722.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/221_84_mustang_svo_51cad4c722.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCV72",
@@ -7473,7 +7568,7 @@
     "Toy": "HCY41",
     "Number": "222",
     "Model Name": "'69 Camaro Convertible(2nd Color - Zamac)",
-    "Series": "Muscle ManiaWalmart Exclusive",
+    "Series": "Muscle Mania",
     "Series Number": "5/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/79/HW-2022-222-2-HCY41-69_Camaro_Convertible_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116124056",
     "Local Photo": "images/hot-wheels/mainline/2022/222_69_camaro_convertible_2nd_color_zamac_b3dd6c721b.jpg",
@@ -7485,13 +7580,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/79/HW-2022-222-2-HCY41-69_Camaro_Convertible_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116124056",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/222_69_camaro_convertible_2nd_color_zamac_b3dd6c721b.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/79/HW-2022-222-2-HCY41-69_Camaro_Convertible_%282nd_Colour_-_Zamac%29.png/revision/latest?cb=20221116124056",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/222_69_camaro_convertible_2nd_color_zamac_b3dd6c721b.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/222_69_camaro_convertible_2nd_color_zamac_b3dd6c721b.jpg",
+    "Exclusive Store": "Walmart Exclusive"
   },
   {
     "Toy": "HCY04",
     "Number": "223",
     "Model Name": "'98 Subaru Impreza 22B STi-Version",
-    "Series": "Rally ChampsTreasure HuntRyu's Rides",
+    "Series": "Rally Champs Ryu's Rides",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a1/%2798Impreza22B.jpg/revision/latest?cb=20231216082134",
     "Local Photo": "images/hot-wheels/mainline/2022/223_98_subaru_impreza_22b_sti_version_615904c4fc.jpg",
@@ -7503,13 +7599,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a1/%2798Impreza22B.jpg/revision/latest?cb=20231216082134",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/223_98_subaru_impreza_22b_sti_version_615904c4fc.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a1/%2798Impreza22B.jpg/revision/latest?cb=20231216082134",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/223_98_subaru_impreza_22b_sti_version_615904c4fc.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/223_98_subaru_impreza_22b_sti_version_615904c4fc.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCT29",
     "Number": "224",
     "Model Name": "Max Steel",
-    "Series": "Rod SquadNew for 2022!",
+    "Series": "Rod Squad",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/7/72/MaxSteel.jpg/revision/latest?cb=20220702064654",
     "Local Photo": "images/hot-wheels/mainline/2022/224_max_steel_936c6091ee.jpg",
@@ -7527,7 +7624,7 @@
     "Toy": "HCT12",
     "Number": "225",
     "Model Name": "'62 Corvette Gasser",
-    "Series": "HW Drag StripNew for 2022!",
+    "Series": "HW Drag Strip",
     "Series Number": "7/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/6d/%2762CorvetteGasser.jpg/revision/latest?cb=20220702103136",
     "Local Photo": "images/hot-wheels/mainline/2022/225_62_corvette_gasser_468e02da97.jpg",
@@ -7599,7 +7696,7 @@
     "Toy": "HCY22",
     "Number": "228",
     "Model Name": "'94 Audi Avant RS2",
-    "Series": "HW WagonsSuper Treasure Hunt",
+    "Series": "HW Wagons",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a0/%2794_Audi_Avant_RS2_STH.jpeg/revision/latest?cb=20220905010248",
     "Local Photo": "images/hot-wheels/mainline/2022/228_94_audi_avant_rs2_953963f905.jpg",
@@ -7611,13 +7708,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a0/%2794_Audi_Avant_RS2_STH.jpeg/revision/latest?cb=20220905010248",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/228_94_audi_avant_rs2_953963f905.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a0/%2794_Audi_Avant_RS2_STH.jpeg/revision/latest?cb=20220905010248",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/228_94_audi_avant_rs2_953963f905.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/228_94_audi_avant_rs2_953963f905.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCT07",
     "Number": "229",
     "Model Name": "Lotus Evija",
-    "Series": "HW ExoticsNew for 2022!",
+    "Series": "HW Exotics",
     "Series Number": "8/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/3c/LotusEvija.jpg/revision/latest?cb=20220804142832",
     "Local Photo": "images/hot-wheels/mainline/2022/229_lotus_evija_96f7a125ce.jpg",
@@ -7671,7 +7769,7 @@
     "Toy": "HCT20",
     "Number": "232",
     "Model Name": "Volvo 240 Drift Wagon",
-    "Series": "HW DriftNew for 2022!",
+    "Series": "HW Drift",
     "Series Number": "4/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/e/eb/Volvo240DriftWagon_Front.png/revision/latest?cb=20221027175440",
     "Local Photo": "images/hot-wheels/mainline/2022/232_volvo_240_drift_wagon_b2b0d1a70a.jpg",
@@ -7779,7 +7877,7 @@
     "Toy": "HCY21",
     "Number": "237",
     "Model Name": "'32 Ford",
-    "Series": "Rod SquadSuper Treasure Hunt",
+    "Series": "Rod Squad",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/ff/HW-2022-237-2-HCY21-32_Ford.png/revision/latest?cb=20221116124344",
     "Local Photo": "images/hot-wheels/mainline/2022/237_32_ford_27a11db553.jpg",
@@ -7791,13 +7889,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/ff/HW-2022-237-2-HCY21-32_Ford.png/revision/latest?cb=20221116124344",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/237_32_ford_27a11db553.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/f/ff/HW-2022-237-2-HCY21-32_Ford.png/revision/latest?cb=20221116124344",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/237_32_ford_27a11db553.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/237_32_ford_27a11db553.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCT19",
     "Number": "238",
     "Model Name": "Aston Martin Vantage GTE",
-    "Series": "HW ExoticsNew for 2022!",
+    "Series": "HW Exotics",
     "Series Number": "9/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/3/35/AMRVantageGTE.jpg/revision/latest?cb=20220804100819",
     "Local Photo": "images/hot-wheels/mainline/2022/238_aston_martin_vantage_gte_cae14a11d6.jpg",
@@ -7815,7 +7914,7 @@
     "Toy": "HCT43",
     "Number": "239",
     "Model Name": "Drone Duty",
-    "Series": "HW RescueNew for 2022!",
+    "Series": "HW Rescue",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/8/80/DroneDuty.jpg/revision/latest?cb=20220802063329",
     "Local Photo": "images/hot-wheels/mainline/2022/239_drone_duty_82853d0b8e.jpg",
@@ -7833,7 +7932,7 @@
     "Toy": "HCY00",
     "Number": "240",
     "Model Name": "Muscle and Blown",
-    "Series": "HW DriftTreasure Hunt",
+    "Series": "HW Drift",
     "Series Number": "5/5",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/ac/DriftandBlown.jpg/revision/latest?cb=20220805064727",
     "Local Photo": "images/hot-wheels/mainline/2022/240_muscle_and_blown_f085f73ec4.jpg",
@@ -7845,7 +7944,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/ac/DriftandBlown.jpg/revision/latest?cb=20220805064727",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/240_muscle_and_blown_f085f73ec4.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/ac/DriftandBlown.jpg/revision/latest?cb=20220805064727",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/240_muscle_and_blown_f085f73ec4.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/240_muscle_and_blown_f085f73ec4.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCT62",
@@ -7887,7 +7987,7 @@
     "Toy": "HCV18",
     "Number": "243",
     "Model Name": "Chevelle SS Express",
-    "Series": "Muscle ManiaNew in Mainline",
+    "Series": "Muscle Mania",
     "Series Number": "8/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/2a/HCV18-LOOSE.jpg/revision/latest?cb=20220914151128",
     "Local Photo": "images/hot-wheels/mainline/2022/243_chevelle_ss_express_75c82742f9.jpg",
@@ -7899,7 +7999,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/2a/HCV18-LOOSE.jpg/revision/latest?cb=20220914151128",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/243_chevelle_ss_express_75c82742f9.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/2a/HCV18-LOOSE.jpg/revision/latest?cb=20220914151128",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/243_chevelle_ss_express_75c82742f9.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/243_chevelle_ss_express_75c82742f9.jpg",
+    "Special Tag": "New in Mainline"
   },
   {
     "Toy": "HCV30",
@@ -7923,7 +8024,7 @@
     "Toy": "HCX95",
     "Number": "245",
     "Model Name": "'71 Mustang Funny Car",
-    "Series": "HW Drag StripTreasure Hunt",
+    "Series": "HW Drag Strip",
     "Series Number": "9/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/17/HW-2022-245-1-HCX95-71_Mustang_Funny_Car1.png/revision/latest?cb=20221210091431",
     "Local Photo": "images/hot-wheels/mainline/2022/245_71_mustang_funny_car_aea7b9172f.jpg",
@@ -7935,13 +8036,14 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/17/HW-2022-245-1-HCX95-71_Mustang_Funny_Car1.png/revision/latest?cb=20221210091431",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/245_71_mustang_funny_car_aea7b9172f.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/1/17/HW-2022-245-1-HCX95-71_Mustang_Funny_Car1.png/revision/latest?cb=20221210091431",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/245_71_mustang_funny_car_aea7b9172f.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/245_71_mustang_funny_car_aea7b9172f.jpg",
+    "Special Tag": "Treasure Hunt"
   },
   {
     "Toy": "HCT25",
     "Number": "246",
     "Model Name": "Matt and Debbie Hay's 1988 Pro Street Thunderbird",
-    "Series": "HW Drag StripNew for 2022!",
+    "Series": "HW Drag Strip",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/2/2c/ProStreetThunderbird.jpg/revision/latest?cb=20220822100300",
     "Local Photo": "images/hot-wheels/mainline/2022/246_matt_and_debbie_hay_s_1988_pro_street_thunderbird_bf1e27af7d.jpg",
@@ -7959,7 +8061,7 @@
     "Toy": "HCT00",
     "Number": "247",
     "Model Name": "Lotus Emira",
-    "Series": "HW ExoticsNew for 2022!",
+    "Series": "HW Exotics",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/a/a1/LotusEmira.jpg/revision/latest?cb=20220822100321",
     "Local Photo": "images/hot-wheels/mainline/2022/247_lotus_emira_9c63460a5b.jpg",
@@ -7995,7 +8097,7 @@
     "Toy": "HCY23",
     "Number": "248",
     "Model Name": "'81 Camaro",
-    "Series": "Then and NowSuper Treasure Hunt",
+    "Series": "Then and Now",
     "Series Number": "10/10",
     "Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/6f/HW-2022-248-2-HCY23-81_Camaro.png/revision/latest?cb=20221116124612",
     "Local Photo": "images/hot-wheels/mainline/2022/248_81_camaro_ee557363ec.jpg",
@@ -8007,7 +8109,8 @@
     "Long Card Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/6f/HW-2022-248-2-HCY23-81_Camaro.png/revision/latest?cb=20221116124612",
     "Long Card Local Photo": "images/hot-wheels/mainline/2022/248_81_camaro_ee557363ec.jpg",
     "Loose Photo": "https://static.wikia.nocookie.net/hotwheels/images/6/6f/HW-2022-248-2-HCY23-81_Camaro.png/revision/latest?cb=20221116124612",
-    "Loose Local Photo": "images/hot-wheels/mainline/2022/248_81_camaro_ee557363ec.jpg"
+    "Loose Local Photo": "images/hot-wheels/mainline/2022/248_81_camaro_ee557363ec.jpg",
+    "Special Tag": "Super Treasure Hunt"
   },
   {
     "Toy": "HCW36",

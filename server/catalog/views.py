@@ -23,7 +23,7 @@ class ModelListView(ListView):
         if request.GET.get('save_filters') == '1':
             filters = {
                 key: request.GET.get(key, '').strip()
-                for key in ('q', 'brand', 'series', 'year', 'category', 'sort')
+                for key in ('q', 'brand', 'series', 'year', 'category', 'exclusive_store', 'special_tag', 'sort')
                 if request.GET.get(key, '').strip()
             }
             request.session[CATALOG_FILTER_SESSION_KEY] = filters
@@ -53,6 +53,8 @@ class ModelListView(ListView):
         brand = self.request.GET.get('brand', '').strip()
         year = self.request.GET.get('year', '').strip()
         category = self.request.GET.get('category', '').strip()
+        exclusive_store = self.request.GET.get('exclusive_store', '').strip()
+        special_tag = self.request.GET.get('special_tag', '').strip()
         sort = self.request.GET.get('sort', 'number').strip()
 
         if query:
@@ -71,11 +73,16 @@ class ModelListView(ListView):
             queryset = queryset.filter(year=int(year))
         if category:
             queryset = queryset.filter(category=category)
+        if exclusive_store:
+            queryset = queryset.filter(exclusive_store=exclusive_store)
+        if special_tag:
+            queryset = queryset.filter(special_tag=special_tag)
 
         sort_options = {
             'number': ('number', 'model_name'),
             'year': ('year', 'number', 'model_name'),
             'category': ('category', 'year', 'number', 'model_name'),
+            'exclusive': ('exclusive_store', 'special_tag', 'year', 'number', 'model_name'),
             'name': ('model_name',),
         }
         return queryset.order_by(*sort_options.get(sort, sort_options['number']))
@@ -89,6 +96,8 @@ class ModelListView(ListView):
         context['selected_series'] = self.request.GET.get('series', '').strip()
         context['selected_year'] = self.request.GET.get('year', '').strip()
         context['selected_category'] = self.request.GET.get('category', '').strip()
+        context['selected_exclusive_store'] = self.request.GET.get('exclusive_store', '').strip()
+        context['selected_special_tag'] = self.request.GET.get('special_tag', '').strip()
         context['selected_sort'] = self.request.GET.get('sort', 'number').strip() or 'number'
         context['current_path'] = self.request.get_full_path()
         context['series_options'] = (
@@ -114,6 +123,18 @@ class ModelListView(ListView):
             .values_list('category', flat=True)
             .distinct()
             .order_by('category')
+        )
+        context['exclusive_store_options'] = (
+            HotWheelsModel.objects.exclude(exclusive_store='')
+            .values_list('exclusive_store', flat=True)
+            .distinct()
+            .order_by('exclusive_store')
+        )
+        context['special_tag_options'] = (
+            HotWheelsModel.objects.exclude(special_tag='')
+            .values_list('special_tag', flat=True)
+            .distinct()
+            .order_by('special_tag')
         )
         context['catalog_stats'] = {
             'total_models': total_queryset.count(),

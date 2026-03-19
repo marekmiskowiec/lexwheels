@@ -17,6 +17,8 @@ class HotWheelsModel(models.Model):
     year = models.PositiveIntegerField(blank=True, null=True)
     category = models.CharField(max_length=64, blank=True)
     series = models.CharField(max_length=255, blank=True)
+    exclusive_store = models.CharField(max_length=128, blank=True)
+    special_tag = models.CharField(max_length=128, blank=True)
     series_number = models.CharField(max_length=32, blank=True)
     photo_url = models.URLField(blank=True)
     local_photo_path = models.CharField(max_length=512, blank=True)

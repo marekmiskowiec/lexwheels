@@ -14,11 +14,71 @@ from .models import HotWheelsModel
 
 
 class ImportModelsCommandTests(TestCase):
-    def test_clean_series_removes_new_for_2022_marker(self):
+    def test_clean_series_removes_new_for_marker(self):
         self.assertEqual(
             Command.clean_series("HW MetroNew for 2022!Ryu's Rides"),
             "HW Metro Ryu's Rides",
         )
+        self.assertEqual(
+            Command.clean_series("Drop TopsNew for 2026!"),
+            "Drop Tops",
+        )
+
+    def test_build_app_id_ignores_new_for_marker_in_series(self):
+        dirty_row = {
+            'Toy': 'ABC',
+            'Number': '001',
+            'Model Name': 'Test Car',
+            'Series': 'Series A New for 2024!',
+            'Series Number': '1/5',
+        }
+        clean_row = {
+            **dirty_row,
+            'Series': 'Series A',
+        }
+        self.assertEqual(Command.build_app_id(dirty_row), Command.build_app_id(clean_row))
+
+    def test_parse_series_metadata_extracts_store_exclusive(self):
+        parsed = Command.parse_series_metadata('Chevy Bel AirDollar General Exclusive')
+        self.assertEqual(parsed['series'], 'Chevy Bel Air')
+        self.assertEqual(parsed['exclusive_store'], 'Dollar General Exclusive')
+        self.assertEqual(parsed['special_tag'], '')
+
+    def test_parse_series_metadata_extracts_special_tag(self):
+        parsed = Command.parse_series_metadata('Chevy Bel AirSuper Treasure Hunt')
+        self.assertEqual(parsed['series'], 'Chevy Bel Air')
+        self.assertEqual(parsed['exclusive_store'], '')
+        self.assertEqual(parsed['special_tag'], 'Super Treasure Hunt')
+
+    def test_parse_series_metadata_extracts_special_tag_and_store(self):
+        parsed = Command.parse_series_metadata('Red EditionTarget Exclusive')
+        self.assertEqual(parsed['series'], 'Red Edition')
+        self.assertEqual(parsed['exclusive_store'], 'Target Exclusive')
+        self.assertEqual(parsed['special_tag'], 'Red Edition')
+
+    def test_parse_series_metadata_normalizes_reverse_family_dollar_marker(self):
+        parsed = Command.parse_series_metadata('HW Reverse RakeFamily Dollar/Dollar Tree Exclusive')
+        self.assertEqual(parsed['series'], 'HW Reverse Rake')
+        self.assertEqual(parsed['exclusive_store'], 'Dollar Tree/Family Dollar Exclusive')
+        self.assertEqual(parsed['special_tag'], '')
+
+    def test_parse_series_metadata_extracts_best_buy_suffix_inside_series(self):
+        parsed = Command.parse_series_metadata("HW MetroBest Buy ExclusiveRyu's Rides")
+        self.assertEqual(parsed['series'], "HW Metro Ryu's Rides")
+        self.assertEqual(parsed['exclusive_store'], 'Best Buy Exclusive')
+        self.assertEqual(parsed['special_tag'], '')
+
+    def test_parse_series_metadata_extracts_walgreens_without_space(self):
+        parsed = Command.parse_series_metadata('Then and NowWalgreensExclusive')
+        self.assertEqual(parsed['series'], 'Then and Now')
+        self.assertEqual(parsed['exclusive_store'], 'Walgreens Exclusive')
+        self.assertEqual(parsed['special_tag'], '')
+
+    def test_parse_series_metadata_extracts_from_the_vault_as_special_tag(self):
+        parsed = Command.parse_series_metadata('HW J-Imports"From the Vault" Exclusive')
+        self.assertEqual(parsed['series'], 'HW J-Imports')
+        self.assertEqual(parsed['exclusive_store'], '')
+        self.assertEqual(parsed['special_tag'], 'From the Vault')
 
     def test_build_app_id_does_not_change_when_year_or_category_changes(self):
         row = {
@@ -376,7 +436,52 @@ class ImportModelsCommandTests(TestCase):
             call_command('import_models', path=str(path))
 
         model = HotWheelsModel.objects.get()
-        self.assertEqual(model.series, 'HW Dream Garage Target Exclusive')
+        self.assertEqual(model.series, 'HW Dream Garage')
+        self.assertEqual(model.exclusive_store, 'Target Exclusive')
+
+    def test_import_extracts_exclusive_store_and_special_tag(self):
+        payload = [{
+            'Toy': 'ABC',
+            'Number': '001',
+            'Model Name': 'Test Car',
+            'Series': 'Chevy Bel AirSuper Treasure Hunt',
+            'Series Number': '1/5',
+            'Photo': 'https://example.com/car.jpg',
+            'Local Photo': 'images/car.jpg',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / 'models.json'
+            path.write_text(json.dumps(payload))
+            call_command('import_models', path=str(path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.series, 'Chevy Bel Air')
+        self.assertEqual(model.special_tag, 'Super Treasure Hunt')
+        self.assertEqual(model.exclusive_store, '')
+
+    def test_import_prefers_dataset_metadata_when_present(self):
+        payload = [{
+            'Toy': 'ABC',
+            'Number': '001',
+            'Model Name': 'Test Car',
+            'Series': 'Chevy Bel AirWalmart Exclusive',
+            'Exclusive Store': 'Kroger Exclusive',
+            'Special Tag': 'ZAMAC',
+            'Series Number': '1/5',
+            'Photo': 'https://example.com/car.jpg',
+            'Local Photo': 'images/car.jpg',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / 'models.json'
+            path.write_text(json.dumps(payload))
+            call_command('import_models', path=str(path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.series, 'Chevy Bel Air')
+        self.assertEqual(model.exclusive_store, 'Kroger Exclusive')
+        self.assertEqual(model.special_tag, 'ZAMAC')
 
 
 class CatalogViewTests(TestCase):
@@ -499,6 +604,33 @@ class CatalogViewTests(TestCase):
 
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertNotContains(response, 'Custom Mustang')
+
+    def test_catalog_can_filter_by_exclusive_store_and_special_tag(self):
+        self.model_obj.exclusive_store = 'Walmart Exclusive'
+        self.model_obj.save(update_fields=['exclusive_store'])
+        second_model = HotWheelsModel.objects.create(
+            app_id='def456',
+            brand='Hot Wheels',
+            toy='HCT06',
+            number='002',
+            model_name='Custom Mustang',
+            year=2023,
+            category='Mainline',
+            series='Muscle Mania',
+            special_tag='Super Treasure Hunt',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:model-list'), {'exclusive_store': 'Walmart Exclusive'})
+
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertNotContains(response, 'Custom Mustang')
+
+        response = self.client.get(reverse('catalog:model-list'), {'special_tag': 'Super Treasure Hunt'})
+
+        self.assertContains(response, 'Custom Mustang')
+        self.assertNotContains(response, '1970 Pontiac Firebird')
 
     def test_catalog_can_filter_by_brand(self):
         HotWheelsModel.objects.create(
