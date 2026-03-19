@@ -3,7 +3,7 @@
 {% block content %}
 <section class="panel hero">
   <h1>Moje statystyki</h1>
-  <p class="meta">Widok skupiony na kompletowaniu kolekcji: postęp ogólny, roczniki, serie, kategorie i najbliższe braki.</p>
+  <p class="meta">Widok skupiony na kompletowaniu kolekcji: postęp ogólny, roczniki, serie i kategorie.</p>
   <form method="get" class="filters" style="margin-top:18px;">
     <div style="flex: 1 1 220px;">
       <label for="scope">Zakres</label>
@@ -45,7 +45,6 @@
       <div class="stats-strip">
         <div class="stat-card"><span class="stat-label">Posiadane modele</span><strong class="stat-value">{{ completion.owned_models }}</strong></div>
         <div class="stat-card"><span class="stat-label">Modele w katalogu</span><strong class="stat-value">{{ completion.total_models }}</strong></div>
-        <div class="stat-card"><span class="stat-label">Brakujące modele</span><strong class="stat-value">{{ completion.missing_models }}</strong></div>
         <div class="stat-card"><span class="stat-label">Warianty</span><strong class="stat-value">{{ stats.variant_count }}</strong></div>
         <div class="stat-card"><span class="stat-label">Sztuk łącznie</span><strong class="stat-value">{{ stats.total_quantity }}</strong></div>
         <div class="stat-card"><span class="stat-label">Ulubione</span><strong class="stat-value">{{ stats.favorite_count }}</strong></div>
@@ -96,40 +95,23 @@
   </article>
 </section>
 
-<section class="grid">
-  <article class="panel">
-    <h2>By Series</h2>
-    <div class="list">
-      {% for row in completion_by_series %}
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:8px;">
-            <strong>{{ row.label }}</strong>
-            <span class="badge">{{ row.percent }}%</span>
-          </div>
-          <div style="height:12px; background:#f0e4cf; border-radius:999px; overflow:hidden; margin-bottom:10px;">
-            <div style="width:{{ row.percent }}%; height:100%; background:#4d7298;"></div>
-          </div>
-          <p class="meta">Owned: {{ row.owned }} / {{ row.total }} | Brakuje: {{ row.missing }}</p>
+<section class="panel">
+  <h2>By Series</h2>
+  <div class="list">
+    {% for row in completion_by_series %}
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:8px;">
+          <strong>{{ row.label }}</strong>
+          <span class="badge">{{ row.percent }}%</span>
         </div>
-      {% empty %}
-        <p class="meta">Nie masz jeszcze żadnego postępu w seriach.</p>
-      {% endfor %}
-    </div>
-  </article>
-
-  <article class="panel">
-    <h2>Missing Models</h2>
-    <div class="list">
-      {% for model in missing_models %}
-        <div class="list-item">
-          <h3 style="margin-bottom:6px;"><a href="{% url 'catalog:model-detail' model.id %}">{{ model.name }}</a></h3>
-          <p class="meta">Rok: {{ model.year|default:"-" }} | Number: {{ model.number|default:"-" }} | Kategoria: {{ model.category|default:"-" }}</p>
-          <p class="meta">{{ model.series|default:"Bez serii" }}</p>
+        <div style="height:12px; background:#f0e4cf; border-radius:999px; overflow:hidden; margin-bottom:10px;">
+          <div style="width:{{ row.percent }}%; height:100%; background:#4d7298;"></div>
         </div>
-      {% empty %}
-        <p class="meta">Brak brakujących modeli w wybranym zakresie.</p>
-      {% endfor %}
-    </div>
-  </article>
+        <p class="meta">Owned: {{ row.owned }} / {{ row.total }} | Brakuje: {{ row.missing }}</p>
+      </div>
+    {% empty %}
+      <p class="meta">Nie masz jeszcze żadnego postępu w seriach.</p>
+    {% endfor %}
+  </div>
 </section>
 {% endblock %}

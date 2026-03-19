@@ -500,10 +500,11 @@ class CollectionTests(TestCase):
         self.assertContains(response, 'Completion Overview')
         self.assertContains(response, 'By Year')
         self.assertContains(response, 'By Series')
-        self.assertContains(response, 'Missing Models')
         self.assertContains(response, 'Owned: 1 / 1')
+        self.assertNotContains(response, 'Missing Models')
+        self.assertNotContains(response, 'Brakujące modele')
 
-    def test_stats_page_shows_missing_models_against_catalog(self):
+    def test_stats_page_does_not_show_global_missing_model_list(self):
         second_model = HotWheelsModel.objects.create(
             app_id='def456',
             toy='HCT06',
@@ -520,7 +521,7 @@ class CollectionTests(TestCase):
 
         response = self.client.get(reverse('collections:stats'))
 
-        self.assertContains(response, 'Custom Mustang')
+        self.assertNotContains(response, 'Custom Mustang')
         self.assertContains(response, 'Owned: 1 / 2')
 
     def test_collection_detail_shows_owner_profile_link(self):

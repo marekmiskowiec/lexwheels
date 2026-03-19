@@ -189,34 +189,15 @@ def build_completion_context(items_queryset, catalog_queryset=None):
         )
     series_rows.sort(key=lambda row: (-row['owned'], -row['percent'], row['label']))
 
-    missing_rows = []
-    if owned_model_ids:
-        missing_queryset = catalog_queryset.exclude(pk__in=owned_model_ids)
-    else:
-        missing_queryset = catalog_queryset
-    for model in missing_queryset.order_by('-year', 'series', 'number', 'model_name')[:12]:
-        missing_rows.append(
-            {
-                'id': model.pk,
-                'name': model.model_name,
-                'year': model.year,
-                'series': model.series,
-                'number': model.number,
-                'category': model.category,
-            }
-        )
-
     return {
         'completion': {
             'owned_models': owned_model_count,
             'total_models': total_model_count,
-            'missing_models': max(total_model_count - owned_model_count, 0),
             'percent': completion_percent,
         },
         'completion_by_year': year_rows,
         'completion_by_category': category_rows[:8],
         'completion_by_series': series_rows[:12],
-        'missing_models': missing_rows,
     }
 
 
