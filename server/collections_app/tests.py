@@ -347,6 +347,124 @@ class CollectionTests(TestCase):
         self.assertNotContains(response, 'Krótka karta')
         self.assertFalse(CollectionItem.objects.filter(collection=self.private_collection, model=semi_premium_model).exists())
 
+    def test_rlc_item_form_hides_short_card_option(self):
+        rlc_model = HotWheelsModel.objects.create(
+            app_id='rlc123',
+            toy='HWF03',
+            number='HWF03',
+            model_name='Kawa-Bug-A',
+            brand='Hot Wheels',
+            year=2024,
+            category='RLC',
+            series='2024 RLC Exclusive',
+            series_number='',
+            photo_url='https://example.com/kawa.jpg',
+            long_card_photo_url='https://example.com/kawa-carded.jpg',
+            loose_photo_url='https://example.com/kawa-loose.jpg',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.get(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {'model': rlc_model.pk},
+        )
+
+        self.assertNotContains(response, 'Krótka karta')
+        self.assertContains(response, 'Długa')
+        self.assertContains(response, 'Luzak')
+
+    def test_exclusive_item_form_hides_short_card_option(self):
+        exclusive_model = HotWheelsModel.objects.create(
+            app_id='exclusive123',
+            toy='ABC01',
+            number='001',
+            model_name='Exclusive Car',
+            brand='Hot Wheels',
+            year=2024,
+            category='Mainline',
+            series='HW Metro',
+            exclusive_store='Walmart Exclusive',
+            series_number='1/5',
+            photo_url='https://example.com/exclusive.jpg',
+            long_card_photo_url='https://example.com/exclusive-carded.jpg',
+            loose_photo_url='https://example.com/exclusive-loose.jpg',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.get(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {'model': exclusive_model.pk},
+        )
+
+        self.assertNotContains(response, 'Krótka karta')
+        self.assertContains(response, 'Długa')
+        self.assertContains(response, 'Luzak')
+
+    def test_owner_cannot_add_rlc_as_short_card(self):
+        rlc_model = HotWheelsModel.objects.create(
+            app_id='rlc124',
+            toy='HWF04',
+            number='HWF04',
+            model_name='1993 Mazda RX-7 R1',
+            brand='Hot Wheels',
+            year=2024,
+            category='RLC',
+            series='2024 RLC Exclusive',
+            series_number='',
+            photo_url='https://example.com/rx7.jpg',
+            long_card_photo_url='https://example.com/rx7-carded.jpg',
+            loose_photo_url='https://example.com/rx7-loose.jpg',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {
+                'model': rlc_model.pk,
+                'enabled_short_card': 'on',
+                'quantity_short_card': 1,
+                'condition_short_card': 'mint',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Zaznacz przynajmniej jeden wariant modelu do dodania.')
+        self.assertNotContains(response, 'Krótka karta')
+        self.assertFalse(CollectionItem.objects.filter(collection=self.private_collection, model=rlc_model).exists())
+
+    def test_owner_cannot_add_exclusive_as_short_card(self):
+        exclusive_model = HotWheelsModel.objects.create(
+            app_id='exclusive124',
+            toy='ABC02',
+            number='002',
+            model_name='Exclusive Car 2',
+            brand='Hot Wheels',
+            year=2024,
+            category='Mainline',
+            series='HW Metro',
+            exclusive_store='Target Exclusive',
+            series_number='2/5',
+            photo_url='https://example.com/exclusive2.jpg',
+            long_card_photo_url='https://example.com/exclusive2-carded.jpg',
+            loose_photo_url='https://example.com/exclusive2-loose.jpg',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {
+                'model': exclusive_model.pk,
+                'enabled_short_card': 'on',
+                'quantity_short_card': 1,
+                'condition_short_card': 'mint',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Zaznacz przynajmniej jeden wariant modelu do dodania.')
+        self.assertNotContains(response, 'Krótka karta')
+        self.assertFalse(CollectionItem.objects.filter(collection=self.private_collection, model=exclusive_model).exists())
+
     def test_owner_can_update_collection(self):
         self.client.force_login(self.owner)
         response = self.client.post(

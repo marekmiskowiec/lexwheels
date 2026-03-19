@@ -99,9 +99,13 @@ class Command(BaseCommand):
                 short_card_local_photo = self.clean_optional_text(row.get('Short Card Local Photo'))
                 long_card_local_photo = self.clean_optional_text(row.get('Long Card Local Photo')) or local_photo
                 loose_local_photo = self.clean_optional_text(row.get('Loose Local Photo')) or local_photo
-                if category.lower() not in {'premium', 'semi premium', 'xl'}:
+                excludes_short_card = category.lower() in {'premium', 'semi premium', 'xl', 'rlc'} or bool(exclusive_store)
+                if not excludes_short_card:
                     short_card_photo_url = short_card_photo_url or photo_url
                     short_card_local_photo = short_card_local_photo or local_photo
+                else:
+                    short_card_photo_url = ''
+                    short_card_local_photo = ''
                 defaults = {
                     'brand': self.extract_brand(row, metadata),
                     'toy': row.get('Toy', ''),

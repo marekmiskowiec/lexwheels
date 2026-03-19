@@ -44,7 +44,7 @@ class HotWheelsModel(models.Model):
     @property
     def excluded_packaging_states(self) -> set[str]:
         category = (self.category or '').strip().lower()
-        if category in {'premium', 'semi premium', 'xl'}:
+        if category in {'premium', 'semi premium', 'xl', 'rlc'} or self.exclusive_store:
             return {'short_card'}
         return set()
 

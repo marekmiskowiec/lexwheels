@@ -241,6 +241,68 @@ class ImportModelsCommandTests(TestCase):
         self.assertEqual(model.long_card_photo_url, 'https://example.com/carded.jpg')
         self.assertEqual(model.loose_photo_url, 'https://example.com/open.jpg')
 
+    def test_import_does_not_backfill_short_card_for_rlc(self):
+        payload = [{
+            'Brand': 'Hot Wheels',
+            'Category': 'RLC',
+            'Year': 2024,
+            'Toy': 'HWF03',
+            'Number': 'HWF03',
+            'Model Name': 'Kawa-Bug-A',
+            'Series': '2024 RLC Exclusive',
+            'Series Number': '',
+            'Photo': 'https://example.com/carded.jpg',
+            'Local Photo': 'images/carded.jpg',
+            'Short Card Photo': '',
+            'Short Card Local Photo': '',
+            'Long Card Photo': 'https://example.com/carded.jpg',
+            'Long Card Local Photo': 'images/carded.jpg',
+            'Loose Photo': 'https://example.com/loose.jpg',
+            'Loose Local Photo': 'images/loose.jpg',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / 'hot-wheels' / 'rlc' / '2024.json'
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(payload))
+            call_command('import_models', path=str(path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.short_card_photo_url, '')
+        self.assertEqual(model.short_card_local_photo_path, '')
+        self.assertEqual(model.long_card_photo_url, 'https://example.com/carded.jpg')
+        self.assertEqual(model.loose_photo_url, 'https://example.com/loose.jpg')
+
+    def test_import_does_not_backfill_short_card_for_exclusive(self):
+        payload = [{
+            'Brand': 'Hot Wheels',
+            'Category': 'Mainline',
+            'Year': 2024,
+            'Toy': 'ABC',
+            'Number': '001',
+            'Model Name': 'Test Car',
+            'Series': 'HW MetroWalmart Exclusive',
+            'Series Number': '1/5',
+            'Photo': 'https://example.com/carded.jpg',
+            'Local Photo': 'images/carded.jpg',
+            'Short Card Photo': '',
+            'Short Card Local Photo': '',
+            'Long Card Photo': 'https://example.com/carded.jpg',
+            'Long Card Local Photo': 'images/carded.jpg',
+            'Loose Photo': 'https://example.com/loose.jpg',
+            'Loose Local Photo': 'images/loose.jpg',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / 'models.json'
+            path.write_text(json.dumps(payload))
+            call_command('import_models', path=str(path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.short_card_photo_url, '')
+        self.assertEqual(model.short_card_local_photo_path, '')
+        self.assertEqual(model.exclusive_store, 'Walmart Exclusive')
+
     def test_import_handles_null_local_photo_paths(self):
         payload = [{
             'Toy': 'ABC',
@@ -578,6 +640,30 @@ class CatalogViewTests(TestCase):
         self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
         self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
         self.model_obj.save(update_fields=['category', 'short_card_photo_url', 'long_card_photo_url', 'loose_photo_url'])
+
+        variants = self.model_obj.catalog_image_variants
+
+        self.assertEqual([variant['key'] for variant in variants], ['long_card', 'loose'])
+        self.assertEqual(self.model_obj.short_card_image_src, '')
+
+    def test_rlc_model_hides_short_card_variant(self):
+        self.model_obj.category = 'RLC'
+        self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.save(update_fields=['category', 'short_card_photo_url', 'long_card_photo_url', 'loose_photo_url'])
+
+        variants = self.model_obj.catalog_image_variants
+
+        self.assertEqual([variant['key'] for variant in variants], ['long_card', 'loose'])
+        self.assertEqual(self.model_obj.short_card_image_src, '')
+
+    def test_exclusive_model_hides_short_card_variant(self):
+        self.model_obj.exclusive_store = 'Walmart Exclusive'
+        self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.save(update_fields=['exclusive_store', 'short_card_photo_url', 'long_card_photo_url', 'loose_photo_url'])
 
         variants = self.model_obj.catalog_image_variants
 
