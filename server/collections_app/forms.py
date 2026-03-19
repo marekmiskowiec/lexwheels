@@ -18,6 +18,15 @@ class CollectionForm(forms.ModelForm):
 
 
 class CollectionImportForm(forms.Form):
+    IMPORT_MODE_MERGE = 'merge'
+    IMPORT_MODE_REPLACE = 'replace'
+    IMPORT_MODE_SKIP = 'skip'
+    IMPORT_MODE_CHOICES = (
+        (IMPORT_MODE_MERGE, 'Scal i dodaj ilość'),
+        (IMPORT_MODE_REPLACE, 'Nadpisz ilość istniejących'),
+        (IMPORT_MODE_SKIP, 'Pomiń istniejące'),
+    )
+
     source_file = forms.FileField(label='Plik CSV lub TSV')
     collection = forms.ModelChoiceField(queryset=Collection.objects.none(), required=False, label='Istniejąca kolekcja')
     new_collection_name = forms.CharField(required=False, max_length=120, label='Lub utwórz nową kolekcję')
@@ -31,6 +40,11 @@ class CollectionImportForm(forms.Form):
         choices=CollectionItem.CONDITION_CHOICES,
         initial='good',
         label='Domyślny stan importowanych modeli',
+    )
+    import_mode = forms.ChoiceField(
+        choices=IMPORT_MODE_CHOICES,
+        initial=IMPORT_MODE_MERGE,
+        label='Co robić z modelami, które już są w kolekcji',
     )
     append_price_to_notes = forms.BooleanField(required=False, initial=True, label='Dodaj cenę do notatek')
     append_location_to_notes = forms.BooleanField(required=False, initial=True, label='Dodaj lokalizację do notatek')

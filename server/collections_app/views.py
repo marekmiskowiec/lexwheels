@@ -573,6 +573,7 @@ class CollectionImportView(LoginRequiredMixin, FormView):
             'new_collection_kind': form.cleaned_data['new_collection_kind'],
             'new_collection_visibility': form.cleaned_data['new_collection_visibility'],
             'default_condition': form.cleaned_data['default_condition'],
+            'import_mode': form.cleaned_data['import_mode'],
             'append_price_to_notes': form.cleaned_data['append_price_to_notes'],
             'append_location_to_notes': form.cleaned_data['append_location_to_notes'],
             'append_color_to_notes': form.cleaned_data['append_color_to_notes'],
@@ -645,22 +646,24 @@ class CollectionImportConfirmView(LoginRequiredMixin, View):
         imported_count = 0
         updated_count = 0
         skipped_count = 0
+        import_mode = preview.get('import_mode', CollectionImportForm.IMPORT_MODE_MERGE)
         for row in preview['rows']:
             if row['status'] != 'matched' or not row['model_id']:
                 skipped_count += 1
                 continue
 
             model = get_object_or_404(HotWheelsModel, pk=row['model_id'])
+            packaging_state = row['packaging_state'] or preferred_packaging_for_model(model)
             notes = build_import_notes(
                 row['source'],
                 include_price=preview['append_price_to_notes'],
                 include_location=preview['append_location_to_notes'],
                 include_color=preview['append_color_to_notes'],
             )
-            item, created = CollectionItem.objects.get_or_create(
+            item = CollectionItem.objects.filter(
                 collection=target_collection,
                 model=model,
-                packaging_state=row['packaging_state'] or preferred_packaging_for_model(model),
+                packaging_state=packaging_state,
                 condition=preview['default_condition'],
                 is_sealed=False,
                 has_soft_corners=False,
@@ -668,14 +671,39 @@ class CollectionImportConfirmView(LoginRequiredMixin, View):
                 is_signed=False,
                 has_bent_hook=False,
                 has_cracked_blister=False,
-                defaults={
-                    'quantity': row['source']['quantity'],
-                    'notes': notes,
-                },
-            )
-            if created:
+            ).first()
+
+            if item is None:
+                CollectionItem.objects.create(
+                    collection=target_collection,
+                    model=model,
+                    packaging_state=packaging_state,
+                    condition=preview['default_condition'],
+                    is_sealed=False,
+                    has_soft_corners=False,
+                    has_protector=False,
+                    is_signed=False,
+                    has_bent_hook=False,
+                    has_cracked_blister=False,
+                    quantity=row['source']['quantity'],
+                    notes=notes,
+                )
                 imported_count += 1
-            else:
+                continue
+
+            if import_mode == CollectionImportForm.IMPORT_MODE_SKIP:
+                skipped_count += 1
+                continue
+
+            if import_mode == CollectionImportForm.IMPORT_MODE_REPLACE:
+                item.quantity = row['source']['quantity']
+                if notes:
+                    item.notes = notes
+                item.save(update_fields=['quantity', 'notes'])
+                updated_count += 1
+                continue
+
+            if import_mode == CollectionImportForm.IMPORT_MODE_MERGE:
                 item.quantity += row['source']['quantity']
                 if notes:
                     item.notes = '\n'.join(filter(None, [item.notes, notes]))

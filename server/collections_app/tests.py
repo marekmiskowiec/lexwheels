@@ -507,6 +507,7 @@ class CollectionTests(TestCase):
                 'new_collection_kind': Collection.KIND_OWNED,
                 'new_collection_visibility': Collection.VISIBILITY_PRIVATE,
                 'default_condition': 'good',
+                'import_mode': 'merge',
                 'append_price_to_notes': 'on',
                 'append_location_to_notes': 'on',
                 'source_file': SimpleUploadedFile('collection.csv', payload.encode('utf-8'), content_type='text/csv'),
@@ -535,6 +536,7 @@ class CollectionTests(TestCase):
                 'new_collection_kind': Collection.KIND_OWNED,
                 'new_collection_visibility': Collection.VISIBILITY_PRIVATE,
                 'default_condition': 'good',
+                'import_mode': 'merge',
                 'append_price_to_notes': 'on',
                 'append_location_to_notes': 'on',
                 'source_file': SimpleUploadedFile('collection.csv', payload.encode('utf-8'), content_type='text/csv'),
@@ -569,6 +571,7 @@ class CollectionTests(TestCase):
                 'new_collection_kind': Collection.KIND_OWNED,
                 'new_collection_visibility': Collection.VISIBILITY_PRIVATE,
                 'default_condition': 'good',
+                'import_mode': 'merge',
                 'append_price_to_notes': 'on',
                 'append_location_to_notes': 'on',
                 'source_file': SimpleUploadedFile('collection.csv', payload.encode('utf-8'), content_type='text/csv'),
@@ -585,6 +588,90 @@ class CollectionTests(TestCase):
         self.assertEqual(report.collection, self.private_collection)
         self.assertEqual(report.import_count, 1)
         self.assertEqual(report.location, 'Box B')
+
+    def test_collection_import_merge_mode_adds_quantity_to_existing_item(self):
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=2, condition='good')
+        self.client.force_login(self.owner)
+        payload = (
+            'ID,Name,Year,Type,Series,Series Number,Amount\n'
+            '1,1970 Pontiac Firebird,2022,Mainline,HW Dream Garage,1/5,3\n'
+        )
+
+        preview_response = self.client.post(
+            reverse('collections:collection-import'),
+            {
+                'collection': self.private_collection.pk,
+                'new_collection_name': '',
+                'new_collection_kind': Collection.KIND_OWNED,
+                'new_collection_visibility': Collection.VISIBILITY_PRIVATE,
+                'default_condition': 'good',
+                'import_mode': 'merge',
+                'source_file': SimpleUploadedFile('collection.csv', payload.encode('utf-8'), content_type='text/csv'),
+            },
+        )
+        preview_page = self.client.get(preview_response['Location'])
+        token = preview_page.context['preview_token']
+
+        self.client.post(reverse('collections:collection-import-confirm'), {'preview_token': token})
+
+        item = CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj, condition='good')
+        self.assertEqual(item.quantity, 5)
+
+    def test_collection_import_replace_mode_overwrites_existing_quantity(self):
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=2, condition='good')
+        self.client.force_login(self.owner)
+        payload = (
+            'ID,Name,Year,Type,Series,Series Number,Amount\n'
+            '1,1970 Pontiac Firebird,2022,Mainline,HW Dream Garage,1/5,3\n'
+        )
+
+        preview_response = self.client.post(
+            reverse('collections:collection-import'),
+            {
+                'collection': self.private_collection.pk,
+                'new_collection_name': '',
+                'new_collection_kind': Collection.KIND_OWNED,
+                'new_collection_visibility': Collection.VISIBILITY_PRIVATE,
+                'default_condition': 'good',
+                'import_mode': 'replace',
+                'source_file': SimpleUploadedFile('collection.csv', payload.encode('utf-8'), content_type='text/csv'),
+            },
+        )
+        preview_page = self.client.get(preview_response['Location'])
+        token = preview_page.context['preview_token']
+
+        self.client.post(reverse('collections:collection-import-confirm'), {'preview_token': token})
+
+        item = CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj, condition='good')
+        self.assertEqual(item.quantity, 3)
+
+    def test_collection_import_skip_mode_leaves_existing_quantity_unchanged(self):
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=2, condition='good')
+        self.client.force_login(self.owner)
+        payload = (
+            'ID,Name,Year,Type,Series,Series Number,Amount\n'
+            '1,1970 Pontiac Firebird,2022,Mainline,HW Dream Garage,1/5,3\n'
+        )
+
+        preview_response = self.client.post(
+            reverse('collections:collection-import'),
+            {
+                'collection': self.private_collection.pk,
+                'new_collection_name': '',
+                'new_collection_kind': Collection.KIND_OWNED,
+                'new_collection_visibility': Collection.VISIBILITY_PRIVATE,
+                'default_condition': 'good',
+                'import_mode': 'skip',
+                'source_file': SimpleUploadedFile('collection.csv', payload.encode('utf-8'), content_type='text/csv'),
+            },
+        )
+        preview_page = self.client.get(preview_response['Location'])
+        token = preview_page.context['preview_token']
+
+        self.client.post(reverse('collections:collection-import-confirm'), {'preview_token': token})
+
+        item = CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj, condition='good')
+        self.assertEqual(item.quantity, 2)
 
     def test_import_backlog_view_lists_unmatched_models(self):
         entry = ImportBacklogEntry.objects.create(
