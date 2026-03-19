@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Import kolekcji | LexWheels{% endblock %}
+{% block content %}
+<section class="panel hero">
+  <h1>Import kolekcji</h1>
+  <p class="meta">Wersja 1 obsługuje pliki CSV i TSV z Excela lub Google Sheets. Najlepiej działają kolumny typu `Toy`, `Name`, `Year`, `Type`, `Series`, `Series Number`, `Amount`, `Price`, `Where`.</p>
+</section>
+
+<section class="panel" style="margin-bottom:18px;">
+  <h2>Wczytaj plik</h2>
+  <form method="post" enctype="multipart/form-data" class="list">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Sprawdź dopasowania</button>
+  </form>
+</section>
+
+{% if preview %}
+  <section class="panel" style="margin-bottom:18px;">
+    <h2>Podgląd importu</h2>
+    <div class="stats-strip" style="margin-bottom:18px;">
+      <div class="stat-card"><span class="stat-label">Wiersze</span><strong class="stat-value">{{ preview.summary.total_rows }}</strong></div>
+      <div class="stat-card"><span class="stat-label">Dopasowane</span><strong class="stat-value">{{ preview.summary.matched_rows }}</strong></div>
+      <div class="stat-card"><span class="stat-label">Niejednoznaczne</span><strong class="stat-value">{{ preview.summary.ambiguous_rows }}</strong></div>
+      <div class="stat-card"><span class="stat-label">Niedopasowane</span><strong class="stat-value">{{ preview.summary.unmatched_rows }}</strong></div>
+    </div>
+    <p class="meta">Wykryte kolumny:
+      {% for key, value in preview.column_map.items %}
+        <span class="badge">{{ key }}: {{ value }}</span>
+      {% empty %}
+        <span class="badge">brak automatycznie wykrytych kolumn</span>
+      {% endfor %}
+    </p>
+    <div class="list" style="margin-top:18px;">
+      {% for row in preview.rows %}
+        <div class="list-item">
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+            <strong>Wiersz {{ row.row_number }}: {{ row.source.model_name|default:"-" }}</strong>
+            <span class="badge">{{ row.status }}</span>
+          </div>
+          <p class="meta">Rok: {{ row.source.year|default:"-" }} | Kategoria: {{ row.source.category|default:"-" }} | Seria: {{ row.source.series|default:"-" }} | Ilość: {{ row.source.quantity }}</p>
+          {% if row.model_label %}
+            <p><strong>Dopasowanie:</strong> {{ row.model_label }}</p>
+            <p class="meta">Opakowanie: {{ row.packaging_state }} | Powód: {{ row.reason }}</p>
+          {% else %}
+            <p class="meta">{{ row.reason }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    <form method="post" action="{% url 'collections:collection-import-confirm' %}" style="margin-top:18px;">
+      {% csrf_token %}
+      <input type="hidden" name="preview_token" value="{{ preview_token }}">
+      <button type="submit">Importuj dopasowane pozycje</button>
+    </form>
+  </section>
+{% endif %}
+{% endblock %}

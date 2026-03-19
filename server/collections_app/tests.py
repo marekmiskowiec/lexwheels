@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 import json
 
@@ -487,7 +488,70 @@ class CollectionTests(TestCase):
         response = self.client.get(reverse('collections:dashboard'))
         self.assertContains(response, '3')
         self.assertContains(response, 'Zobacz pełne statystyki')
+        self.assertContains(response, 'Importuj CSV')
         self.assertNotContains(response, 'Statystyki i wykresy')
+
+    def test_collection_import_preview_matches_rows_from_csv(self):
+        self.client.force_login(self.owner)
+        payload = (
+            'ID,Name,Color,Year,Type,Series,Series Number,Price,Amount,Where\n'
+            '1,1970 Pontiac Firebird,Black,2022,Mainline,HW Dream Garage,1/5,20 zl,2,Shelf A\n'
+        )
+
+        response = self.client.post(
+            reverse('collections:collection-import'),
+            {
+                'collection': self.private_collection.pk,
+                'new_collection_name': '',
+                'new_collection_kind': Collection.KIND_OWNED,
+                'new_collection_visibility': Collection.VISIBILITY_PRIVATE,
+                'default_condition': 'good',
+                'append_price_to_notes': 'on',
+                'append_location_to_notes': 'on',
+                'source_file': SimpleUploadedFile('collection.csv', payload.encode('utf-8'), content_type='text/csv'),
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        preview_response = self.client.get(response['Location'])
+        self.assertContains(preview_response, 'Podgląd importu')
+        self.assertContains(preview_response, 'Dopasowane')
+        self.assertContains(preview_response, '1970 Pontiac Firebird')
+        self.assertContains(preview_response, 'matched')
+
+    def test_collection_import_confirm_creates_items_and_notes(self):
+        self.client.force_login(self.owner)
+        payload = (
+            'ID,Name,Color,Year,Type,Series,Series Number,Price,Amount,Where\n'
+            '1,1970 Pontiac Firebird,Black,2022,Mainline,HW Dream Garage,1/5,20 zl,2,Shelf A\n'
+        )
+
+        preview_response = self.client.post(
+            reverse('collections:collection-import'),
+            {
+                'collection': self.private_collection.pk,
+                'new_collection_name': '',
+                'new_collection_kind': Collection.KIND_OWNED,
+                'new_collection_visibility': Collection.VISIBILITY_PRIVATE,
+                'default_condition': 'good',
+                'append_price_to_notes': 'on',
+                'append_location_to_notes': 'on',
+                'source_file': SimpleUploadedFile('collection.csv', payload.encode('utf-8'), content_type='text/csv'),
+            },
+        )
+        preview_page = self.client.get(preview_response['Location'])
+        token = preview_page.context['preview_token']
+
+        response = self.client.post(
+            reverse('collections:collection-import-confirm'),
+            {'preview_token': token},
+        )
+
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        item = CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj)
+        self.assertEqual(item.quantity, 2)
+        self.assertIn('Imported price: 20 zl', item.notes)
+        self.assertIn('Imported location: Shelf A', item.notes)
 
     def test_stats_page_shows_charts(self):
         CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=3, is_favorite=True)

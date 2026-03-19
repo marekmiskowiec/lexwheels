@@ -17,6 +17,42 @@ class CollectionForm(forms.ModelForm):
         fields = ('name', 'description', 'kind', 'visibility')
 
 
+class CollectionImportForm(forms.Form):
+    source_file = forms.FileField(label='Plik CSV lub TSV')
+    collection = forms.ModelChoiceField(queryset=Collection.objects.none(), required=False, label='Istniejąca kolekcja')
+    new_collection_name = forms.CharField(required=False, max_length=120, label='Lub utwórz nową kolekcję')
+    new_collection_kind = forms.ChoiceField(choices=Collection.KIND_CHOICES, initial=Collection.KIND_OWNED, label='Typ nowej kolekcji')
+    new_collection_visibility = forms.ChoiceField(
+        choices=Collection.VISIBILITY_CHOICES,
+        initial=Collection.VISIBILITY_PRIVATE,
+        label='Widoczność nowej kolekcji',
+    )
+    default_condition = forms.ChoiceField(
+        choices=CollectionItem.CONDITION_CHOICES,
+        initial='good',
+        label='Domyślny stan importowanych modeli',
+    )
+    append_price_to_notes = forms.BooleanField(required=False, initial=True, label='Dodaj cenę do notatek')
+    append_location_to_notes = forms.BooleanField(required=False, initial=True, label='Dodaj lokalizację do notatek')
+    append_color_to_notes = forms.BooleanField(required=False, initial=False, label='Dodaj kolor do notatek')
+
+    def __init__(self, *args, **kwargs):
+        owner = kwargs.pop('owner')
+        super().__init__(*args, **kwargs)
+        self.fields['collection'].queryset = Collection.objects.filter(owner=owner).order_by('kind', 'name')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        collection = cleaned_data.get('collection')
+        new_collection_name = (cleaned_data.get('new_collection_name') or '').strip()
+
+        if not collection and not new_collection_name:
+            raise forms.ValidationError('Wybierz kolekcję docelową albo podaj nazwę nowej kolekcji.')
+        if collection and new_collection_name:
+            raise forms.ValidationError('Wybierz istniejącą kolekcję albo utwórz nową, nie oba naraz.')
+        return cleaned_data
+
+
 class VariantSectionsMixin:
     CARD_ATTRIBUTE_NAMES = (
         'is_sealed',

@@ -1,5 +1,7 @@
 import csv
 import json
+import io
+import uuid
 from itertools import groupby
 from urllib.parse import urlencode
 
@@ -20,6 +22,7 @@ from .forms import (
     CollectionBatchAddForm,
     CollectionBulkEditForm,
     CollectionForm,
+    CollectionImportForm,
     CollectionItemForm,
     CollectionItemMultiVariantForm,
 )
@@ -55,6 +58,30 @@ ATTRIBUTE_FILTER_FIELDS = (
     ('bent_hook', 'has_bent_hook'),
     ('cracked_blister', 'has_cracked_blister'),
 )
+COLLECTION_IMPORT_SESSION_KEY = 'collection_import_preview'
+IMPORT_COLUMN_ALIASES = {
+    'toy': {'toy', 'toy id', 'toy_id', 'sku', 'id katalogowy', 'item code'},
+    'model_name': {'name', 'model', 'model name', 'nazwa'},
+    'year': {'year', 'rok'},
+    'category': {'type', 'category', 'kategoria', 'line'},
+    'series': {'series', 'seria'},
+    'series_number': {'series number', 'series_number', 'nr serii'},
+    'quantity': {'amount', 'quantity', 'qty', 'ilosc', 'ilość'},
+    'price': {'price', 'cena'},
+    'location': {'where', 'location', 'storage', 'miejsce'},
+    'color': {'color', 'colour', 'kolor'},
+}
+IMPORT_CATEGORY_MAP = {
+    'half-premium': 'Semi Premium',
+    'half premium': 'Semi Premium',
+    'semi-premium': 'Semi Premium',
+    'semi premium': 'Semi Premium',
+    'premium': 'Premium',
+    'mainline': 'Mainline',
+    'rlc': 'RLC',
+    'collectors': 'Collectors',
+    'xl': 'XL',
+}
 
 
 def parse_boolean_filter(raw_value):
@@ -64,6 +91,126 @@ def parse_boolean_filter(raw_value):
     if value == 'no':
         return False
     return None
+
+
+def normalize_import_header(value):
+    return ' '.join((value or '').strip().lower().replace('_', ' ').split())
+
+
+def detect_import_columns(headers):
+    mapping = {}
+    normalized_headers = {normalize_import_header(header): header for header in headers if header}
+    for target, aliases in IMPORT_COLUMN_ALIASES.items():
+        for alias in aliases:
+            if alias in normalized_headers:
+                mapping[target] = normalized_headers[alias]
+                break
+    return mapping
+
+
+def normalize_import_category(value):
+    raw = ' '.join((value or '').strip().split())
+    if not raw:
+        return ''
+    return IMPORT_CATEGORY_MAP.get(raw.lower(), raw)
+
+
+def parse_import_quantity(value):
+    raw = (value or '').strip()
+    if not raw:
+        return 1
+    try:
+        parsed = int(raw)
+    except ValueError:
+        return 1
+    return max(parsed, 1)
+
+
+def preferred_packaging_for_model(model):
+    for packaging_state in ('short_card', 'long_card', 'loose'):
+        if packaging_state in model.available_packaging_states:
+            return packaging_state
+    return model.available_packaging_states[0] if model.available_packaging_states else 'loose'
+
+
+def build_import_notes(row_data, include_price=True, include_location=True, include_color=False):
+    notes = []
+    if include_price and row_data.get('price'):
+        notes.append(f"Imported price: {row_data['price']}")
+    if include_location and row_data.get('location'):
+        notes.append(f"Imported location: {row_data['location']}")
+    if include_color and row_data.get('color'):
+        notes.append(f"Imported color: {row_data['color']}")
+    return '\n'.join(notes)
+
+
+def match_import_row(row_data):
+    toy = (row_data.get('toy') or '').strip()
+    model_name = (row_data.get('model_name') or '').strip()
+    year = row_data.get('year')
+    category = (row_data.get('category') or '').strip()
+    series = (row_data.get('series') or '').strip()
+    series_number = (row_data.get('series_number') or '').strip()
+
+    if toy:
+        exact_by_toy = HotWheelsModel.objects.filter(toy__iexact=toy).order_by('year', 'number', 'model_name')
+        if exact_by_toy.count() == 1:
+            return {'status': 'matched', 'model': exact_by_toy.first(), 'reason': 'Toy ID'}
+        if exact_by_toy.count() > 1:
+            return {'status': 'ambiguous', 'model': None, 'reason': f'Wiele modeli z Toy ID "{toy}"'}
+
+    if not model_name:
+        return {'status': 'unmatched', 'model': None, 'reason': 'Brak nazwy modelu'}
+
+    exact_match = HotWheelsModel.objects.filter(model_name__iexact=model_name)
+    if year:
+        exact_match = exact_match.filter(year=year)
+    if category:
+        exact_match = exact_match.filter(category__iexact=category)
+    if series:
+        exact_match = exact_match.filter(series__iexact=series)
+    if series_number:
+        exact_match = exact_match.filter(series_number__iexact=series_number)
+    exact_match = exact_match.order_by('year', 'number', 'model_name')
+    if exact_match.count() == 1:
+        return {'status': 'matched', 'model': exact_match.first(), 'reason': 'Name + Year + Category + Series'}
+    if exact_match.count() > 1:
+        return {'status': 'ambiguous', 'model': None, 'reason': 'Wiele modeli pasuje dokładnie'}
+
+    fallback_match = HotWheelsModel.objects.filter(model_name__iexact=model_name)
+    if year:
+        fallback_match = fallback_match.filter(year=year)
+    if series:
+        fallback_match = fallback_match.filter(series__iexact=series)
+    fallback_match = fallback_match.order_by('year', 'number', 'model_name')
+    if fallback_match.count() == 1:
+        return {'status': 'matched', 'model': fallback_match.first(), 'reason': 'Name + Year + Series'}
+    if fallback_match.count() > 1:
+        return {'status': 'ambiguous', 'model': None, 'reason': 'Kilka modeli pasuje po nazwie i serii'}
+
+    relaxed_match = HotWheelsModel.objects.filter(model_name__iexact=model_name)
+    if year:
+        relaxed_match = relaxed_match.filter(year=year)
+    relaxed_match = relaxed_match.order_by('year', 'number', 'model_name')
+    if relaxed_match.count() == 1:
+        return {'status': 'matched', 'model': relaxed_match.first(), 'reason': 'Name + Year'}
+    if relaxed_match.count() > 1:
+        return {'status': 'ambiguous', 'model': None, 'reason': 'Kilka modeli pasuje po nazwie'}
+
+    return {'status': 'unmatched', 'model': None, 'reason': 'Nie znaleziono modelu'}
+
+
+def parse_import_file(uploaded_file):
+    decoded = uploaded_file.read().decode('utf-8-sig', errors='replace')
+    sample = decoded[:2048]
+    try:
+        dialect = csv.Sniffer().sniff(sample, delimiters=',;\t')
+        delimiter = dialect.delimiter
+    except csv.Error:
+        delimiter = '\t' if '\t' in sample else ','
+    reader = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
+    rows = list(reader)
+    return reader.fieldnames or [], rows
 
 
 def build_collection_stats_context(items_queryset):
@@ -299,6 +446,171 @@ class CollectionCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.owner = self.request.user
         return super().form_valid(form)
+
+
+class CollectionImportView(LoginRequiredMixin, FormView):
+    template_name = 'collections/import.html'
+    form_class = CollectionImportForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['owner'] = self.request.user
+        return kwargs
+
+    def get_preview(self):
+        token = self.request.GET.get('preview') or self.request.POST.get('preview_token')
+        previews = self.request.session.get(COLLECTION_IMPORT_SESSION_KEY, {})
+        if not token:
+            return None
+        return previews.get(token)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['preview'] = self.get_preview()
+        context['preview_token'] = self.request.GET.get('preview', '').strip()
+        return context
+
+    def form_valid(self, form):
+        headers, rows = parse_import_file(self.request.FILES['source_file'])
+        column_map = detect_import_columns(headers)
+        preview_rows = []
+        matched_count = 0
+        ambiguous_count = 0
+        unmatched_count = 0
+
+        for index, row in enumerate(rows, start=1):
+            row_data = {
+                'toy': (row.get(column_map.get('toy', ''), '') or '').strip(),
+                'model_name': (row.get(column_map.get('model_name', ''), '') or '').strip(),
+                'year': int((row.get(column_map.get('year', ''), '') or 0)) if (row.get(column_map.get('year', ''), '') or '').strip().isdigit() else None,
+                'category': normalize_import_category(row.get(column_map.get('category', ''), '')),
+                'series': (row.get(column_map.get('series', ''), '') or '').strip(),
+                'series_number': (row.get(column_map.get('series_number', ''), '') or '').strip(),
+                'quantity': parse_import_quantity(row.get(column_map.get('quantity', ''), '')),
+                'price': (row.get(column_map.get('price', ''), '') or '').strip(),
+                'location': (row.get(column_map.get('location', ''), '') or '').strip(),
+                'color': (row.get(column_map.get('color', ''), '') or '').strip(),
+            }
+            match = match_import_row(row_data)
+            packaging_state = preferred_packaging_for_model(match['model']) if match['model'] else ''
+            preview_row = {
+                'row_number': index,
+                'source': row_data,
+                'status': match['status'],
+                'reason': match['reason'],
+                'packaging_state': packaging_state,
+                'model_id': match['model'].pk if match['model'] else None,
+                'model_label': (
+                    f"{match['model'].model_name} | {match['model'].year or '-'} | {match['model'].series or '-'} | Toy: {match['model'].toy}"
+                    if match['model']
+                    else ''
+                ),
+            }
+            preview_rows.append(preview_row)
+            if match['status'] == 'matched':
+                matched_count += 1
+            elif match['status'] == 'ambiguous':
+                ambiguous_count += 1
+            else:
+                unmatched_count += 1
+
+        preview_token = uuid.uuid4().hex
+        previews = self.request.session.get(COLLECTION_IMPORT_SESSION_KEY, {})
+        previews[preview_token] = {
+            'column_map': column_map,
+            'rows': preview_rows,
+            'target_collection_id': form.cleaned_data['collection'].pk if form.cleaned_data['collection'] else None,
+            'new_collection_name': (form.cleaned_data.get('new_collection_name') or '').strip(),
+            'new_collection_kind': form.cleaned_data['new_collection_kind'],
+            'new_collection_visibility': form.cleaned_data['new_collection_visibility'],
+            'default_condition': form.cleaned_data['default_condition'],
+            'append_price_to_notes': form.cleaned_data['append_price_to_notes'],
+            'append_location_to_notes': form.cleaned_data['append_location_to_notes'],
+            'append_color_to_notes': form.cleaned_data['append_color_to_notes'],
+            'summary': {
+                'headers': headers,
+                'total_rows': len(preview_rows),
+                'matched_rows': matched_count,
+                'ambiguous_rows': ambiguous_count,
+                'unmatched_rows': unmatched_count,
+            },
+        }
+        self.request.session[COLLECTION_IMPORT_SESSION_KEY] = previews
+        self.request.session.modified = True
+        messages.success(self.request, f'Wczytano plik. Dopasowano {matched_count} z {len(preview_rows)} wierszy.')
+        return redirect(f"{reverse('collections:collection-import')}?preview={preview_token}")
+
+
+class CollectionImportConfirmView(LoginRequiredMixin, View):
+    def post(self, request):
+        preview_token = request.POST.get('preview_token', '').strip()
+        previews = request.session.get(COLLECTION_IMPORT_SESSION_KEY, {})
+        preview = previews.get(preview_token)
+        if not preview:
+            messages.error(request, 'Podgląd importu wygasł. Wczytaj plik ponownie.')
+            return redirect(reverse('collections:collection-import'))
+
+        target_collection = None
+        if preview.get('target_collection_id'):
+            target_collection = get_object_or_404(Collection, pk=preview['target_collection_id'], owner=request.user)
+        else:
+            target_collection, _ = Collection.objects.get_or_create(
+                owner=request.user,
+                name=preview['new_collection_name'],
+                defaults={
+                    'kind': preview['new_collection_kind'],
+                    'visibility': preview['new_collection_visibility'],
+                },
+            )
+
+        imported_count = 0
+        updated_count = 0
+        skipped_count = 0
+        for row in preview['rows']:
+            if row['status'] != 'matched' or not row['model_id']:
+                skipped_count += 1
+                continue
+
+            model = get_object_or_404(HotWheelsModel, pk=row['model_id'])
+            notes = build_import_notes(
+                row['source'],
+                include_price=preview['append_price_to_notes'],
+                include_location=preview['append_location_to_notes'],
+                include_color=preview['append_color_to_notes'],
+            )
+            item, created = CollectionItem.objects.get_or_create(
+                collection=target_collection,
+                model=model,
+                packaging_state=row['packaging_state'] or preferred_packaging_for_model(model),
+                condition=preview['default_condition'],
+                is_sealed=False,
+                has_soft_corners=False,
+                has_protector=False,
+                is_signed=False,
+                has_bent_hook=False,
+                has_cracked_blister=False,
+                defaults={
+                    'quantity': row['source']['quantity'],
+                    'notes': notes,
+                },
+            )
+            if created:
+                imported_count += 1
+            else:
+                item.quantity += row['source']['quantity']
+                if notes:
+                    item.notes = '\n'.join(filter(None, [item.notes, notes]))
+                item.save(update_fields=['quantity', 'notes'])
+                updated_count += 1
+
+        previews.pop(preview_token, None)
+        request.session[COLLECTION_IMPORT_SESSION_KEY] = previews
+        request.session.modified = True
+        messages.success(
+            request,
+            f'Import zakończony. Dodano {imported_count} pozycji, zaktualizowano {updated_count}, pominięto {skipped_count}.',
+        )
+        return redirect(target_collection.get_absolute_url())
 
 class CollectionDetailView(DetailView):
     model = Collection
