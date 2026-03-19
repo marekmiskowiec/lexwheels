@@ -32,7 +32,9 @@ class Command(BaseCommand):
         ('ZAMAC', 'ZAMAC'),
         ('Mail-In', 'Mail-In'),
         ('Mail In', 'Mail-In'),
-        ('New in Mainline', 'New in Mainline'),
+    )
+    IGNORED_SERIES_MARKERS = (
+        'New in Mainline',
     )
     DEFAULT_DATASET_PATH = settings.PROJECT_ROOT / 'data' / 'catalog' / 'hot-wheels' / 'mainline' / '2022.json'
     DEFAULT_DATASET_ROOT = settings.PROJECT_ROOT / 'data' / 'catalog'
@@ -309,8 +311,12 @@ class Command(BaseCommand):
                 special_tag = normalized
                 break
 
+        for marker in cls.IGNORED_SERIES_MARKERS:
+            if marker in cleaned:
+                cleaned = cleaned.replace(marker, ' ')
+
         cleaned = re.sub(r'\s+', ' ', cleaned).strip()
-        if not cleaned and special_tag in {'Red Edition', 'ZAMAC', 'Mail-In', 'New in Mainline', 'From the Vault'}:
+        if not cleaned and special_tag in {'Red Edition', 'ZAMAC', 'Mail-In', 'From the Vault'}:
             cleaned = special_tag
 
         return {

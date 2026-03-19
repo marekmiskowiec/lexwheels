@@ -80,6 +80,12 @@ class ImportModelsCommandTests(TestCase):
         self.assertEqual(parsed['exclusive_store'], '')
         self.assertEqual(parsed['special_tag'], 'From the Vault')
 
+    def test_parse_series_metadata_discards_new_in_mainline(self):
+        parsed = Command.parse_series_metadata('Compact KingsNew in Mainline')
+        self.assertEqual(parsed['series'], 'Compact Kings')
+        self.assertEqual(parsed['exclusive_store'], '')
+        self.assertEqual(parsed['special_tag'], '')
+
     def test_build_app_id_does_not_change_when_year_or_category_changes(self):
         row = {
             'Toy': 'ABC',
@@ -482,6 +488,26 @@ class ImportModelsCommandTests(TestCase):
         self.assertEqual(model.series, 'Chevy Bel Air')
         self.assertEqual(model.exclusive_store, 'Kroger Exclusive')
         self.assertEqual(model.special_tag, 'ZAMAC')
+
+    def test_import_does_not_store_new_in_mainline_as_special_tag(self):
+        payload = [{
+            'Toy': 'ABC',
+            'Number': '001',
+            'Model Name': 'Test Car',
+            'Series': 'Compact KingsNew in Mainline',
+            'Series Number': '1/5',
+            'Photo': 'https://example.com/car.jpg',
+            'Local Photo': 'images/car.jpg',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / 'models.json'
+            path.write_text(json.dumps(payload))
+            call_command('import_models', path=str(path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.series, 'Compact Kings')
+        self.assertEqual(model.special_tag, '')
 
 
 class CatalogViewTests(TestCase):
