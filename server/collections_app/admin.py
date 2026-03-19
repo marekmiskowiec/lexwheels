@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Collection, CollectionItem, ImportBacklogEntry
+from .models import Collection, CollectionItem, ImportBacklogEntry, ImportBacklogReport
 
 
 class CollectionItemInline(admin.TabularInline):
@@ -54,11 +54,16 @@ class ImportBacklogEntryAdmin(admin.ModelAdmin):
         'year',
         'category',
         'series',
-        'owner',
-        'collection',
         'status',
-        'import_count',
+        'report_count',
         'last_seen_at',
     )
     list_filter = ('status', 'category', 'year')
-    search_fields = ('model_name', 'toy', 'series', 'owner__email', 'owner__login')
+    search_fields = ('model_name', 'toy', 'series')
+
+
+@admin.register(ImportBacklogReport)
+class ImportBacklogReportAdmin(admin.ModelAdmin):
+    list_display = ('backlog_entry', 'owner', 'collection', 'color', 'import_count', 'last_seen_at')
+    list_filter = ('owner',)
+    search_fields = ('backlog_entry__model_name', 'owner__email', 'owner__login', 'color')

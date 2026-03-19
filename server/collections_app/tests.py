@@ -6,7 +6,7 @@ import json
 from accounts.models import User
 from catalog.models import HotWheelsModel
 
-from .models import Collection, CollectionItem, ImportBacklogEntry
+from .models import Collection, CollectionItem, ImportBacklogEntry, ImportBacklogReport
 
 
 class CollectionTests(TestCase):
@@ -576,22 +576,28 @@ class CollectionTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        entry = ImportBacklogEntry.objects.get(owner=self.owner, model_name='Unreleased Civic')
-        self.assertEqual(entry.collection, self.private_collection)
+        entry = ImportBacklogEntry.objects.get(model_name='Unreleased Civic')
         self.assertEqual(entry.status, ImportBacklogEntry.STATUS_OPEN)
-        self.assertEqual(entry.import_count, 1)
+        self.assertEqual(entry.report_count, 1)
         self.assertEqual(entry.category, 'Premium')
         self.assertEqual(entry.series, 'Future Series')
+        report = ImportBacklogReport.objects.get(backlog_entry=entry, owner=self.owner)
+        self.assertEqual(report.collection, self.private_collection)
+        self.assertEqual(report.import_count, 1)
+        self.assertEqual(report.location, 'Box B')
 
     def test_import_backlog_view_lists_unmatched_models(self):
-        ImportBacklogEntry.objects.create(
-            owner=self.owner,
-            collection=self.private_collection,
+        entry = ImportBacklogEntry.objects.create(
             model_name='Unreleased Civic',
             year=2026,
             category='Premium',
             series='Future Series',
             series_number='1/5',
+        )
+        ImportBacklogReport.objects.create(
+            backlog_entry=entry,
+            owner=self.owner,
+            collection=self.private_collection,
             location='Box B',
         )
         self.client.force_login(self.owner)
@@ -602,6 +608,35 @@ class CollectionTests(TestCase):
         self.assertContains(response, 'Braki z importów')
         self.assertContains(response, 'Unreleased Civic')
         self.assertContains(response, 'Future Series')
+        self.assertContains(response, 'Zgłoszeń: 1')
+
+    def test_import_backlog_aggregates_same_model_across_users(self):
+        other_collection = Collection.objects.create(
+            owner=self.other,
+            name='Other backlog source',
+            kind=Collection.KIND_OWNED,
+            visibility=Collection.VISIBILITY_PRIVATE,
+        )
+        payload = {
+            'toy': '',
+            'model_name': 'Unreleased Civic',
+            'year': 2026,
+            'category': 'Premium',
+            'series': 'Future Series',
+            'series_number': '1/5',
+            'color': 'Red',
+            'price': '50 zl',
+            'location': 'Box A',
+        }
+        from .views import record_import_backlog
+
+        record_import_backlog(self.owner, self.private_collection, payload)
+        record_import_backlog(self.other, other_collection, {**payload, 'color': 'Dark Red', 'location': 'Box B'})
+
+        entry = ImportBacklogEntry.objects.get(model_name='Unreleased Civic')
+        self.assertEqual(ImportBacklogEntry.objects.count(), 1)
+        self.assertEqual(entry.report_count, 2)
+        self.assertEqual(entry.reports.count(), 2)
 
     def test_stats_page_shows_charts(self):
         CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=3, is_favorite=True)

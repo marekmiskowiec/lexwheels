@@ -35,16 +35,23 @@
         </div>
         <p class="meta">Toy: {{ entry.toy|default:"-" }} | Rok: {{ entry.year|default:"-" }} | Kategoria: {{ entry.category|default:"-" }}</p>
         <p class="meta">Seria: {{ entry.series|default:"-" }} {% if entry.series_number %}| {{ entry.series_number }}{% endif %}</p>
-        <p class="meta">Importów: {{ entry.import_count }} | Ostatnio: {{ entry.last_seen_at|date:"Y-m-d H:i" }}</p>
-        {% if entry.color or entry.price or entry.location %}
-          <p class="meta">Kolor: {{ entry.color|default:"-" }} | Cena: {{ entry.price|default:"-" }} | Gdzie: {{ entry.location|default:"-" }}</p>
-        {% endif %}
-        {% if entry.collection %}
-          <p class="meta">Źródłowa kolekcja: <a href="{{ entry.collection.get_absolute_url }}">{{ entry.collection.name }}</a></p>
-        {% endif %}
+        <p class="meta">Zgłoszeń: {{ entry.report_count }} | Ostatnio: {{ entry.last_seen_at|date:"Y-m-d H:i" }}</p>
         {% if entry.resolved_model %}
           <p class="meta">Połączone z: <a href="{{ entry.resolved_model.get_absolute_url }}">{{ entry.resolved_model.model_name }}</a></p>
         {% endif %}
+        <div class="list" style="margin-top:12px;">
+          {% for report in entry.reports.all %}
+            {% if report.owner_id == user.id %}
+              <div class="card compact-card">
+                <p class="meta">Twoje zgłoszenie{% if report.collection %} | Kolekcja: <a href="{{ report.collection.get_absolute_url }}">{{ report.collection.name }}</a>{% endif %}</p>
+                <p class="meta">Importów: {{ report.import_count }} | Ostatnio: {{ report.last_seen_at|date:"Y-m-d H:i" }}</p>
+                {% if report.color or report.price or report.location %}
+                  <p class="meta">Kolor: {{ report.color|default:"-" }} | Cena: {{ report.price|default:"-" }} | Gdzie: {{ report.location|default:"-" }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
       </div>
     {% empty %}
       <p>Brak nierozpoznanych modeli z importów.</p>
