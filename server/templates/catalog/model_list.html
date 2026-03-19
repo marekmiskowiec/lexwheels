@@ -231,8 +231,19 @@
 </script>
 {% if is_paginated %}
   <div class="pagination">
-    {% if page_obj.has_previous %}<a class="button secondary" href="?scope={{ selected_scope }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
-    {% if page_obj.has_next %}<a class="button secondary" href="?scope={{ selected_scope }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+    {% if page_obj.has_previous %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+    {% for page_number in paginator.page_range %}
+      {% if page_number == 1 or page_number == paginator.num_pages or page_number >= page_obj.number|add:'-2' and page_number <= page_obj.number|add:'2' %}
+        {% if page_number == page_obj.number %}
+          <span class="button page-number is-current">{{ page_number }}</span>
+        {% else %}
+          <a class="button secondary page-number" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_number }}">{{ page_number }}</a>
+        {% endif %}
+      {% elif page_number == page_obj.number|add:'-3' or page_number == page_obj.number|add:'3' %}
+        <span class="meta">…</span>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
   </div>
 {% endif %}
 {% endblock %}

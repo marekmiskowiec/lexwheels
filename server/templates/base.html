@@ -32,7 +32,9 @@
     .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #f0e4cf; color: var(--accent-dark); font-size: .9rem; }
     .messages { margin-bottom: 16px; }
     .message { padding: 12px 14px; border-radius: 12px; background: #f0e4cf; }
-    .pagination { display: flex; gap: 12px; margin-top: 20px; }
+    .pagination { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; align-items: center; }
+    .page-number { min-width: 42px; text-align: center; }
+    .page-number.is-current { background: var(--accent-dark); color: #fff; }
     .danger-zone { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
     .profile-head { display: flex; gap: 18px; align-items: center; }
     .avatar-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 10px; }
