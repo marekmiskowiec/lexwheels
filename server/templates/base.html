@@ -71,12 +71,14 @@
       .stats-strip { grid-template-columns: 1fr 1fr; }
     }
   </style>
+  {% block extra_styles %}{% endblock %}
 </head>
 <body>
   <div class="shell">
     <nav class="nav">
       <div class="nav-links">
-        <a class="brand" href="{% url 'catalog:model-list' %}">LexWheels</a>
+        <a class="brand" href="{% url 'home' %}">LexWheels</a>
+        <a href="{% url 'home' %}">Start</a>
         <a href="{% url 'catalog:model-list' %}">Katalog</a>
         <a href="{% url 'collections:public-collections' %}">Publiczne kolekcje</a>
         <a href="{% url 'accounts:collector-list' %}">Kolekcjonerzy</a>

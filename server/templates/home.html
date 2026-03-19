@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% block title %}LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .home-hero { position: relative; overflow: hidden; padding: 30px; background:
+    radial-gradient(circle at top left, rgba(181, 73, 32, 0.18), transparent 34%),
+    linear-gradient(135deg, #fff6e7 0%, #f3e2c5 48%, #ead0ad 100%);
+  }
+  .home-hero::after { content: ""; position: absolute; inset: auto -80px -120px auto; width: 280px; height: 280px; border-radius: 50%; background: rgba(122, 47, 18, 0.08); }
+  .hero-grid { display: grid; gap: 22px; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .95fr); align-items: start; }
+  .hero-copy h1 { font-size: clamp(2.3rem, 5vw, 4.2rem); line-height: .95; margin-bottom: 12px; letter-spacing: -0.05em; }
+  .hero-copy p { max-width: 58ch; font-size: 1.05rem; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+  .home-kpis { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-kpi { padding: 18px; border-radius: 18px; background: rgba(255, 252, 246, 0.9); border: 1px solid #e5cfac; }
+  .home-kpi strong { display: block; font-size: 2rem; color: var(--accent-dark); }
+  .section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .spotlight-grid { display: grid; gap: 18px; grid-template-columns: 1.2fr .8fr; }
+  .progress-list, .launch-list { display: grid; gap: 12px; }
+  .progress-row { padding: 14px 16px; border: 1px solid #eadcc3; border-radius: 16px; background: #fff; }
+  .progress-meta { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+  .progress-bar { height: 10px; border-radius: 999px; background: #f2e6d2; overflow: hidden; }
+  .progress-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #b54920 0%, #de8451 100%); }
+  .launch-card { padding: 16px; border: 1px solid #eadcc3; border-radius: 18px; background: linear-gradient(180deg, #fffdf9 0%, #f8efdf 100%); }
+  .model-row { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 14px; align-items: center; }
+  .model-thumb { width: 72px; height: 72px; object-fit: contain; border: 1px solid #eadcc3; border-radius: 14px; background: #fff9f1; }
+  .tag-cloud { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag-cloud .badge { background: #f7e5cd; }
+
+  @media (max-width: 860px) {
+    .hero-grid, .spotlight-grid { grid-template-columns: 1fr; }
+    .home-hero { padding: 22px; }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<section class="panel hero home-hero">
+  <div class="hero-grid">
+    <div class="hero-copy">
+      {% if user.is_authenticated %}
+        <span class="badge">Dashboard kolekcjonera</span>
+        <h1>LexWheels dla {{ user.public_name }}</h1>
+        <p>Strona główna ma teraz być punktem wejścia do Twojej kolekcji, a nie kopią katalogu. Tu widzisz progres, braki i szybkie przejścia do rzeczy, które chcesz zrobić teraz.</p>
+        <div class="hero-actions">
+          <a class="button" href="{% url 'collections:dashboard' %}">Moje kolekcje</a>
+          <a class="button secondary" href="{% url 'collections:stats' %}">Statystyki</a>
+          <a class="button secondary" href="{% url 'catalog:model-list' %}">Przejdź do katalogu</a>
+        </div>
+      {% else %}
+        <span class="badge">Katalog + kolekcja + wishlist</span>
+        <h1>Zacznij od kolekcji, nie od listy modeli.</h1>
+        <p>LexWheels łączy katalog Hot Wheels z własną kolekcją, wishlistą i statystykami kompletowania. Katalog jest osobno, a strona główna prowadzi do tego, co najważniejsze.</p>
+        <div class="hero-actions">
+          <a class="button" href="{% url 'catalog:model-list' %}">Przeglądaj katalog</a>
+          <a class="button secondary" href="{% url 'accounts:register' %}">Załóż konto</a>
+          <a class="button secondary" href="{% url 'collections:public-collections' %}">Zobacz publiczne kolekcje</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="home-kpis">
+      <div class="home-kpi">
+        <span class="meta">Modele w katalogu</span>
+        <strong>{{ catalog_stats.total_models }}</strong>
+      </div>
+      <div class="home-kpi">
+        <span class="meta">Roczniki</span>
+        <strong>{{ catalog_stats.year_count }}</strong>
+      </div>
+      <div class="home-kpi">
+        <span class="meta">Kategorie</span>
+        <strong>{{ catalog_stats.category_count }}</strong>
+      </div>
+      <div class="home-kpi">
+        <span class="meta">Publiczne kolekcje</span>
+        <strong>{{ public_stats.public_collections }}</strong>
+      </div>
+      {% if user.is_authenticated %}
+        <div class="home-kpi">
+          <span class="meta">Twój completion</span>
+          <strong>{{ completion.percent }}%</strong>
+        </div>
+        <div class="home-kpi">
+          <span class="meta">Brakujące modele</span>
+          <strong>{{ completion.missing_models }}</strong>
+        </div>
+      {% else %}
+        <div class="home-kpi">
+          <span class="meta">Kolekcjonerzy publiczni</span>
+          <strong>{{ public_stats.collector_count }}</strong>
+        </div>
+        <div class="home-kpi">
+          <span class="meta">Marki w katalogu</span>
+          <strong>{{ catalog_stats.brand_count }}</strong>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% if user.is_authenticated %}
+  <section class="spotlight-grid" style="margin-bottom: 18px;">
+    <section class="panel">
+      <div class="section-head">
+        <h2>Stan kolekcji</h2>
+        <a href="{% url 'collections:dashboard' %}">Zarządzaj kolekcjami</a>
+      </div>
+      <div class="stats-strip">
+        <div class="stat-card"><span class="stat-label">Kolekcje</span><strong class="stat-value">{{ user_summary.collection_count }}</strong></div>
+        <div class="stat-card"><span class="stat-label">Wishlisty</span><strong class="stat-value">{{ user_summary.wishlist_count }}</strong></div>
+        <div class="stat-card"><span class="stat-label">Pozycje</span><strong class="stat-value">{{ user_summary.item_count }}</strong></div>
+        <div class="stat-card"><span class="stat-label">Warianty</span><strong class="stat-value">{{ user_summary.variant_count }}</strong></div>
+        <div class="stat-card"><span class="stat-label">Sztuk łącznie</span><strong class="stat-value">{{ user_summary.total_quantity }}</strong></div>
+        <div class="stat-card"><span class="stat-label">Ulubione</span><strong class="stat-value">{{ user_summary.favorite_count }}</strong></div>
+      </div>
+      <div class="launch-list" style="margin-top: 18px;">
+        {% for collection in focus_collections %}
+          <div class="launch-card">
+            <h3 style="margin-bottom: 6px;"><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>
+            <p class="meta">{{ collection.get_kind_display }} | {{ collection.item_total }} pozycji | {{ collection.get_visibility_display }}</p>
+            {% if collection.description %}<p>{{ collection.description }}</p>{% endif %}
+          </div>
+        {% empty %}
+          <p>Nie masz jeszcze kolekcji. Zacznij od własnej listy modeli albo wishlisty.</p>
+          <p><a class="button" href="{% url 'collections:collection-create' %}">Nowa kolekcja</a></p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h2>Najbliżej ukończenia</h2>
+        <a href="{% url 'collections:stats' %}">Pełne statystyki</a>
+      </div>
+      <div class="progress-list">
+        {% for row in completion_by_series %}
+          <div class="progress-row">
+            <div class="progress-meta">
+              <strong>{{ row.label }}</strong>
+              <span class="meta">{{ row.owned }}/{{ row.total }} · {{ row.percent }}%</span>
+            </div>
+            <div class="progress-bar"><span style="width: {{ row.percent }}%;"></span></div>
+          </div>
+        {% empty %}
+          <p class="meta">Dodaj modele do kolekcji, żeby zobaczyć postęp serii.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </section>
+
+  <section class="grid" style="margin-bottom: 18px;">
+    <section class="panel">
+      <div class="section-head">
+        <h2>Brakujące modele</h2>
+        <a href="{% url 'collections:stats' %}">Więcej braków</a>
+      </div>
+      <div class="list">
+        {% for model in missing_models %}
+          <div class="list-item">
+            <strong><a href="{% url 'catalog:model-detail' model.id %}">{{ model.name }}</a></strong>
+            <div class="meta">{{ model.year|default:"-" }} | {{ model.series|default:"Bez serii" }} | {{ model.number }}</div>
+          </div>
+        {% empty %}
+          <p>Brak modeli do pokazania.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h2>Szybkie wejścia</h2>
+      </div>
+      <div class="launch-list">
+        <div class="launch-card">
+          <h3>Katalog</h3>
+          <p class="meta">Szukaj po roczniku, serii, exclusive i tagach specjalnych.</p>
+          <a href="{% url 'catalog:model-list' %}">Otwórz katalog</a>
+        </div>
+        <div class="launch-card">
+          <h3>Nowa kolekcja</h3>
+          <p class="meta">Utwórz osobną kolekcję albo wishlistę dla konkretnego celu.</p>
+          <a href="{% url 'collections:collection-create' %}">Dodaj kolekcję</a>
+        </div>
+        <div class="launch-card">
+          <h3>Profil</h3>
+          <p class="meta">Edytuj widoczność, opis i ustawienia swojego konta kolekcjonera.</p>
+          <a href="{% url 'accounts:profile' %}">Przejdź do profilu</a>
+        </div>
+      </div>
+    </section>
+  </section>
+{% else %}
+  <section class="grid" style="margin-bottom: 18px;">
+    <section class="panel">
+      <div class="section-head">
+        <h2>Popularne serie</h2>
+        <a href="{% url 'catalog:model-list' %}">Cały katalog</a>
+      </div>
+      <div class="tag-cloud">
+        {% for row in featured_series %}
+          <span class="badge">{{ row.series }} · {{ row.total }}</span>
+        {% empty %}
+          <span class="meta">Brak danych o seriach.</span>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h2>Po co osobna strona główna?</h2>
+      </div>
+      <div class="launch-list">
+        <div class="launch-card">
+          <h3>Start od celu</h3>
+          <p class="meta">Najpierw kolekcja, wishlista i postęp, a dopiero potem pełna eksploracja katalogu.</p>
+        </div>
+        <div class="launch-card">
+          <h3>Lepsza orientacja</h3>
+          <p class="meta">Publiczne kolekcje, kolekcjonerzy i najnowsze modele są pod ręką bez wejścia w filtry.</p>
+        </div>
+      </div>
+    </section>
+  </section>
+{% endif %}
+
+<section class="panel">
+  <div class="section-head">
+    <h2>Ostatnio dodane do katalogu</h2>
+    <a href="{% url 'catalog:model-list' %}">Przeglądaj katalog</a>
+  </div>
+  <div class="grid">
+    {% for model in recent_models %}
+      <article class="card compact-card">
+        <div class="model-row">
+          {% if model.catalog_primary_image_src %}
+            <img class="model-thumb" src="{{ model.catalog_primary_image_src }}" alt="{{ model.model_name }}">
+          {% else %}
+            <div class="model-thumb"></div>
+          {% endif %}
+          <div>
+            <h3 style="margin-bottom: 6px;"><a href="{{ model.get_absolute_url }}">{{ model.model_name }}</a></h3>
+            <div class="meta">{{ model.year|default:"-" }} | {{ model.category|default:"-" }}</div>
+            <div class="meta">{{ model.series|default:"Bez serii" }}</div>
+            {% if model.exclusive_store or model.special_tag %}
+              <div class="meta" style="margin-top: 4px;">{% if model.exclusive_store %}{{ model.exclusive_store }}{% endif %}{% if model.exclusive_store and model.special_tag %} | {% endif %}{% if model.special_tag %}{{ model.special_tag }}{% endif %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    {% empty %}
+      <p>Brak modeli w katalogu.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
