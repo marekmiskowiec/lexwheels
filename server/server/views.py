@@ -55,7 +55,6 @@ class HomeView(TemplateView):
             }
             context['completion'] = completion_context['completion']
             context['completion_by_series'] = completion_context['completion_by_series'][:5]
-            context['missing_models'] = completion_context['missing_models'][:6]
             context['focus_collections'] = collections.annotate(item_total=Count('items')).order_by('-item_total', 'name')[:4]
 
         return context

@@ -80,10 +80,6 @@
           <span class="meta">Twój completion</span>
           <strong>{{ completion.percent }}%</strong>
         </div>
-        <div class="home-kpi">
-          <span class="meta">Brakujące modele</span>
-          <strong>{{ completion.missing_models }}</strong>
-        </div>
       {% else %}
         <div class="home-kpi">
           <span class="meta">Kolekcjonerzy publiczni</span>
@@ -151,23 +147,6 @@
   <section class="grid" style="margin-bottom: 18px;">
     <section class="panel">
       <div class="section-head">
-        <h2>Brakujące modele</h2>
-        <a href="{% url 'collections:stats' %}">Więcej braków</a>
-      </div>
-      <div class="list">
-        {% for model in missing_models %}
-          <div class="list-item">
-            <strong><a href="{% url 'catalog:model-detail' model.id %}">{{ model.name }}</a></strong>
-            <div class="meta">{{ model.year|default:"-" }} | {{ model.series|default:"Bez serii" }} | {{ model.number }}</div>
-          </div>
-        {% empty %}
-          <p>Brak modeli do pokazania.</p>
-        {% endfor %}
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="section-head">
         <h2>Szybkie wejścia</h2>
       </div>
       <div class="launch-list">
@@ -185,6 +164,29 @@
           <h3>Profil</h3>
           <p class="meta">Edytuj widoczność, opis i ustawienia swojego konta kolekcjonera.</p>
           <a href="{% url 'accounts:profile' %}">Przejdź do profilu</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h2>Otwórz dalej</h2>
+      </div>
+      <div class="launch-list">
+        <div class="launch-card">
+          <h3>Publiczne kolekcje</h3>
+          <p class="meta">Zobacz, jak inni układają swoje kolekcje i wishlisty.</p>
+          <a href="{% url 'collections:public-collections' %}">Przeglądaj kolekcje</a>
+        </div>
+        <div class="launch-card">
+          <h3>Kolekcjonerzy</h3>
+          <p class="meta">Przejrzyj profile użytkowników i ich publiczne zestawy.</p>
+          <a href="{% url 'accounts:collector-list' %}">Zobacz kolekcjonerów</a>
+        </div>
+        <div class="launch-card">
+          <h3>Statystyki</h3>
+          <p class="meta">Sprawdź progres po seriach, latach i kategoriach bez listy braków.</p>
+          <a href="{% url 'collections:stats' %}">Otwórz statystyki</a>
         </div>
       </div>
     </section>
