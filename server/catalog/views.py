@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.views.generic import DetailView, ListView
+import shlex
 from urllib.parse import urlencode
 
 from collections_app.forms import CatalogQuickAddForm, CollectionBatchAddForm
@@ -48,13 +49,15 @@ class ModelListView(ListView):
 
     def get_queryset(self):
         queryset = HotWheelsModel.objects.all()
-        query = self.request.GET.get('q', '').strip()
-        series = self.request.GET.get('series', '').strip()
-        brand = self.request.GET.get('brand', '').strip()
-        year = self.request.GET.get('year', '').strip()
-        category = self.request.GET.get('category', '').strip()
-        exclusive_store = self.request.GET.get('exclusive_store', '').strip()
-        special_tag = self.request.GET.get('special_tag', '').strip()
+        raw_query = self.request.GET.get('q', '').strip()
+        parsed_query = self.parse_search_query(raw_query)
+        query = parsed_query['text']
+        series = self.request.GET.get('series', '').strip() or parsed_query['series']
+        brand = self.request.GET.get('brand', '').strip() or parsed_query['brand']
+        year = self.request.GET.get('year', '').strip() or parsed_query['year']
+        category = self.request.GET.get('category', '').strip() or parsed_query['category']
+        exclusive_store = self.request.GET.get('exclusive_store', '').strip() or parsed_query['exclusive_store']
+        special_tag = self.request.GET.get('special_tag', '').strip() or parsed_query['special_tag']
         sort = self.request.GET.get('sort', 'number').strip()
 
         if query:
@@ -87,17 +90,67 @@ class ModelListView(ListView):
         }
         return queryset.order_by(*sort_options.get(sort, sort_options['number']))
 
+    @staticmethod
+    def parse_search_query(raw_query: str) -> dict[str, str]:
+        parsed = {
+            'text': '',
+            'year': '',
+            'brand': '',
+            'category': '',
+            'series': '',
+            'exclusive_store': '',
+            'special_tag': '',
+        }
+        if not raw_query:
+            return parsed
+
+        try:
+            tokens = shlex.split(raw_query)
+        except ValueError:
+            tokens = raw_query.split()
+
+        free_text_tokens = []
+        for token in tokens:
+            if ':' not in token:
+                free_text_tokens.append(token)
+                continue
+            key, value = token.split(':', 1)
+            normalized_key = key.strip().lower()
+            normalized_value = value.strip()
+            if not normalized_value:
+                free_text_tokens.append(token)
+                continue
+            if normalized_key in {'y', 'year'} and normalized_value.isdigit():
+                parsed['year'] = normalized_value
+            elif normalized_key in {'b', 'brand'}:
+                parsed['brand'] = normalized_value
+            elif normalized_key in {'c', 'cat', 'category'}:
+                parsed['category'] = normalized_value
+            elif normalized_key in {'s', 'series'}:
+                parsed['series'] = normalized_value
+            elif normalized_key in {'x', 'ex', 'exclusive'}:
+                parsed['exclusive_store'] = normalized_value
+            elif normalized_key in {'t', 'tag'}:
+                parsed['special_tag'] = normalized_value
+            else:
+                free_text_tokens.append(token)
+
+        parsed['text'] = ' '.join(free_text_tokens).strip()
+        return parsed
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         filtered_count = context['page_obj'].paginator.count if context.get('page_obj') else len(context['models'])
         total_queryset = HotWheelsModel.objects.all()
-        context['query'] = self.request.GET.get('q', '').strip()
-        context['selected_brand'] = self.request.GET.get('brand', '').strip()
-        context['selected_series'] = self.request.GET.get('series', '').strip()
-        context['selected_year'] = self.request.GET.get('year', '').strip()
-        context['selected_category'] = self.request.GET.get('category', '').strip()
-        context['selected_exclusive_store'] = self.request.GET.get('exclusive_store', '').strip()
-        context['selected_special_tag'] = self.request.GET.get('special_tag', '').strip()
+        raw_query = self.request.GET.get('q', '').strip()
+        parsed_query = self.parse_search_query(raw_query)
+        context['query'] = raw_query
+        context['selected_brand'] = self.request.GET.get('brand', '').strip() or parsed_query['brand']
+        context['selected_series'] = self.request.GET.get('series', '').strip() or parsed_query['series']
+        context['selected_year'] = self.request.GET.get('year', '').strip() or parsed_query['year']
+        context['selected_category'] = self.request.GET.get('category', '').strip() or parsed_query['category']
+        context['selected_exclusive_store'] = self.request.GET.get('exclusive_store', '').strip() or parsed_query['exclusive_store']
+        context['selected_special_tag'] = self.request.GET.get('special_tag', '').strip() or parsed_query['special_tag']
         context['selected_sort'] = self.request.GET.get('sort', 'number').strip() or 'number'
         context['current_path'] = self.request.get_full_path()
         context['series_options'] = (

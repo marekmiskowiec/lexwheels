@@ -674,6 +674,57 @@ class CatalogViewTests(TestCase):
         response = self.client.get(reverse('catalog:model-list'), {'q': 'Firebird'})
         self.assertContains(response, '1970 Pontiac Firebird')
 
+    def test_catalog_search_can_parse_year_shortcut(self):
+        HotWheelsModel.objects.create(
+            app_id='def456',
+            brand='Hot Wheels',
+            toy='HCT06',
+            number='002',
+            model_name='Honda Civic Custom',
+            year=2023,
+            category='Mainline',
+            series='HW J-Imports',
+            series_number='2/5',
+            photo_url='https://example.com/civic.jpg',
+        )
+        self.model_obj.model_name = 'Honda Civic Custom'
+        self.model_obj.save(update_fields=['model_name'])
+
+        response = self.client.get(reverse('catalog:model-list'), {'q': 'honda civic custom y:2022'})
+
+        self.assertContains(response, 'Honda Civic Custom')
+        self.assertNotContains(response, 'value="2023" selected')
+        self.assertContains(response, 'value="honda civic custom y:2022"', html=False)
+
+    def test_catalog_search_can_parse_quoted_shortcuts(self):
+        self.model_obj.exclusive_store = 'Walmart Exclusive'
+        self.model_obj.category = 'Semi Premium'
+        self.model_obj.special_tag = 'Super Treasure Hunt'
+        self.model_obj.save(update_fields=['exclusive_store', 'category', 'special_tag'])
+        HotWheelsModel.objects.create(
+            app_id='def457',
+            brand='Hot Wheels',
+            toy='HCT07',
+            number='003',
+            model_name='Other Car',
+            year=2022,
+            category='Mainline',
+            series='Muscle Mania',
+            series_number='3/5',
+            photo_url='https://example.com/other.jpg',
+        )
+
+        response = self.client.get(
+            reverse('catalog:model-list'),
+            {'q': 'firebird c:"Semi Premium" x:"Walmart Exclusive" t:"Super Treasure Hunt"'},
+        )
+
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertNotContains(response, 'Other Car')
+        self.assertContains(response, '<option value="Semi Premium" selected>', html=False)
+        self.assertContains(response, '<option value="Walmart Exclusive" selected>', html=False)
+        self.assertContains(response, '<option value="Super Treasure Hunt" selected>', html=False)
+
     def test_catalog_shows_summary_stats(self):
         HotWheelsModel.objects.create(
             app_id='def456',

@@ -26,7 +26,11 @@
     </article>
   </div>
   <form method="get" class="filters">
-    <div style="flex: 2 1 300px;"><label for="q">Szukaj</label><input id="q" type="search" name="q" value="{{ query }}" placeholder="Toy, Number, nazwa modelu, seria"></div>
+    <div style="flex: 2 1 300px;">
+      <label for="q">Szukaj</label>
+      <input id="q" type="search" name="q" value="{{ query }}" placeholder='Np. honda civic custom y:2022 c:mainline x:"Walmart Exclusive"'>
+      <p class="meta" style="margin:6px 0 0;">Skróty: `y:` rok, `c:` kategoria, `b:` marka, `s:` seria, `x:` exclusive, `t:` tag.</p>
+    </div>
     <div style="flex: 1 1 220px;"><label for="brand">Marka</label><select id="brand" name="brand"><option value="">Wszystkie marki</option>{% for brand in brand_options %}<option value="{{ brand }}" {% if selected_brand == brand %}selected{% endif %}>{{ brand }}</option>{% endfor %}</select></div>
     <div style="flex: 1 1 220px;"><label for="series">Seria</label><select id="series" name="series"><option value="">Wszystkie serie</option>{% for series in series_options %}<option value="{{ series }}" {% if selected_series == series %}selected{% endif %}>{{ series }}</option>{% endfor %}</select></div>
     <div style="flex: 1 1 180px;"><label for="year">Rok</label><select id="year" name="year"><option value="">Wszystkie lata</option>{% for year in year_options %}<option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>{% endfor %}</select></div>
