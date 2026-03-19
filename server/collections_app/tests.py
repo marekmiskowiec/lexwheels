@@ -379,9 +379,31 @@ class CollectionTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Moje statystyki')
-        self.assertContains(response, 'Statystyki')
-        self.assertContains(response, 'Marki')
-        self.assertContains(response, 'Hot Wheels')
+        self.assertContains(response, 'Completion Overview')
+        self.assertContains(response, 'By Year')
+        self.assertContains(response, 'By Series')
+        self.assertContains(response, 'Missing Models')
+        self.assertContains(response, 'Owned: 1 / 1')
+
+    def test_stats_page_shows_missing_models_against_catalog(self):
+        second_model = HotWheelsModel.objects.create(
+            app_id='def456',
+            toy='HCT06',
+            number='002',
+            model_name='Custom Mustang',
+            year=2023,
+            category='Mainline',
+            series='HW Dream Garage',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=1)
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse('collections:stats'))
+
+        self.assertContains(response, 'Custom Mustang')
+        self.assertContains(response, 'Owned: 1 / 2')
 
     def test_collection_detail_shows_owner_profile_link(self):
         response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))

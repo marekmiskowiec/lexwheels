@@ -105,6 +105,121 @@ def build_collection_stats_context(items_queryset):
     }
 
 
+def build_completion_context(items_queryset, catalog_queryset=None):
+    catalog_queryset = catalog_queryset or HotWheelsModel.objects.all()
+    owned_model_ids = list(items_queryset.values_list('model_id', flat=True).distinct())
+    owned_model_count = len(owned_model_ids)
+    total_model_count = catalog_queryset.count()
+    completion_percent = int((owned_model_count / total_model_count) * 100) if total_model_count else 0
+
+    owned_by_year = {
+        row['model__year']: row['owned']
+        for row in items_queryset.exclude(model__year__isnull=True)
+        .values('model__year')
+        .annotate(owned=Count('model_id', distinct=True))
+    }
+    total_by_year = {
+        row['year']: row['total']
+        for row in catalog_queryset.exclude(year__isnull=True)
+        .values('year')
+        .annotate(total=Count('id'))
+    }
+    year_rows = []
+    for year in sorted(total_by_year):
+        total = total_by_year[year]
+        owned = owned_by_year.get(year, 0)
+        year_rows.append(
+            {
+                'label': str(year),
+                'owned': owned,
+                'total': total,
+                'percent': int((owned / total) * 100) if total else 0,
+            }
+        )
+
+    owned_by_category = {
+        row['model__category']: row['owned']
+        for row in items_queryset.exclude(model__category='')
+        .values('model__category')
+        .annotate(owned=Count('model_id', distinct=True))
+    }
+    total_by_category = {
+        row['category']: row['total']
+        for row in catalog_queryset.exclude(category='')
+        .values('category')
+        .annotate(total=Count('id'))
+    }
+    category_rows = []
+    for category, total in sorted(total_by_category.items(), key=lambda item: (-item[1], item[0])):
+        owned = owned_by_category.get(category, 0)
+        category_rows.append(
+            {
+                'label': category,
+                'owned': owned,
+                'total': total,
+                'percent': int((owned / total) * 100) if total else 0,
+            }
+        )
+
+    owned_by_series = {
+        row['model__series']: row['owned']
+        for row in items_queryset.exclude(model__series='')
+        .values('model__series')
+        .annotate(owned=Count('model_id', distinct=True))
+    }
+    total_by_series = {
+        row['series']: row['total']
+        for row in catalog_queryset.exclude(series='')
+        .values('series')
+        .annotate(total=Count('id'))
+    }
+    series_rows = []
+    for series, owned in owned_by_series.items():
+        total = total_by_series.get(series, 0)
+        if not total:
+            continue
+        series_rows.append(
+            {
+                'label': series,
+                'owned': owned,
+                'total': total,
+                'missing': max(total - owned, 0),
+                'percent': int((owned / total) * 100) if total else 0,
+            }
+        )
+    series_rows.sort(key=lambda row: (-row['owned'], -row['percent'], row['label']))
+
+    missing_rows = []
+    if owned_model_ids:
+        missing_queryset = catalog_queryset.exclude(pk__in=owned_model_ids)
+    else:
+        missing_queryset = catalog_queryset
+    for model in missing_queryset.order_by('-year', 'series', 'number', 'model_name')[:12]:
+        missing_rows.append(
+            {
+                'id': model.pk,
+                'name': model.model_name,
+                'year': model.year,
+                'series': model.series,
+                'number': model.number,
+                'category': model.category,
+            }
+        )
+
+    return {
+        'completion': {
+            'owned_models': owned_model_count,
+            'total_models': total_model_count,
+            'missing_models': max(total_model_count - owned_model_count, 0),
+            'percent': completion_percent,
+        },
+        'completion_by_year': year_rows,
+        'completion_by_category': category_rows[:8],
+        'completion_by_series': series_rows[:12],
+        'missing_models': missing_rows,
+    }
+
+
 class DashboardView(LoginRequiredMixin, ListView):
     template_name = 'collections/dashboard.html'
     context_object_name = 'collections'
@@ -166,7 +281,9 @@ class CollectionStatsView(LoginRequiredMixin, ListView):
             scope = 'all'
 
         stats_context = build_collection_stats_context(items)
+        completion_context = build_completion_context(items)
         context.update(stats_context)
+        context.update(completion_context)
         context['selected_scope'] = scope
         context['selected_collection_id'] = selected_collection_id
         context['selected_kind'] = selected_kind

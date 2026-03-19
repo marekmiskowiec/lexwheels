@@ -3,7 +3,7 @@
 {% block content %}
 <section class="panel hero">
   <h1>Moje statystyki</h1>
-  <p class="meta">Oddzielony widok analityczny dla wszystkich kolekcji, wishlist albo jednej wybranej kolekcji.</p>
+  <p class="meta">Widok skupiony na kompletowaniu kolekcji: postęp ogólny, roczniki, serie, kategorie i najbliższe braki.</p>
   <form method="get" class="filters" style="margin-top:18px;">
     <div style="flex: 1 1 220px;">
       <label for="scope">Zakres</label>
@@ -27,72 +27,109 @@
       <div><a class="button secondary" href="{% url 'collections:stats' %}">Wyczyść</a></div>
     {% endif %}
   </form>
-  <div class="grid" style="margin-top:18px;">
-    <div class="card"><strong>{{ stats.item_count }}</strong><div class="meta">pozycje</div></div>
-    <div class="card"><strong>{{ stats.variant_count }}</strong><div class="meta">warianty</div></div>
-    <div class="card"><strong>{{ stats.total_quantity }}</strong><div class="meta">sztuk łącznie</div></div>
-    <div class="card"><strong>{{ stats.favorite_count }}</strong><div class="meta">ulubione</div></div>
+</section>
+
+<section class="panel" style="margin-bottom:18px;">
+  <h2>Completion Overview</h2>
+  <div class="grid" style="align-items:stretch;">
+    <article class="card" style="display:grid; place-items:center; min-height:260px; background:linear-gradient(180deg, #fffaf2 0%, #f6ead6 100%);">
+      <div style="position:relative; width:220px; height:220px; border-radius:50%; background:conic-gradient(var(--accent) 0 {{ completion.percent }}%, #eadcc3 {{ completion.percent }}% 100%); display:grid; place-items:center;">
+        <div style="width:150px; height:150px; border-radius:50%; background:var(--panel); display:grid; place-items:center; text-align:center;">
+          <strong style="font-size:3rem; line-height:1; color:var(--accent-dark);">{{ completion.percent }}%</strong>
+          <span class="meta">skompletowane</span>
+        </div>
+      </div>
+    </article>
+    <article class="card" style="display:grid; gap:12px; align-content:start;">
+      <h3 style="margin-bottom:0;">Postęp katalogu</h3>
+      <div class="stats-strip">
+        <div class="stat-card"><span class="stat-label">Posiadane modele</span><strong class="stat-value">{{ completion.owned_models }}</strong></div>
+        <div class="stat-card"><span class="stat-label">Modele w katalogu</span><strong class="stat-value">{{ completion.total_models }}</strong></div>
+        <div class="stat-card"><span class="stat-label">Brakujące modele</span><strong class="stat-value">{{ completion.missing_models }}</strong></div>
+        <div class="stat-card"><span class="stat-label">Warianty</span><strong class="stat-value">{{ stats.variant_count }}</strong></div>
+        <div class="stat-card"><span class="stat-label">Sztuk łącznie</span><strong class="stat-value">{{ stats.total_quantity }}</strong></div>
+        <div class="stat-card"><span class="stat-label">Ulubione</span><strong class="stat-value">{{ stats.favorite_count }}</strong></div>
+      </div>
+    </article>
   </div>
 </section>
 
-<section class="panel">
-  <h2>Wykresy</h2>
-  <div class="grid">
-    <div class="card">
-      <h3>Marki</h3>
-      {% for row in charts.brands %}
-        <div style="margin-bottom:10px;">
-          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
-          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:var(--accent);"></div></div>
+<section class="grid" style="margin-bottom:18px;">
+  <article class="panel">
+    <h2>By Year</h2>
+    <div class="list">
+      {% for row in completion_by_year %}
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:baseline; margin-bottom:8px;">
+            <strong style="font-size:1.2rem; color:var(--accent-dark);">{{ row.label }}</strong>
+            <span class="badge">{{ row.percent }}%</span>
+          </div>
+          <div style="height:12px; background:#f0e4cf; border-radius:999px; overflow:hidden; margin-bottom:10px;">
+            <div style="width:{{ row.percent }}%; height:100%; background:linear-gradient(90deg, var(--accent) 0%, #d68c4f 100%);"></div>
+          </div>
+          <p class="meta">Owned: {{ row.owned }} / {{ row.total }}</p>
         </div>
       {% empty %}
-        <p class="meta">Brak danych.</p>
+        <p class="meta">Brak danych rocznikowych.</p>
       {% endfor %}
     </div>
-    <div class="card">
-      <h3>Roczniki</h3>
-      {% for row in charts.years %}
-        <div style="margin-bottom:10px;">
-          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
-          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:#8f806a;"></div></div>
+  </article>
+
+  <article class="panel">
+    <h2>By Category</h2>
+    <div class="list">
+      {% for row in completion_by_category %}
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:baseline; margin-bottom:8px;">
+            <strong>{{ row.label }}</strong>
+            <span class="badge">{{ row.percent }}%</span>
+          </div>
+          <div style="height:12px; background:#f0e4cf; border-radius:999px; overflow:hidden; margin-bottom:10px;">
+            <div style="width:{{ row.percent }}%; height:100%; background:#5b8c5a;"></div>
+          </div>
+          <p class="meta">Owned: {{ row.owned }} / {{ row.total }}</p>
         </div>
       {% empty %}
-        <p class="meta">Brak danych.</p>
+        <p class="meta">Brak danych kategorii.</p>
       {% endfor %}
     </div>
-    <div class="card">
-      <h3>Kategorie</h3>
-      {% for row in charts.categories %}
-        <div style="margin-bottom:10px;">
-          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
-          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:#c47b38;"></div></div>
+  </article>
+</section>
+
+<section class="grid">
+  <article class="panel">
+    <h2>By Series</h2>
+    <div class="list">
+      {% for row in completion_by_series %}
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:8px;">
+            <strong>{{ row.label }}</strong>
+            <span class="badge">{{ row.percent }}%</span>
+          </div>
+          <div style="height:12px; background:#f0e4cf; border-radius:999px; overflow:hidden; margin-bottom:10px;">
+            <div style="width:{{ row.percent }}%; height:100%; background:#4d7298;"></div>
+          </div>
+          <p class="meta">Owned: {{ row.owned }} / {{ row.total }} | Brakuje: {{ row.missing }}</p>
         </div>
       {% empty %}
-        <p class="meta">Brak danych.</p>
+        <p class="meta">Nie masz jeszcze żadnego postępu w seriach.</p>
       {% endfor %}
     </div>
-    <div class="card">
-      <h3>Opakowanie</h3>
-      {% for row in charts.packaging %}
-        <div style="margin-bottom:10px;">
-          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
-          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:#5b8c5a;"></div></div>
+  </article>
+
+  <article class="panel">
+    <h2>Missing Models</h2>
+    <div class="list">
+      {% for model in missing_models %}
+        <div class="list-item">
+          <h3 style="margin-bottom:6px;"><a href="{% url 'catalog:model-detail' model.id %}">{{ model.name }}</a></h3>
+          <p class="meta">Rok: {{ model.year|default:"-" }} | Number: {{ model.number|default:"-" }} | Kategoria: {{ model.category|default:"-" }}</p>
+          <p class="meta">{{ model.series|default:"Bez serii" }}</p>
         </div>
       {% empty %}
-        <p class="meta">Brak danych.</p>
+        <p class="meta">Brak brakujących modeli w wybranym zakresie.</p>
       {% endfor %}
     </div>
-    <div class="card">
-      <h3>Stan modeli</h3>
-      {% for row in charts.conditions %}
-        <div style="margin-bottom:10px;">
-          <div class="meta" style="display:flex; justify-content:space-between; gap:12px;"><span>{{ row.label }}</span><span>{{ row.value }}</span></div>
-          <div style="height:10px; background:#f0e4cf; border-radius:999px; overflow:hidden;"><div style="width:{{ row.percent }}%; height:100%; background:#4d7298;"></div></div>
-        </div>
-      {% empty %}
-        <p class="meta">Brak danych.</p>
-      {% endfor %}
-    </div>
-  </div>
+  </article>
 </section>
 {% endblock %}
