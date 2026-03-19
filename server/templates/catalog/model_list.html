@@ -89,9 +89,9 @@
     {% endif %}
   {% endif %}
 </section>
-<section class="grid">
+<section class="grid catalog-grid">
   {% for item in models %}
-    <article class="card">
+    <article class="card catalog-card">
       {% if user.is_authenticated and batch_add_form.fields.collection.queryset %}
         <label class="meta" style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
           <input type="checkbox" name="model_ids" value="{{ item.pk }}" form="batch-add-form" style="width:auto;">
@@ -123,13 +123,18 @@
         </div>
       {% endif %}
       <h3><a href="{{ item.get_absolute_url }}">{{ item.model_name }}</a></h3>
-      <p class="meta">Marka: {{ item.brand|default:"-" }}</p>
-      <p class="meta">Toy: {{ item.toy }} | Number: {{ item.number }}</p>
-      <p class="meta">Rok: {{ item.year|default:"-" }} | Kategoria: {{ item.category|default:"-" }}</p>
-      <p class="meta">{{ item.series }} {% if item.series_number %}| {{ item.series_number }}{% endif %}</p>
-      {% if item.exclusive_store or item.special_tag %}
-        <p class="meta">{% if item.exclusive_store %}Exclusive: {{ item.exclusive_store }}{% endif %}{% if item.exclusive_store and item.special_tag %} | {% endif %}{% if item.special_tag %}Tag: {{ item.special_tag }}{% endif %}</p>
-      {% endif %}
+      <div class="catalog-meta">
+        <div class="catalog-inline-meta">
+          <p class="meta"><strong>{{ item.year|default:"-" }}</strong></p>
+          <p class="meta">{{ item.category|default:"-" }}</p>
+        </div>
+        <p class="meta">{{ item.brand|default:"-" }}</p>
+        <p class="meta">Toy: {{ item.toy }} | No: {{ item.number }}</p>
+        <p class="meta">{{ item.series|default:"Bez serii" }}{% if item.series_number %} | {{ item.series_number }}{% endif %}</p>
+        {% if item.exclusive_store or item.special_tag %}
+          <p class="meta">{% if item.exclusive_store %}Exclusive: {{ item.exclusive_store }}{% endif %}{% if item.exclusive_store and item.special_tag %} | {% endif %}{% if item.special_tag %}Tag: {{ item.special_tag }}{% endif %}</p>
+        {% endif %}
+      </div>
       {% if user.is_authenticated and quick_add_form.fields.collection.queryset %}
         <details class="quick-add-box">
           <summary>Szybko dodaj warianty</summary>

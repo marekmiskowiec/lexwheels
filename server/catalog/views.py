@@ -19,7 +19,7 @@ class ModelListView(ListView):
     model = HotWheelsModel
     template_name = 'catalog/model_list.html'
     context_object_name = 'models'
-    paginate_by = 24
+    paginate_by = 36
 
     def get(self, request, *args, **kwargs):
         base_url = request.path
