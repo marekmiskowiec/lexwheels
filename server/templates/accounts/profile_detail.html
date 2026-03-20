@@ -9,6 +9,13 @@
       <h1>{{ profile_user.public_name }}</h1>
       <p class="meta">Dołączył: {{ profile_user.date_joined|date:"j E Y" }}</p>
       {% if profile_user.bio %}<p>{{ profile_user.bio }}</p>{% endif %}
+      {% if profile_user.youtube_url or profile_user.tiktok_url or profile_user.instagram_url %}
+        <div class="danger-zone">
+          {% if profile_user.youtube_url %}<a class="button secondary" href="{{ profile_user.youtube_url }}" target="_blank" rel="noopener noreferrer">YouTube</a>{% endif %}
+          {% if profile_user.tiktok_url %}<a class="button secondary" href="{{ profile_user.tiktok_url }}" target="_blank" rel="noopener noreferrer">TikTok</a>{% endif %}
+          {% if profile_user.instagram_url %}<a class="button secondary" href="{{ profile_user.instagram_url }}" target="_blank" rel="noopener noreferrer">Instagram</a>{% endif %}
+        </div>
+      {% endif %}
     </div>
   </div>
   <div class="grid" style="margin-top:18px;">
