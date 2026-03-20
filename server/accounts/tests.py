@@ -160,6 +160,28 @@ class AccountTests(TestCase):
         self.assertEqual(user.display_name, 'NowyLogin')
         self.assertEqual(user.login, 'NowyLogin')
 
+    def test_profile_form_rejects_bio_longer_than_100_characters(self):
+        user = User.objects.create_user(email='bio@example.com', password='ComplexPass123')
+
+        form = ProfileForm(
+            data={
+                'display_name': 'BioUser',
+                'bio': 'a' * 101,
+                'youtube_url': '',
+                'tiktok_url': '',
+                'instagram_url': '',
+                'avatar_key': 'garage-blue',
+                'catalog_scope_brands': [],
+                'catalog_scope_categories': [],
+                'catalog_scope_year_from': '',
+                'catalog_scope_year_to': '',
+            },
+            instance=user,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('bio', form.errors)
+
     def test_public_profile_visible(self):
         user = User.objects.create_user(email='test@example.com', password='ComplexPass123', display_name='Lex')
         response = self.client.get(reverse('accounts:public-profile', args=[user.pk]))

@@ -66,6 +66,11 @@ class ProfileForm(LoginNormalizationMixin, forms.ModelForm):
         label='Nazwa użytkownika',
         help_text='Ta sama nazwa będzie używana do wyświetlania profilu i logowania.',
     )
+    bio = forms.CharField(
+        required=False,
+        max_length=100,
+        widget=forms.Textarea(attrs={'maxlength': 100}),
+    )
     avatar_key = forms.ChoiceField(
         choices=AVATAR_CHOICES,
         widget=forms.RadioSelect,
@@ -118,6 +123,8 @@ class ProfileForm(LoginNormalizationMixin, forms.ModelForm):
         ]
 
         self.fields['catalog_scope_enabled'].label = 'Domyślnie używaj mojego zakresu w katalogu'
+        self.fields['bio'].label = 'Bio'
+        self.fields['bio'].help_text = 'Maksymalnie 100 znaków.'
         self.fields['youtube_url'].label = 'YouTube'
         self.fields['tiktok_url'].label = 'TikTok'
         self.fields['instagram_url'].label = 'Instagram'
