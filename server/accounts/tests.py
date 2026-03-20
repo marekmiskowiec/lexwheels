@@ -57,11 +57,6 @@ class AccountTests(TestCase):
             'tiktok_url': 'https://www.tiktok.com/@lexwheels',
             'instagram_url': 'https://www.instagram.com/lexwheels/',
             'avatar_key': 'garage-blue',
-            'catalog_scope_enabled': 'on',
-            'catalog_scope_brands': ['Hot Wheels'],
-            'catalog_scope_categories': ['Mainline'],
-            'catalog_scope_year_from': '2022',
-            'catalog_scope_year_to': '2023',
         })
         self.assertRedirects(response, reverse('accounts:profile'))
         user.refresh_from_db()
@@ -71,6 +66,22 @@ class AccountTests(TestCase):
         self.assertEqual(user.youtube_url, 'https://www.youtube.com/@lexwheels')
         self.assertEqual(user.tiktok_url, 'https://www.tiktok.com/@lexwheels')
         self.assertEqual(user.instagram_url, 'https://www.instagram.com/lexwheels/')
+        self.assertFalse(user.catalog_scope_enabled)
+
+    def test_catalog_scope_update(self):
+        user = User.objects.create_user(email='scope@example.com', password='ComplexPass123')
+        self.client.force_login(user)
+
+        response = self.client.post(reverse('accounts:catalog-scope'), {
+            'catalog_scope_enabled': 'on',
+            'catalog_scope_brands': ['Hot Wheels'],
+            'catalog_scope_categories': ['Mainline'],
+            'catalog_scope_year_from': '2022',
+            'catalog_scope_year_to': '2023',
+        })
+
+        self.assertRedirects(response, reverse('accounts:catalog-scope'))
+        user.refresh_from_db()
         self.assertTrue(user.catalog_scope_enabled)
         self.assertEqual(user.catalog_scope_brands, ['Hot Wheels'])
         self.assertEqual(user.catalog_scope_categories, ['Mainline'])
@@ -88,10 +99,6 @@ class AccountTests(TestCase):
                 'tiktok_url': '',
                 'instagram_url': '',
                 'avatar_key': 'garage-blue',
-                'catalog_scope_brands': [],
-                'catalog_scope_categories': [],
-                'catalog_scope_year_from': '',
-                'catalog_scope_year_to': '',
             },
             instance=user,
         )
@@ -110,10 +117,6 @@ class AccountTests(TestCase):
                 'tiktok_url': 'https://example.com/@lexwheels',
                 'instagram_url': '',
                 'avatar_key': 'garage-blue',
-                'catalog_scope_brands': [],
-                'catalog_scope_categories': [],
-                'catalog_scope_year_from': '',
-                'catalog_scope_year_to': '',
             },
             instance=user,
         )
@@ -132,10 +135,6 @@ class AccountTests(TestCase):
                 'tiktok_url': '',
                 'instagram_url': 'https://example.com/lexwheels',
                 'avatar_key': 'garage-blue',
-                'catalog_scope_brands': [],
-                'catalog_scope_categories': [],
-                'catalog_scope_year_from': '',
-                'catalog_scope_year_to': '',
             },
             instance=user,
         )
@@ -151,8 +150,6 @@ class AccountTests(TestCase):
             'display_name': 'NowyLogin',
             'bio': 'Collector profile',
             'avatar_key': 'garage-blue',
-            'catalog_scope_brands': [],
-            'catalog_scope_categories': [],
         })
 
         self.assertRedirects(response, reverse('accounts:profile'))
@@ -171,10 +168,6 @@ class AccountTests(TestCase):
                 'tiktok_url': '',
                 'instagram_url': '',
                 'avatar_key': 'garage-blue',
-                'catalog_scope_brands': [],
-                'catalog_scope_categories': [],
-                'catalog_scope_year_from': '',
-                'catalog_scope_year_to': '',
             },
             instance=user,
         )
@@ -244,11 +237,11 @@ class AccountTests(TestCase):
         self.assertContains(response, user.login)
         self.assertNotContains(response, user.email)
 
-    def test_profile_edit_shows_catalog_scope_fields(self):
+    def test_catalog_scope_page_shows_scope_fields(self):
         user = User.objects.create_user(email='test@example.com', login='tester', password='ComplexPass123')
         self.client.force_login(user)
 
-        response = self.client.get(reverse('accounts:profile-edit'))
+        response = self.client.get(reverse('accounts:catalog-scope'))
 
         self.assertContains(response, 'Domyślnie używaj mojego zakresu w katalogu')
         self.assertContains(response, 'Pokazuj tylko marki')
@@ -258,3 +251,13 @@ class AccountTests(TestCase):
         self.assertContains(response, 'type="checkbox"')
         self.assertContains(response, 'Mainline')
         self.assertContains(response, 'Collectors')
+
+    def test_profile_edit_does_not_show_scope_fields(self):
+        user = User.objects.create_user(email='profile@example.com', login='tester', password='ComplexPass123')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('accounts:profile-edit'))
+
+        self.assertNotContains(response, 'Domyślnie używaj mojego zakresu w katalogu')
+        self.assertNotContains(response, 'Pokazuj tylko marki')
+        self.assertNotContains(response, 'Pokazuj tylko kategorie')

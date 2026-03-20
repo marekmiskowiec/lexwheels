@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from .forms import ProfileForm, UserRegistrationForm
+from .forms import CatalogScopeForm, ProfileForm, UserRegistrationForm
 from .models import User
 from collections_app.models import CollectionItem
 
@@ -40,6 +40,15 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     form_class = ProfileForm
     template_name = 'accounts/profile_form.html'
     success_url = reverse_lazy('accounts:profile')
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+
+class CatalogScopeUpdateView(LoginRequiredMixin, UpdateView):
+    form_class = CatalogScopeForm
+    template_name = 'accounts/catalog_scope_form.html'
+    success_url = reverse_lazy('accounts:catalog-scope')
 
     def get_object(self, queryset=None):
         return self.request.user

@@ -9,26 +9,6 @@
   .profile-bio-input {
     min-height: 132px;
   }
-  .category-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-    gap: 10px;
-    margin-top: 10px;
-  }
-  .category-chip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    background: rgba(255,255,255,0.03);
-    line-height: 1.3;
-  }
-  .category-chip input {
-    width: auto;
-    margin: 0;
-  }
   .field-meta-row {
     display: flex;
     justify-content: space-between;
@@ -62,22 +42,6 @@
             {% endfor %}
           </div>
           {% if field.errors %}<p class="meta">{{ field.errors|join:', ' }}</p>{% endif %}
-        </div>
-      {% elif field.name == 'catalog_scope_categories' %}
-        <div>
-          <label>{{ field.label }}</label>
-          <div class="category-grid">
-            {% for checkbox in field %}
-              <label class="category-chip">
-                {{ checkbox.tag }}
-                <span>{{ checkbox.choice_label }}</span>
-              </label>
-            {% empty %}
-              <p class="meta">Brak kategorii w bazie.</p>
-            {% endfor %}
-          </div>
-          {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
-          {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
         </div>
       {% elif field.name == 'bio' %}
         <p>

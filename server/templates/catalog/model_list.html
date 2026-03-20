@@ -54,18 +54,18 @@
             {% endif %}
             <div class="actions-row">
               <a class="button secondary" href="{% url 'catalog:model-list' %}?scope=all">Pokaż cały katalog</a>
-              <a class="button secondary" href="{% url 'accounts:profile-edit' %}">Ustaw zakres</a>
+              <a class="button secondary" href="{% url 'accounts:catalog-scope' %}">Ustaw zakres</a>
             </div>
           {% else %}
             {% if user.catalog_scope_enabled %}
               <p class="meta" style="margin:0 0 10px;">Masz zapisany własny zakres kolekcjonowania. Możesz przełączyć katalog na ten widok.</p>
               <div class="actions-row">
                 <a class="button secondary" href="{% url 'catalog:model-list' %}?scope=profile">Pokaż mój zakres</a>
-                <a class="button secondary" href="{% url 'accounts:profile-edit' %}">Ustaw zakres</a>
+                <a class="button secondary" href="{% url 'accounts:catalog-scope' %}">Ustaw zakres</a>
               </div>
             {% else %}
               <p class="meta" style="margin:0 0 10px;">Skonfiguruj swój zakres kolekcjonowania, aby ukrywać niechciane marki i kategorie.</p>
-              <a class="button secondary" href="{% url 'accounts:profile-edit' %}">Ustaw zakres</a>
+              <a class="button secondary" href="{% url 'accounts:catalog-scope' %}">Ustaw zakres</a>
             {% endif %}
           {% endif %}
         </div>
