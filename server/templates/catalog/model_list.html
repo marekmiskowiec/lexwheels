@@ -179,6 +179,12 @@
           <p class="meta">{% if item.exclusive_store %}Exclusive: {{ item.exclusive_store }}{% endif %}{% if item.exclusive_store and item.special_tag %} | {% endif %}{% if item.special_tag %}Tag: {{ item.special_tag }}{% endif %}</p>
         {% endif %}
       </div>
+      <div class="actions-row" style="margin-top:0;">
+        <a class="button secondary" href="{{ item.get_absolute_url }}">Szczegóły</a>
+        {% if user.is_authenticated %}
+          <a class="button secondary" href="{% url 'collections:wanted-create' %}?model={{ item.pk }}">Szukam</a>
+        {% endif %}
+      </div>
       {% if user.is_authenticated and quick_add_form.fields.collection.queryset %}
         <details class="quick-add-box">
           <summary>Szybko dodaj warianty</summary>

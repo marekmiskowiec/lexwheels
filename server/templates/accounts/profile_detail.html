@@ -20,11 +20,34 @@
   </div>
   <div class="grid" style="margin-top:18px;">
     <div class="card"><strong>{{ stats.collection_count }}</strong><div class="meta">kolekcje publiczne{% if is_own_profile %} / własne{% endif %}</div></div>
+    <div class="card"><strong>{{ stats.wanted_count }}</strong><div class="meta">aktywne szukane</div></div>
     <div class="card"><strong>{{ stats.item_count }}</strong><div class="meta">pozycje</div></div>
     <div class="card"><strong>{{ stats.total_quantity }}</strong><div class="meta">sztuk łącznie</div></div>
     <div class="card"><strong>{{ stats.favorite_count }}</strong><div class="meta">ulubione</div></div>
   </div>
   {% if is_own_profile %}<p><a class="button" href="{% url 'accounts:profile-edit' %}">Edytuj profil</a></p>{% endif %}
+</section>
+
+<section class="panel" style="margin-top:18px;">
+  <div class="section-head">
+    <div>
+      <h2>{% if is_own_profile %}Twoje szukane{% else %}Aktualnie szukane{% endif %}</h2>
+      <p class="meta">Modele, których ten kolekcjoner obecnie szuka.</p>
+    </div>
+    {% if is_own_profile %}<a href="{% url 'collections:wanted-list' %}">Zarządzaj szukanymi</a>{% endif %}
+  </div>
+  <section class="list">
+    {% for wanted in wanted_items %}
+      <div class="list-item">
+        <h3><a href="{{ wanted.model.get_absolute_url }}">{{ wanted.model.model_name }}</a></h3>
+        <p class="meta">{{ wanted.model.year|default:"-" }} | {{ wanted.model.category|default:"-" }} | {{ wanted.get_packaging_state_display }}</p>
+        <p class="meta">Stan min.: {{ wanted.get_condition_min_display }}{% if wanted.budget_max %} | budżet do {{ wanted.budget_max }} PLN{% endif %}</p>
+        {% if wanted.notes %}<p>{{ wanted.notes }}</p>{% endif %}
+      </div>
+    {% empty %}
+      <p>Brak aktywnych szukanych do wyświetlenia.</p>
+    {% endfor %}
+  </section>
 </section>
 
 <section class="panel" style="margin-top:18px;">

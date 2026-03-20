@@ -115,7 +115,6 @@
       <select id="scope" name="scope">
         <option value="all" {% if selected_scope == 'all' %}selected{% endif %}>Wszystkie moje kolekcje</option>
         <option value="owned" {% if selected_scope == 'owned' %}selected{% endif %}>Tylko kolekcje</option>
-        <option value="wishlist" {% if selected_scope == 'wishlist' %}selected{% endif %}>Tylko wishlisty</option>
       </select>
     </div>
     <div style="flex: 1 1 320px;">
@@ -123,7 +122,7 @@
       <select id="collection" name="collection">
         <option value="">Wszystkie kolekcje</option>
         {% for collection in collection_options %}
-          <option value="{{ collection.pk }}" {% if selected_collection_id == collection.pk|stringformat:"s" %}selected{% endif %}>{{ collection.name }} ({{ collection.get_kind_display }})</option>
+          <option value="{{ collection.pk }}" {% if selected_collection_id == collection.pk|stringformat:"s" %}selected{% endif %}>{{ collection.name }}</option>
         {% endfor %}
       </select>
     </div>

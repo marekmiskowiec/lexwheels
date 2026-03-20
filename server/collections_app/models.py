@@ -118,6 +118,39 @@ class CollectionItem(models.Model):
         return badges
 
 
+class WantedItem(models.Model):
+    PACKAGING_ANY = 'any'
+    PACKAGING_CHOICES = (
+        (PACKAGING_ANY, 'Dowolne opakowanie'),
+    ) + CollectionItem.PACKAGING_CHOICES
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wanted_items')
+    model = models.ForeignKey(HotWheelsModel, on_delete=models.CASCADE, related_name='wanted_items')
+    packaging_state = models.CharField(max_length=16, choices=PACKAGING_CHOICES, default=PACKAGING_ANY)
+    condition_min = models.CharField(max_length=16, choices=CollectionItem.CONDITION_CHOICES, default='good')
+    budget_max = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
+    notes = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('-is_active', '-updated_at', '-created_at')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('owner', 'model', 'packaging_state', 'condition_min'),
+                name='unique_wanted_item_per_owner_variant',
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f'{self.owner} szuka {self.model}'
+
+    @property
+    def has_social_links(self) -> bool:
+        return bool(self.owner.youtube_url or self.owner.tiktok_url or self.owner.instagram_url)
+
+
 class ImportBacklogEntry(models.Model):
     STATUS_OPEN = 'open'
     STATUS_RESOLVED = 'resolved'

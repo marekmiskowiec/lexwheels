@@ -443,6 +443,7 @@
             <summary class="nav-user-summary">{{ user.login }}</summary>
             <div class="nav-user-panel">
               <a class="nav-user-action" href="{% url 'accounts:profile' %}">Profil</a>
+              <a class="nav-user-action" href="{% url 'collections:wanted-list' %}">Szukane</a>
               <a class="nav-user-action" href="{% url 'accounts:catalog-scope' %}">Zakres katalogu</a>
               <form method="post" action="{% url 'logout' %}">
                 {% csrf_token %}

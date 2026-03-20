@@ -20,6 +20,10 @@ from .views import (
     CollectionStatsView,
     CommunityView,
     PublicCollectionListView,
+    WantedCreateView,
+    WantedDeleteView,
+    WantedListView,
+    WantedUpdateView,
 )
 
 app_name = 'collections'
@@ -29,6 +33,10 @@ urlpatterns = [
     path('stats/', CollectionStatsView.as_view(), name='stats'),
     path('community/', CommunityView.as_view(), name='community'),
     path('public/', PublicCollectionListView.as_view(), name='public-collections'),
+    path('wanted/', WantedListView.as_view(), name='wanted-list'),
+    path('wanted/new/', WantedCreateView.as_view(), name='wanted-create'),
+    path('wanted/<int:pk>/edit/', WantedUpdateView.as_view(), name='wanted-update'),
+    path('wanted/<int:pk>/delete/', WantedDeleteView.as_view(), name='wanted-delete'),
     path('import/', CollectionImportView.as_view(), name='collection-import'),
     path('import/confirm/', CollectionImportConfirmView.as_view(), name='collection-import-confirm'),
     path('import/backlog/', ImportBacklogListView.as_view(), name='import-backlog'),

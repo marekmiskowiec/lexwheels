@@ -34,9 +34,10 @@
 <section class="panel hero">
   <span class="eyebrow">Community</span>
   <h1>Społeczność</h1>
-  <p class="meta">Jedno miejsce do przeglądania publicznych kolekcji i profili kolekcjonerów.</p>
+  <p class="meta">Jedno miejsce do przeglądania publicznych kolekcji, profili kolekcjonerów i aktywnych szukanych modeli.</p>
   <div class="community-switcher">
     <a class="community-tab{% if selected_view == 'collections' %} is-active{% endif %}" href="{% url 'collections:community' %}?view=collections">Kolekcje <span class="badge">{{ community_counts.collections }}</span></a>
+    <a class="community-tab{% if selected_view == 'wanted' %} is-active{% endif %}" href="{% url 'collections:community' %}?view=wanted">Szukane <span class="badge">{{ community_counts.wanted }}</span></a>
     <a class="community-tab{% if selected_view == 'collectors' %} is-active{% endif %}" href="{% url 'collections:community' %}?view=collectors">Kolekcjonerzy <span class="badge">{{ community_counts.collectors }}</span></a>
   </div>
   {% if selected_view == 'collections' %}
@@ -47,11 +48,24 @@
         <select id="kind" name="kind">
           <option value="">Wszystkie</option>
           <option value="owned" {% if selected_kind == 'owned' %}selected{% endif %}>Kolekcje</option>
-          <option value="wishlist" {% if selected_kind == 'wishlist' %}selected{% endif %}>Wishlisty</option>
         </select>
       </div>
       <div><button type="submit">Filtruj</button></div>
       {% if selected_kind %}<div><a class="button secondary" href="{% url 'collections:community' %}?view=collections">Wyczyść</a></div>{% endif %}
+    </form>
+  {% elif selected_view == 'wanted' %}
+    <form method="get" class="filters community-toolbar">
+      <input type="hidden" name="view" value="wanted">
+      <div style="flex:1 1 180px;"><label for="brand">Marka</label><select id="brand" name="brand"><option value="">Wszystkie marki</option>{% for brand in brand_options %}<option value="{{ brand }}" {% if selected_brand == brand %}selected{% endif %}>{{ brand }}</option>{% endfor %}</select></div>
+      <div style="flex:1 1 180px;"><label for="series">Seria</label><select id="series" name="series"><option value="">Wszystkie serie</option>{% for series in series_options %}<option value="{{ series }}" {% if selected_series == series %}selected{% endif %}>{{ series }}</option>{% endfor %}</select></div>
+      <div style="flex:1 1 160px;"><label for="year">Rok</label><select id="year" name="year"><option value="">Wszystkie lata</option>{% for year in year_options %}<option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>{% endfor %}</select></div>
+      <div style="flex:1 1 180px;"><label for="category">Kategoria</label><select id="category" name="category"><option value="">Wszystkie kategorie</option>{% for category in category_options %}<option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>{% endfor %}</select></div>
+      <div style="flex:1 1 180px;"><label for="packaging">Opakowanie</label><select id="packaging" name="packaging"><option value="">Dowolne</option>{% for value, label in packaging_options %}<option value="{{ value }}" {% if selected_packaging == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div style="flex:1 1 180px;"><label for="condition">Stan min.</label><select id="condition" name="condition"><option value="">Dowolny</option>{% for value, label in condition_options %}<option value="{{ value }}" {% if selected_condition == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div><button type="submit">Filtruj</button></div>
+      {% if selected_brand or selected_series or selected_year or selected_category or selected_packaging or selected_condition %}
+        <div><a class="button secondary" href="{% url 'collections:community' %}?view=wanted">Wyczyść</a></div>
+      {% endif %}
     </form>
   {% endif %}
 </section>
@@ -68,7 +82,7 @@
     {% empty %}
       <div class="panel"><p>Brak publicznych kolekcji dla tego filtra.</p></div>
     {% endfor %}
-  {% else %}
+  {% elif selected_view == 'collectors' %}
     {% for collector in collectors %}
       <div class="list-item">
         <div class="collector-row">
@@ -83,24 +97,42 @@
     {% empty %}
       <div class="panel"><p>Brak kolekcjonerów z publicznymi kolekcjami.</p></div>
     {% endfor %}
+  {% else %}
+    {% for wanted in wanted_items %}
+      <div class="list-item">
+        <h3><a href="{{ wanted.model.get_absolute_url }}">{{ wanted.model.model_name }}</a></h3>
+        <p class="meta">{{ wanted.model.brand|default:"-" }} | {{ wanted.model.year|default:"-" }} | {{ wanted.model.category|default:"-" }}</p>
+        <p class="meta">Szukane przez: <a href="{% url 'accounts:public-profile' wanted.owner.pk %}">{{ wanted.owner.public_name }}</a></p>
+        <p class="meta">Opakowanie: {{ wanted.get_packaging_state_display }} | Stan min.: {{ wanted.get_condition_min_display }}{% if wanted.budget_max %} | budżet do {{ wanted.budget_max }} PLN{% endif %}</p>
+        {% if wanted.notes %}<p>{{ wanted.notes }}</p>{% endif %}
+        <div class="danger-zone">
+          <a class="button secondary" href="{% url 'accounts:public-profile' wanted.owner.pk %}">Profil</a>
+          {% if wanted.owner.youtube_url %}<a class="button secondary" href="{{ wanted.owner.youtube_url }}" target="_blank" rel="noopener noreferrer">YouTube</a>{% endif %}
+          {% if wanted.owner.tiktok_url %}<a class="button secondary" href="{{ wanted.owner.tiktok_url }}" target="_blank" rel="noopener noreferrer">TikTok</a>{% endif %}
+          {% if wanted.owner.instagram_url %}<a class="button secondary" href="{{ wanted.owner.instagram_url }}" target="_blank" rel="noopener noreferrer">Instagram</a>{% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="panel"><p>Brak aktywnych szukanych dla tego filtra.</p></div>
+    {% endfor %}
   {% endif %}
 </section>
 
 {% if is_paginated %}
   <div class="pagination">
-    {% if page_obj.has_previous %}<a class="button secondary" href="?view={{ selected_view }}{% if selected_kind %}&kind={{ selected_kind }}{% endif %}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+    {% if page_obj.has_previous %}<a class="button secondary" href="?view={{ selected_view }}{% if selected_kind %}&kind={{ selected_kind }}{% endif %}{% if selected_brand %}&brand={{ selected_brand }}{% endif %}{% if selected_series %}&series={{ selected_series }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_packaging %}&packaging={{ selected_packaging }}{% endif %}{% if selected_condition %}&condition={{ selected_condition }}{% endif %}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
     {% for page_number in paginator.page_range %}
       {% if page_number == 1 or page_number == paginator.num_pages or page_number >= page_obj.number|add:'-2' and page_number <= page_obj.number|add:'2' %}
         {% if page_number == page_obj.number %}
           <span class="button page-number is-current">{{ page_number }}</span>
         {% else %}
-          <a class="button secondary page-number" href="?view={{ selected_view }}{% if selected_kind %}&kind={{ selected_kind }}{% endif %}&page={{ page_number }}">{{ page_number }}</a>
+          <a class="button secondary page-number" href="?view={{ selected_view }}{% if selected_kind %}&kind={{ selected_kind }}{% endif %}{% if selected_brand %}&brand={{ selected_brand }}{% endif %}{% if selected_series %}&series={{ selected_series }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_packaging %}&packaging={{ selected_packaging }}{% endif %}{% if selected_condition %}&condition={{ selected_condition }}{% endif %}&page={{ page_number }}">{{ page_number }}</a>
         {% endif %}
       {% elif page_number == page_obj.number|add:'-3' or page_number == page_obj.number|add:'3' %}
         <span class="meta">…</span>
       {% endif %}
     {% endfor %}
-    {% if page_obj.has_next %}<a class="button secondary" href="?view={{ selected_view }}{% if selected_kind %}&kind={{ selected_kind }}{% endif %}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+    {% if page_obj.has_next %}<a class="button secondary" href="?view={{ selected_view }}{% if selected_kind %}&kind={{ selected_kind }}{% endif %}{% if selected_brand %}&brand={{ selected_brand }}{% endif %}{% if selected_series %}&series={{ selected_series }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_packaging %}&packaging={{ selected_packaging }}{% endif %}{% if selected_condition %}&condition={{ selected_condition }}{% endif %}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
   </div>
 {% endif %}
 {% endblock %}

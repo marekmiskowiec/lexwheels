@@ -7,7 +7,7 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from .forms import CatalogScopeForm, ProfileForm, UserRegistrationForm
 from .models import User
-from collections_app.models import CollectionItem
+from collections_app.models import Collection, CollectionItem, WantedItem
 
 
 class RegisterView(CreateView):
@@ -75,13 +75,15 @@ class PublicCollectorListView(ListView):
 
 
 def build_profile_context(user: User, public_only: bool) -> dict:
-    collections = user.collections.all()
+    collections = user.collections.filter(kind=Collection.KIND_OWNED)
     if public_only:
         collections = collections.filter(visibility='public')
 
-    items = CollectionItem.objects.filter(collection__owner=user)
+    items = CollectionItem.objects.filter(collection__owner=user, collection__kind=Collection.KIND_OWNED)
     if public_only:
         items = items.filter(collection__visibility='public')
+
+    wanted_items = WantedItem.objects.filter(owner=user, is_active=True).select_related('model')
 
     stats = items.aggregate(
         total_quantity=Sum('quantity'),
@@ -89,10 +91,12 @@ def build_profile_context(user: User, public_only: bool) -> dict:
     )
     return {
         'collections_list': collections.order_by('name'),
+        'wanted_items': wanted_items.order_by('-updated_at', '-created_at'),
         'stats': {
             'collection_count': collections.count(),
             'item_count': items.count(),
             'total_quantity': stats['total_quantity'] or 0,
             'favorite_count': stats['favorite_count'] or 0,
+            'wanted_count': wanted_items.count(),
         },
     }

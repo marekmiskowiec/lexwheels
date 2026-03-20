@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.views.generic import TemplateView
 
 from catalog.models import HotWheelsModel
-from collections_app.models import Collection, CollectionItem
+from collections_app.models import Collection, CollectionItem, WantedItem
 from collections_app.views import build_collection_stats_context, build_completion_context
 
 
@@ -27,11 +27,18 @@ class HomeView(TemplateView):
         }
         context['recent_models'] = recent_models
         context['public_stats'] = {
-            'public_collections': Collection.objects.filter(visibility=Collection.VISIBILITY_PUBLIC).count(),
-            'collector_count': Collection.objects.filter(visibility=Collection.VISIBILITY_PUBLIC)
+            'public_collections': Collection.objects.filter(
+                visibility=Collection.VISIBILITY_PUBLIC,
+                kind=Collection.KIND_OWNED,
+            ).count(),
+            'collector_count': Collection.objects.filter(
+                visibility=Collection.VISIBILITY_PUBLIC,
+                kind=Collection.KIND_OWNED,
+            )
             .values('owner_id')
             .distinct()
             .count(),
+            'wanted_count': WantedItem.objects.filter(is_active=True).count(),
         }
         context['featured_series'] = (
             HotWheelsModel.objects.exclude(series='')
@@ -41,13 +48,14 @@ class HomeView(TemplateView):
         )
 
         if self.request.user.is_authenticated:
-            collections = Collection.objects.filter(owner=self.request.user).prefetch_related('items')
-            owner_items = CollectionItem.objects.filter(collection__owner=self.request.user)
+            collections = Collection.objects.filter(owner=self.request.user, kind=Collection.KIND_OWNED).prefetch_related('items')
+            owner_items = CollectionItem.objects.filter(collection__owner=self.request.user, collection__kind=Collection.KIND_OWNED)
+            wanted_items = WantedItem.objects.filter(owner=self.request.user)
             stats_context = build_collection_stats_context(owner_items)
             completion_context = build_completion_context(owner_items)
             context['user_summary'] = {
-                'collection_count': collections.filter(kind=Collection.KIND_OWNED).count(),
-                'wishlist_count': collections.filter(kind=Collection.KIND_WISHLIST).count(),
+                'collection_count': collections.count(),
+                'wanted_count': wanted_items.filter(is_active=True).count(),
                 'item_count': stats_context['stats']['item_count'],
                 'variant_count': stats_context['stats']['variant_count'],
                 'favorite_count': stats_context['stats']['favorite_count'],

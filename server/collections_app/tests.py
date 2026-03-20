@@ -6,7 +6,7 @@ import json
 from accounts.models import User
 from catalog.models import HotWheelsModel
 
-from .models import Collection, CollectionItem, ImportBacklogEntry, ImportBacklogReport
+from .models import Collection, CollectionItem, ImportBacklogEntry, ImportBacklogReport, WantedItem
 
 
 class CollectionTests(TestCase):
@@ -470,12 +470,12 @@ class CollectionTests(TestCase):
         self.client.force_login(self.owner)
         response = self.client.post(
             reverse('collections:collection-update', args=[self.private_collection.pk]),
-            {'name': 'Nowa nazwa', 'description': 'Opis', 'kind': Collection.KIND_WISHLIST, 'visibility': Collection.VISIBILITY_PUBLIC},
+            {'name': 'Nowa nazwa', 'description': 'Opis', 'visibility': Collection.VISIBILITY_PUBLIC},
         )
         self.assertRedirects(response, self.private_collection.get_absolute_url())
         self.private_collection.refresh_from_db()
         self.assertEqual(self.private_collection.name, 'Nowa nazwa')
-        self.assertEqual(self.private_collection.kind, Collection.KIND_WISHLIST)
+        self.assertEqual(self.private_collection.kind, Collection.KIND_OWNED)
 
     def test_other_user_cannot_edit_collection(self):
         self.client.force_login(self.other)
@@ -1231,3 +1231,72 @@ class CollectionTests(TestCase):
 
         self.assertRedirects(response, self.private_collection.get_absolute_url())
         self.assertFalse(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).exists())
+
+    def test_owner_can_create_wanted_item_from_model(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:wanted-create') + f'?model={self.model_obj.pk}',
+            {
+                'model': self.model_obj.pk,
+                'packaging_state': 'short_card',
+                'condition_min': 'good',
+                'budget_max': '45.00',
+                'notes': 'Szukam czystej karty.',
+                'is_active': 'on',
+            },
+        )
+
+        self.assertRedirects(response, reverse('collections:wanted-list'))
+        wanted = WantedItem.objects.get(owner=self.owner, model=self.model_obj)
+        self.assertEqual(wanted.packaging_state, 'short_card')
+        self.assertEqual(str(wanted.budget_max), '45.00')
+
+    def test_wanted_item_requires_supported_packaging(self):
+        semi_premium_model = HotWheelsModel.objects.create(
+            app_id='semi125',
+            toy='JBY31',
+            number='3/5',
+            model_name='Porsche 911 GT3',
+            brand='Hot Wheels',
+            year=2025,
+            category='Semi Premium',
+            series='Fast & Furious',
+            series_number='3/5',
+            photo_url='https://example.com/porsche.jpg',
+            long_card_photo_url='https://example.com/porsche-carded.jpg',
+            loose_photo_url='https://example.com/porsche-loose.jpg',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:wanted-create') + f'?model={semi_premium_model.pk}',
+            {
+                'model': semi_premium_model.pk,
+                'packaging_state': 'short_card',
+                'condition_min': 'good',
+                'budget_max': '30.00',
+                'notes': '',
+                'is_active': 'on',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ten model nie występuje w wybranym typie opakowania.')
+
+    def test_public_wanted_items_are_visible_in_community(self):
+        WantedItem.objects.create(
+            owner=self.owner,
+            model=self.model_obj,
+            packaging_state='loose',
+            condition_min='used',
+            budget_max='20.00',
+            notes='Może być bez pudełka.',
+            is_active=True,
+        )
+
+        response = self.client.get(reverse('collections:community'), {'view': 'wanted'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertContains(response, self.owner.public_name)

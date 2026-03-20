@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Szukane | LexWheels{% endblock %}
+{% block content %}
+<section class="panel hero">
+  <span class="eyebrow">Wanted Feed</span>
+  <h1>Moje szukane</h1>
+  <p class="meta">Tu zarządzasz modelami, których szukasz. Każdy wpis może mieć warunki i budżet oraz być widoczny publicznie przez Twój profil i zakładkę społeczności.</p>
+  <div class="actions-row">
+    <a class="button" href="{% url 'catalog:model-list' %}">Przeglądaj katalog</a>
+    <a class="button secondary" href="{% url 'collections:community' %}?view=wanted">Publiczne szukane</a>
+  </div>
+  <div class="stats-strip" style="margin-top:18px;">
+    <div class="stat-card"><span class="stat-label">Aktywne</span><strong class="stat-value">{{ wanted_stats.active_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Nieaktywne</span><strong class="stat-value">{{ wanted_stats.inactive_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Z budżetem</span><strong class="stat-value">{{ wanted_stats.budgeted_count }}</strong></div>
+  </div>
+</section>
+
+<section class="list">
+  {% for wanted in wanted_items %}
+    <div class="list-item">
+      <div class="section-head">
+        <div>
+          <h3><a href="{{ wanted.model.get_absolute_url }}">{{ wanted.model.model_name }}</a></h3>
+          <p class="meta">{{ wanted.model.brand|default:"-" }} | {{ wanted.model.year|default:"-" }} | {{ wanted.model.category|default:"-" }}</p>
+        </div>
+        <span class="badge">{% if wanted.is_active %}Aktywne{% else %}Nieaktywne{% endif %}</span>
+      </div>
+      <p class="meta">Opakowanie: {{ wanted.get_packaging_state_display }} | Stan min.: {{ wanted.get_condition_min_display }}{% if wanted.budget_max %} | budżet do {{ wanted.budget_max }} PLN{% endif %}</p>
+      {% if wanted.notes %}<p>{{ wanted.notes }}</p>{% endif %}
+      <div class="danger-zone">
+        <a class="button secondary" href="{% url 'collections:wanted-update' wanted.pk %}">Edytuj</a>
+        <a class="button secondary" href="{% url 'collections:wanted-delete' wanted.pk %}">Usuń</a>
+      </div>
+    </div>
+  {% empty %}
+    <div class="panel">
+      <p>Nie masz jeszcze żadnych szukanych. Dodaj pierwszy model z katalogu albo z widoku szczegółów modelu.</p>
+      <p><a class="button" href="{% url 'catalog:model-list' %}">Przejdź do katalogu</a></p>
+    </div>
+  {% endfor %}
+</section>
+{% endblock %}

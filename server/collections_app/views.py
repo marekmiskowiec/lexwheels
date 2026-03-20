@@ -27,8 +27,9 @@ from .forms import (
     CollectionImportForm,
     CollectionItemForm,
     CollectionItemMultiVariantForm,
+    WantedItemForm,
 )
-from .models import Collection, CollectionItem
+from .models import Collection, CollectionItem, WantedItem
 from .models import ImportBacklogEntry, ImportBacklogReport
 
 
@@ -399,25 +400,19 @@ class DashboardView(LoginRequiredMixin, ListView):
     context_object_name = 'collections'
 
     def get_queryset(self):
-        return Collection.objects.filter(owner=self.request.user).prefetch_related('items')
+        return Collection.objects.filter(owner=self.request.user, kind=Collection.KIND_OWNED).prefetch_related('items')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        owner_items = CollectionItem.objects.filter(collection__owner=self.request.user)
-        owned = []
-        wishlist = []
-        for collection in context['collections']:
-            if collection.is_wishlist:
-                wishlist.append(collection)
-            else:
-                owned.append(collection)
+        owner_items = CollectionItem.objects.filter(collection__owner=self.request.user, collection__kind=Collection.KIND_OWNED)
+        wanted_items = WantedItem.objects.filter(owner=self.request.user).select_related('model')
 
-        context['owned_collections'] = owned
-        context['wishlist_collections'] = wishlist
+        context['owned_collections'] = list(context['collections'])
+        context['wanted_items'] = wanted_items
         stats_context = build_collection_stats_context(owner_items)
         context['stats'] = {
-            'collection_count': len(owned),
-            'wishlist_count': len(wishlist),
+            'collection_count': context['collections'].count(),
+            'wanted_count': wanted_items.filter(is_active=True).count(),
             'item_count': stats_context['stats']['item_count'],
             'variant_count': stats_context['stats']['variant_count'],
             'total_quantity': stats_context['stats']['total_quantity'],
@@ -431,26 +426,19 @@ class CollectionStatsView(LoginRequiredMixin, ListView):
     context_object_name = 'collections'
 
     def get_queryset(self):
-        return Collection.objects.filter(owner=self.request.user).prefetch_related('items')
+        return Collection.objects.filter(owner=self.request.user, kind=Collection.KIND_OWNED).prefetch_related('items')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         scope = self.request.GET.get('scope', '').strip()
         collections = context['collections']
         selected_collection_id = self.request.GET.get('collection', '').strip()
-        selected_kind = self.request.GET.get('kind', '').strip()
-
-        items = CollectionItem.objects.filter(collection__owner=self.request.user)
+        items = CollectionItem.objects.filter(collection__owner=self.request.user, collection__kind=Collection.KIND_OWNED)
         if selected_collection_id.isdigit():
             items = items.filter(collection_id=int(selected_collection_id))
             scope = 'collection'
-        elif selected_kind in {Collection.KIND_OWNED, Collection.KIND_WISHLIST}:
-            items = items.filter(collection__kind=selected_kind)
-            scope = selected_kind
         elif scope == 'owned':
             items = items.filter(collection__kind=Collection.KIND_OWNED)
-        elif scope == 'wishlist':
-            items = items.filter(collection__kind=Collection.KIND_WISHLIST)
         else:
             scope = 'all'
 
@@ -460,8 +448,7 @@ class CollectionStatsView(LoginRequiredMixin, ListView):
         context.update(completion_context)
         context['selected_scope'] = scope
         context['selected_collection_id'] = selected_collection_id
-        context['selected_kind'] = selected_kind
-        context['collection_options'] = collections.order_by('kind', 'name')
+        context['collection_options'] = collections.order_by('name')
         return context
 
 
@@ -469,7 +456,7 @@ class PublicCollectionListView(ListView):
     def get(self, request, *args, **kwargs):
         query = {'view': 'collections'}
         kind = request.GET.get('kind', '').strip()
-        if kind in {Collection.KIND_OWNED, Collection.KIND_WISHLIST}:
+        if kind == Collection.KIND_OWNED:
             query['kind'] = kind
         return redirect(f"{reverse('collections:community')}?{urlencode(query)}")
 
@@ -480,18 +467,33 @@ class CommunityView(TemplateView):
 
     def get_selected_view(self):
         selected_view = self.request.GET.get('view', '').strip()
-        if selected_view in {'collections', 'collectors'}:
+        if selected_view in {'collections', 'collectors', 'wanted'}:
             return selected_view
         return 'collections'
 
     def get_selected_kind(self):
         selected_kind = self.request.GET.get('kind', '').strip()
-        if selected_kind in {Collection.KIND_OWNED, Collection.KIND_WISHLIST}:
+        if selected_kind == Collection.KIND_OWNED:
             return selected_kind
         return ''
 
+    def get_selected_packaging(self):
+        selected_packaging = self.request.GET.get('packaging', '').strip()
+        if selected_packaging in dict(WantedItem.PACKAGING_CHOICES):
+            return selected_packaging
+        return ''
+
+    def get_selected_condition(self):
+        selected_condition = self.request.GET.get('condition', '').strip()
+        if selected_condition in dict(CollectionItem.CONDITION_CHOICES):
+            return selected_condition
+        return ''
+
     def get_collections_queryset(self):
-        queryset = Collection.objects.filter(visibility=Collection.VISIBILITY_PUBLIC).select_related('owner')
+        queryset = Collection.objects.filter(
+            visibility=Collection.VISIBILITY_PUBLIC,
+            kind=Collection.KIND_OWNED,
+        ).select_related('owner')
         selected_kind = self.get_selected_kind()
         if selected_kind:
             queryset = queryset.filter(kind=selected_kind)
@@ -499,10 +501,36 @@ class CommunityView(TemplateView):
 
     def get_collectors_queryset(self):
         return (
-            User.objects.filter(collections__visibility=Collection.VISIBILITY_PUBLIC)
+            User.objects.filter(
+                Q(collections__visibility=Collection.VISIBILITY_PUBLIC, collections__kind=Collection.KIND_OWNED)
+                | Q(wanted_items__is_active=True)
+            )
             .distinct()
             .order_by('display_name', 'email')
         )
+
+    def get_wanted_queryset(self):
+        queryset = WantedItem.objects.filter(is_active=True).select_related('owner', 'model')
+        selected_brand = self.request.GET.get('brand', '').strip()
+        selected_series = self.request.GET.get('series', '').strip()
+        selected_year = self.request.GET.get('year', '').strip()
+        selected_category = self.request.GET.get('category', '').strip()
+        selected_packaging = self.get_selected_packaging()
+        selected_condition = self.get_selected_condition()
+
+        if selected_brand:
+            queryset = queryset.filter(model__brand=selected_brand)
+        if selected_series:
+            queryset = queryset.filter(model__series=selected_series)
+        if selected_year.isdigit():
+            queryset = queryset.filter(model__year=int(selected_year))
+        if selected_category:
+            queryset = queryset.filter(model__category=selected_category)
+        if selected_packaging:
+            queryset = queryset.filter(packaging_state=selected_packaging)
+        if selected_condition:
+            queryset = queryset.filter(condition_min=selected_condition)
+        return queryset.order_by('-updated_at', '-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -510,7 +538,13 @@ class CommunityView(TemplateView):
         selected_kind = self.get_selected_kind()
         collections = self.get_collections_queryset()
         collectors = self.get_collectors_queryset()
-        active_queryset = collectors if selected_view == 'collectors' else collections
+        wanted = self.get_wanted_queryset()
+        if selected_view == 'collectors':
+            active_queryset = collectors
+        elif selected_view == 'wanted':
+            active_queryset = wanted
+        else:
+            active_queryset = collections
 
         paginator = Paginator(active_queryset, self.paginate_by)
         page_obj = paginator.get_page(self.request.GET.get('page'))
@@ -521,13 +555,27 @@ class CommunityView(TemplateView):
                 'selected_kind': selected_kind,
                 'collections': page_obj.object_list if selected_view == 'collections' else [],
                 'collectors': page_obj.object_list if selected_view == 'collectors' else [],
+                'wanted_items': page_obj.object_list if selected_view == 'wanted' else [],
                 'page_obj': page_obj,
                 'paginator': paginator,
                 'is_paginated': page_obj.has_other_pages(),
                 'community_counts': {
                     'collections': collections.count(),
                     'collectors': collectors.count(),
+                    'wanted': wanted.count(),
                 },
+                'selected_brand': self.request.GET.get('brand', '').strip(),
+                'selected_series': self.request.GET.get('series', '').strip(),
+                'selected_year': self.request.GET.get('year', '').strip(),
+                'selected_category': self.request.GET.get('category', '').strip(),
+                'selected_packaging': self.get_selected_packaging(),
+                'selected_condition': self.get_selected_condition(),
+                'brand_options': wanted.exclude(model__brand='').values_list('model__brand', flat=True).distinct().order_by('model__brand'),
+                'series_options': wanted.exclude(model__series='').values_list('model__series', flat=True).distinct().order_by('model__series'),
+                'year_options': wanted.exclude(model__year__isnull=True).values_list('model__year', flat=True).distinct().order_by('model__year'),
+                'category_options': wanted.exclude(model__category='').values_list('model__category', flat=True).distinct().order_by('model__category'),
+                'packaging_options': WantedItem.PACKAGING_CHOICES,
+                'condition_options': CollectionItem.CONDITION_CHOICES,
             }
         )
         return context
@@ -540,6 +588,7 @@ class CollectionCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.owner = self.request.user
+        form.instance.kind = Collection.KIND_OWNED
         return super().form_valid(form)
 
 
@@ -685,7 +734,7 @@ class CollectionImportConfirmView(LoginRequiredMixin, View):
         if preview.get('target_collection_id'):
             target_collection = get_object_or_404(Collection, pk=preview['target_collection_id'], owner=request.user)
         else:
-            target_collection, _ = Collection.objects.get_or_create(
+            target_collection, created = Collection.objects.get_or_create(
                 owner=request.user,
                 name=preview['new_collection_name'],
                 defaults={
@@ -693,6 +742,10 @@ class CollectionImportConfirmView(LoginRequiredMixin, View):
                     'visibility': preview['new_collection_visibility'],
                 },
             )
+            if not created and target_collection.kind != Collection.KIND_OWNED:
+                target_collection.kind = Collection.KIND_OWNED
+                target_collection.visibility = preview['new_collection_visibility']
+                target_collection.save(update_fields=['kind', 'visibility'])
 
         imported_count = 0
         updated_count = 0
@@ -906,6 +959,8 @@ class OwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         obj = self.get_object()
         if isinstance(obj, Collection):
             return obj.owner == self.request.user
+        if isinstance(obj, WantedItem):
+            return obj.owner == self.request.user
         return obj.collection.owner == self.request.user
 
 
@@ -919,6 +974,82 @@ class CollectionDeleteView(OwnerRequiredMixin, DeleteView):
     model = Collection
     template_name = 'collections/collection_confirm_delete.html'
     success_url = reverse_lazy('collections:dashboard')
+
+
+class WantedListView(LoginRequiredMixin, ListView):
+    model = WantedItem
+    template_name = 'collections/wanted_list.html'
+    context_object_name = 'wanted_items'
+
+    def get_queryset(self):
+        return WantedItem.objects.filter(owner=self.request.user).select_related('model').order_by('-is_active', '-updated_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        queryset = context['wanted_items']
+        context['wanted_stats'] = {
+            'active_count': queryset.filter(is_active=True).count(),
+            'inactive_count': queryset.filter(is_active=False).count(),
+            'budgeted_count': queryset.exclude(budget_max__isnull=True).count(),
+        }
+        return context
+
+
+class WantedCreateView(LoginRequiredMixin, CreateView):
+    model = WantedItem
+    form_class = WantedItemForm
+    template_name = 'collections/wanted_form.html'
+
+    def get_fixed_model(self):
+        model_id = self.request.GET.get('model', '').strip() or self.request.POST.get('model', '').strip()
+        if model_id.isdigit():
+            return get_object_or_404(HotWheelsModel, pk=int(model_id))
+        return None
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['owner'] = self.request.user
+        kwargs['fixed_model'] = self.get_fixed_model()
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        messages.success(self.request, 'Dodano model do szukanych.')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('collections:wanted-list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['wanted_model'] = self.get_fixed_model() or getattr(self.object, 'model', None)
+        return context
+
+
+class WantedUpdateView(OwnerRequiredMixin, UpdateView):
+    model = WantedItem
+    form_class = WantedItemForm
+    template_name = 'collections/wanted_form.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['owner'] = self.request.user
+        kwargs['fixed_model'] = self.object.model
+        return kwargs
+
+    def get_success_url(self):
+        return reverse('collections:wanted-list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['wanted_model'] = self.object.model
+        return context
+
+
+class WantedDeleteView(OwnerRequiredMixin, DeleteView):
+    model = WantedItem
+    template_name = 'collections/wanted_confirm_delete.html'
+    success_url = reverse_lazy('collections:wanted-list')
 
 
 class CollectionExportView(LoginRequiredMixin, View):

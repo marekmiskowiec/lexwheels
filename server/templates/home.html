@@ -126,9 +126,10 @@
           <a class="button secondary" href="{% url 'catalog:model-list' %}">Przejdź do katalogu</a>
         </div>
       {% else %}
-        <span class="eyebrow">Katalog + kolekcja + wishlist</span>
-        <h1>Jedno miejsce do katalogu, kolekcji i braków.</h1>
-        <p>Przeglądaj modele, buduj własną kolekcję i trzymaj wishlistę w jednym miejscu.</p>
+        <span class="eyebrow">Katalog + kolekcja + szukane</span>
+        <h1>Jedno miejsce do katalogu, kolekcji i aktywnych poszukiwań.</h1>
+        <p>Przeglądaj modele, buduj własną kolekcję i publikuj czego aktualnie szukasz wraz z budżetem.</p>
+        <p class="meta">Zacznij od kolekcji, nie od listy modeli.</p>
         <div class="hero-actions">
           <a class="button" href="{% url 'catalog:model-list' %}">Przeglądaj katalog</a>
           <a class="button secondary" href="{% url 'accounts:register' %}">Załóż konto</a>
@@ -150,10 +151,14 @@
         <span class="meta">Kategorie</span>
         <strong>{{ catalog_stats.category_count }}</strong>
       </div>
-      <div class="home-kpi">
-        <span class="meta">Publiczne kolekcje</span>
-        <strong>{{ public_stats.public_collections }}</strong>
-      </div>
+        <div class="home-kpi">
+          <span class="meta">Publiczne kolekcje</span>
+          <strong>{{ public_stats.public_collections }}</strong>
+        </div>
+        <div class="home-kpi">
+          <span class="meta">Aktywne szukane</span>
+          <strong>{{ public_stats.wanted_count }}</strong>
+        </div>
       {% if user.is_authenticated %}
         <div class="home-kpi">
           <span class="meta">Twój completion</span>
@@ -185,7 +190,7 @@
       </div>
       <div class="stats-strip">
         <div class="stat-card"><span class="stat-label">Kolekcje</span><strong class="stat-value">{{ user_summary.collection_count }}</strong></div>
-        <div class="stat-card"><span class="stat-label">Wishlisty</span><strong class="stat-value">{{ user_summary.wishlist_count }}</strong></div>
+        <div class="stat-card"><span class="stat-label">Szukane</span><strong class="stat-value">{{ user_summary.wanted_count }}</strong></div>
         <div class="stat-card"><span class="stat-label">Pozycje</span><strong class="stat-value">{{ user_summary.item_count }}</strong></div>
         <div class="stat-card"><span class="stat-label">Warianty</span><strong class="stat-value">{{ user_summary.variant_count }}</strong></div>
         <div class="stat-card"><span class="stat-label">Sztuk łącznie</span><strong class="stat-value">{{ user_summary.total_quantity }}</strong></div>
@@ -199,7 +204,7 @@
             {% if collection.description %}<p>{{ collection.description }}</p>{% endif %}
           </div>
         {% empty %}
-          <p>Nie masz jeszcze kolekcji. Zacznij od własnej listy modeli albo wishlisty.</p>
+          <p>Nie masz jeszcze kolekcji. Zacznij od własnej listy modeli i dodawaj osobno to, czego szukasz.</p>
           <p><a class="button" href="{% url 'collections:collection-create' %}">Nowa kolekcja</a></p>
         {% endfor %}
       </div>
@@ -244,8 +249,13 @@
       </div>
       <div class="launch-card">
         <h3>Nowa kolekcja</h3>
-        <p class="meta">Utwórz kolekcję albo wishlistę dla konkretnego celu.</p>
+        <p class="meta">Utwórz kolekcję dla posiadanych modeli i zarządzaj nią oddzielnie od szukanych.</p>
         <a href="{% url 'collections:collection-create' %}">Dodaj kolekcję</a>
+      </div>
+      <div class="launch-card">
+        <h3>Szukane</h3>
+        <p class="meta">Dodawaj modele, których szukasz, wraz z budżetem i detalami.</p>
+        <a href="{% url 'collections:wanted-list' %}">Otwórz szukane</a>
       </div>
       <div class="launch-card">
         <h3>Profil</h3>
@@ -254,7 +264,7 @@
       </div>
       <div class="launch-card">
         <h3>Publiczne kolekcje</h3>
-        <p class="meta">Zobacz, jak inni układają swoje zestawy i wishlisty.</p>
+        <p class="meta">Zobacz, jak inni układają swoje zestawy i czego aktualnie szukają.</p>
         <a href="{% url 'collections:community' %}">Przeglądaj społeczność</a>
       </div>
     </div>
@@ -293,7 +303,7 @@
         </div>
         <div class="launch-card">
           <h3>Konto</h3>
-          <p class="meta">Załóż konto, żeby prowadzić własną kolekcję i wishlistę.</p>
+          <p class="meta">Załóż konto, żeby prowadzić własną kolekcję i publikować listę szukanych modeli.</p>
           <a href="{% url 'accounts:register' %}">Załóż konto</a>
         </div>
         <div class="launch-card">

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Usuń szukane | LexWheels{% endblock %}
+{% block content %}
+<section class="panel" style="max-width: 720px;">
+  <h1>Usuń wpis szukany</h1>
+  <p>Czy na pewno chcesz usunąć wpis dla modelu <strong>{{ object.model.model_name }}</strong>?</p>
+  <form method="post" class="danger-zone">
+    {% csrf_token %}
+    <button type="submit">Usuń</button>
+    <a class="button secondary" href="{% url 'collections:wanted-list' %}">Anuluj</a>
+  </form>
+</section>
+{% endblock %}

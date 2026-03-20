@@ -3,7 +3,7 @@ from django.db.models import Q
 
 from catalog.models import HotWheelsModel
 
-from .models import Collection, CollectionItem
+from .models import Collection, CollectionItem, WantedItem
 
 
 class CatalogModelChoiceField(forms.ModelChoiceField):
@@ -14,7 +14,7 @@ class CatalogModelChoiceField(forms.ModelChoiceField):
 class CollectionForm(forms.ModelForm):
     class Meta:
         model = Collection
-        fields = ('name', 'description', 'kind', 'visibility')
+        fields = ('name', 'description', 'visibility')
 
 
 class CollectionImportForm(forms.Form):
@@ -30,7 +30,11 @@ class CollectionImportForm(forms.Form):
     source_file = forms.FileField(label='Plik CSV lub TSV')
     collection = forms.ModelChoiceField(queryset=Collection.objects.none(), required=False, label='Istniejąca kolekcja')
     new_collection_name = forms.CharField(required=False, max_length=120, label='Lub utwórz nową kolekcję')
-    new_collection_kind = forms.ChoiceField(choices=Collection.KIND_CHOICES, initial=Collection.KIND_OWNED, label='Typ nowej kolekcji')
+    new_collection_kind = forms.ChoiceField(
+        choices=((Collection.KIND_OWNED, 'Kolekcja'),),
+        initial=Collection.KIND_OWNED,
+        label='Typ nowej kolekcji',
+    )
     new_collection_visibility = forms.ChoiceField(
         choices=Collection.VISIBILITY_CHOICES,
         initial=Collection.VISIBILITY_PRIVATE,
@@ -53,7 +57,10 @@ class CollectionImportForm(forms.Form):
     def __init__(self, *args, **kwargs):
         owner = kwargs.pop('owner')
         super().__init__(*args, **kwargs)
-        self.fields['collection'].queryset = Collection.objects.filter(owner=owner).order_by('kind', 'name')
+        self.fields['collection'].queryset = Collection.objects.filter(
+            owner=owner,
+            kind=Collection.KIND_OWNED,
+        ).order_by('name')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -231,6 +238,73 @@ class CollectionItemForm(forms.ModelForm):
         return cleaned_data
 
 
+class WantedItemForm(forms.ModelForm):
+    model = CatalogModelChoiceField(queryset=HotWheelsModel.objects.none(), label='Model')
+
+    class Meta:
+        model = WantedItem
+        fields = ('model', 'packaging_state', 'condition_min', 'budget_max', 'notes', 'is_active')
+        widgets = {
+            'notes': forms.Textarea(attrs={'rows': 4}),
+        }
+        labels = {
+            'packaging_state': 'Szukane opakowanie',
+            'condition_min': 'Minimalny stan',
+            'budget_max': 'Budżet maksymalny',
+            'notes': 'Szczegóły',
+            'is_active': 'Ogłoszenie aktywne',
+        }
+        help_texts = {
+            'budget_max': 'Kwota orientacyjna w PLN.',
+            'notes': 'Dodaj szczegóły, np. wariant, preferowany stan karty albo inne warunki.',
+        }
+
+    def __init__(self, *args, **kwargs):
+        owner = kwargs.pop('owner')
+        fixed_model = kwargs.pop('fixed_model', None)
+        super().__init__(*args, **kwargs)
+        self.owner = owner
+        self.fixed_model = fixed_model
+        self.fields['model'].queryset = HotWheelsModel.objects.all().order_by('brand', 'year', 'number', 'model_name')
+        if fixed_model:
+            self.fields['model'].queryset = HotWheelsModel.objects.filter(pk=fixed_model.pk)
+            self.fields['model'].widget = forms.HiddenInput()
+            self.initial.setdefault('model', fixed_model.pk)
+            self.instance.model = fixed_model
+
+    def clean_budget_max(self):
+        budget_max = self.cleaned_data.get('budget_max')
+        if budget_max is not None and budget_max <= 0:
+            raise forms.ValidationError('Budżet musi być większy od zera.')
+        return budget_max
+
+    def clean(self):
+        cleaned_data = super().clean()
+        model = cleaned_data.get('model') or self.fixed_model
+        packaging_state = cleaned_data.get('packaging_state')
+        condition_min = cleaned_data.get('condition_min')
+
+        if not model or not packaging_state or not condition_min:
+            return cleaned_data
+
+        if packaging_state != WantedItem.PACKAGING_ANY and packaging_state not in model.available_packaging_states:
+            raise forms.ValidationError('Ten model nie występuje w wybranym typie opakowania.')
+
+        queryset = WantedItem.objects.filter(
+            owner=self.owner,
+            model=model,
+            packaging_state=packaging_state,
+            condition_min=condition_min,
+        )
+        if self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise forms.ValidationError('Masz już aktywny wpis szukany z takim samym wariantem modelu.')
+
+        cleaned_data['model'] = model
+        return cleaned_data
+
+
 class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
     model = CatalogModelChoiceField(queryset=HotWheelsModel.objects.none(), label='Model')
 
@@ -332,7 +406,10 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
     def __init__(self, *args, **kwargs):
         owner = kwargs.pop('owner')
         super().__init__(*args, **kwargs)
-        self.fields['collection'].queryset = Collection.objects.filter(owner=owner).order_by('kind', 'name')
+        self.fields['collection'].queryset = Collection.objects.filter(
+            owner=owner,
+            kind=Collection.KIND_OWNED,
+        ).order_by('name')
         self.fields['model'].queryset = HotWheelsModel.objects.all()
         self.condition_choices = CollectionItem.CONDITION_CHOICES
         self.build_variant_sections()
@@ -406,7 +483,10 @@ class CollectionBatchAddForm(forms.Form):
     def __init__(self, *args, **kwargs):
         owner = kwargs.pop('owner')
         super().__init__(*args, **kwargs)
-        self.fields['collection'].queryset = Collection.objects.filter(owner=owner).order_by('kind', 'name')
+        self.fields['collection'].queryset = Collection.objects.filter(
+            owner=owner,
+            kind=Collection.KIND_OWNED,
+        ).order_by('name')
 
 
 class CollectionBulkEditForm(forms.Form):

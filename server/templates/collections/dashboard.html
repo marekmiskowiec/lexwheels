@@ -45,9 +45,10 @@
     <div class="hero-copy">
       <span class="eyebrow">Collection Control</span>
       <h1>Moje kolekcje</h1>
-      <p>Widok startowy jest teraz bardziej jak dashboard aplikacji: szybkie akcje, podsumowanie stanu i osobne sekcje dla kolekcji oraz wishlist.</p>
+      <p>Widok startowy skupia kolekcje, aktywne ogłoszenia szukane i szybkie przejścia do najważniejszych działań.</p>
       <div class="actions-row">
         <a class="button" href="{% url 'collections:collection-create' %}">Nowa kolekcja</a>
+        <a class="button secondary" href="{% url 'collections:wanted-list' %}">Moje szukane</a>
         <a class="button secondary" href="{% url 'collections:collection-import' %}">Importuj CSV</a>
         <a class="button secondary" href="{% url 'collections:import-backlog' %}">Braki z importów</a>
       </div>
@@ -69,7 +70,7 @@
   </div>
   <div class="grid" style="margin-top: 18px;">
     <div class="card"><strong>{{ stats.collection_count }}</strong><div class="meta">kolekcje</div></div>
-    <div class="card"><strong>{{ stats.wishlist_count }}</strong><div class="meta">wishlisty</div></div>
+    <div class="card"><strong>{{ stats.wanted_count }}</strong><div class="meta">aktywne szukane</div></div>
     <div class="card"><strong>{{ stats.item_count }}</strong><div class="meta">pozycje</div></div>
     <div class="card"><strong>{{ stats.variant_count }}</strong><div class="meta">warianty</div></div>
     <div class="card"><strong>{{ stats.total_quantity }}</strong><div class="meta">sztuk łącznie</div></div>
@@ -107,26 +108,28 @@
 <section class="panel">
   <div class="section-head">
     <div>
-      <h2>Wishlisty</h2>
-      <p class="meta">Osobne listy polowań, braków i planowanych zakupów.</p>
+      <h2>Szukane</h2>
+      <p class="meta">Aktywne modele, których szukasz wraz z warunkami i budżetem.</p>
     </div>
+    <a href="{% url 'collections:wanted-list' %}">Zarządzaj</a>
   </div>
   <section class="dashboard-list">
-  {% for collection in wishlist_collections %}
+  {% for wanted in wanted_items %}
     <div class="list-item collection-card">
       <div class="collection-card-top">
-        <h3><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>
-        <span class="badge">{{ collection.get_visibility_display }}</span>
+        <h3><a href="{% url 'collections:wanted-update' wanted.pk %}">{{ wanted.model.model_name }}</a></h3>
+        <span class="badge">{% if wanted.is_active %}Aktywne{% else %}Nieaktywne{% endif %}</span>
       </div>
-      <p class="meta">{{ collection.items.count }} modeli</p>
-      {% if collection.description %}<p>{{ collection.description }}</p>{% endif %}
+      <p class="meta">{{ wanted.model.year|default:"-" }} | {{ wanted.model.category|default:"-" }} | {{ wanted.get_packaging_state_display }}</p>
+      <p class="meta">Stan min.: {{ wanted.get_condition_min_display }}{% if wanted.budget_max %} | budżet do {{ wanted.budget_max }} PLN{% endif %}</p>
+      {% if wanted.notes %}<p>{{ wanted.notes }}</p>{% endif %}
       <div class="danger-zone">
-        <a class="button secondary" href="{% url 'collections:collection-update' collection.pk %}">Edytuj</a>
-        <a class="button secondary" href="{% url 'collections:collection-delete' collection.pk %}">Usuń</a>
+        <a class="button secondary" href="{% url 'collections:wanted-update' wanted.pk %}">Edytuj</a>
+        <a class="button secondary" href="{% url 'collections:wanted-delete' wanted.pk %}">Usuń</a>
       </div>
     </div>
   {% empty %}
-    <p>Nie masz jeszcze wishlisty.</p>
+    <p>Nie masz jeszcze żadnych aktywnych szukanych.</p>
   {% endfor %}
   </section>
 </section>
