@@ -197,9 +197,7 @@ class AccountTests(TestCase):
             visibility=Collection.VISIBILITY_PUBLIC,
         )
         response = self.client.get(reverse('accounts:collector-list'))
-        self.assertContains(response, 'Lex')
-        self.assertContains(response, f'Dołączył: {date_format(timezone.localtime(user.date_joined), "j E Y", use_l10n=True)}')
-        self.assertNotContains(response, user.email)
+        self.assertRedirects(response, f"{reverse('collections:community')}?view=collectors")
 
     def test_profile_renders_selected_avatar(self):
         user = User.objects.create_user(

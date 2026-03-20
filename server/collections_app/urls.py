@@ -18,6 +18,7 @@ from .views import (
     CollectionUpdateView,
     DashboardView,
     CollectionStatsView,
+    CommunityView,
     PublicCollectionListView,
 )
 
@@ -26,6 +27,7 @@ app_name = 'collections'
 urlpatterns = [
     path('', DashboardView.as_view(), name='dashboard'),
     path('stats/', CollectionStatsView.as_view(), name='stats'),
+    path('community/', CommunityView.as_view(), name='community'),
     path('public/', PublicCollectionListView.as_view(), name='public-collections'),
     path('import/', CollectionImportView.as_view(), name='collection-import'),
     path('import/confirm/', CollectionImportConfirmView.as_view(), name='collection-import-confirm'),

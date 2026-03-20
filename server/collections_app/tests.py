@@ -487,7 +487,7 @@ class CollectionTests(TestCase):
         self.client.force_login(self.owner)
         response = self.client.get(reverse('collections:dashboard'))
         self.assertContains(response, '3')
-        self.assertContains(response, 'Zobacz pełne statystyki')
+        self.assertContains(response, 'Otwórz statystyki')
         self.assertContains(response, 'Importuj CSV')
         self.assertContains(response, 'Braki z importów')
         self.assertNotContains(response, 'Statystyki i wykresy')
@@ -733,10 +733,10 @@ class CollectionTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Moje statystyki')
-        self.assertContains(response, 'Completion Overview')
-        self.assertContains(response, 'By Year')
-        self.assertContains(response, 'By Series')
-        self.assertContains(response, 'Owned: 1 / 1')
+        self.assertContains(response, 'Przegląd completion')
+        self.assertContains(response, 'Po rocznikach')
+        self.assertContains(response, 'Po seriach')
+        self.assertContains(response, 'Posiadane: 1 / 1')
         self.assertNotContains(response, 'Missing Models')
         self.assertNotContains(response, 'Brakujące modele')
 
@@ -758,16 +758,21 @@ class CollectionTests(TestCase):
         response = self.client.get(reverse('collections:stats'))
 
         self.assertNotContains(response, 'Custom Mustang')
-        self.assertContains(response, 'Owned: 1 / 2')
+        self.assertContains(response, 'Posiadane: 1 / 2')
 
     def test_collection_detail_shows_owner_profile_link(self):
         response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
         self.assertContains(response, reverse('accounts:public-profile', args=[self.owner.pk]))
 
-    def test_public_collection_list_shows_public_collections(self):
+    def test_public_collection_list_redirects_to_community(self):
         response = self.client.get(reverse('collections:public-collections'))
+        self.assertRedirects(response, f"{reverse('collections:community')}?view=collections")
+
+    def test_community_page_shows_public_collections(self):
+        response = self.client.get(reverse('collections:community'))
         self.assertContains(response, 'Publiczna')
         self.assertNotContains(response, 'Prywatna')
+        self.assertContains(response, 'Społeczność')
 
     def test_collection_detail_can_filter_items_by_search_query(self):
         second_model = HotWheelsModel.objects.create(

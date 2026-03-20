@@ -1,8 +1,8 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login
 from django.db.models import Count, Q, Sum
-from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from .forms import ProfileForm, UserRegistrationForm
@@ -61,17 +61,8 @@ class PublicProfileView(DetailView):
 
 
 class PublicCollectorListView(ListView):
-    model = User
-    template_name = 'accounts/public_collector_list.html'
-    context_object_name = 'collectors'
-    paginate_by = 24
-
-    def get_queryset(self):
-        return (
-            User.objects.filter(collections__visibility='public')
-            .distinct()
-            .order_by('display_name', 'email')
-        )
+    def get(self, request, *args, **kwargs):
+        return redirect(f"{reverse('collections:community')}?view=collectors")
 
 
 def build_profile_context(user: User, public_only: bool) -> dict:

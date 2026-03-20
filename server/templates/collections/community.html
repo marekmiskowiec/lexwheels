@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Społeczność | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .community-switcher {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .community-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--ink);
+    background: rgba(255,255,255,0.04);
+  }
+  .community-tab.is-active {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+    border-color: transparent;
+    color: #fff;
+  }
+  .community-toolbar {
+    margin-top: 18px;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<section class="panel hero">
+  <span class="eyebrow">Community</span>
+  <h1>Społeczność</h1>
+  <p class="meta">Jedno miejsce do przeglądania publicznych kolekcji i profili kolekcjonerów.</p>
+  <div class="community-switcher">
+    <a class="community-tab{% if selected_view == 'collections' %} is-active{% endif %}" href="{% url 'collections:community' %}?view=collections">Kolekcje <span class="badge">{{ community_counts.collections }}</span></a>
+    <a class="community-tab{% if selected_view == 'collectors' %} is-active{% endif %}" href="{% url 'collections:community' %}?view=collectors">Kolekcjonerzy <span class="badge">{{ community_counts.collectors }}</span></a>
+  </div>
+  {% if selected_view == 'collections' %}
+    <form method="get" class="filters community-toolbar">
+      <input type="hidden" name="view" value="collections">
+      <div style="max-width:260px;">
+        <label for="kind">Typ</label>
+        <select id="kind" name="kind">
+          <option value="">Wszystkie</option>
+          <option value="owned" {% if selected_kind == 'owned' %}selected{% endif %}>Kolekcje</option>
+          <option value="wishlist" {% if selected_kind == 'wishlist' %}selected{% endif %}>Wishlisty</option>
+        </select>
+      </div>
+      <div><button type="submit">Filtruj</button></div>
+      {% if selected_kind %}<div><a class="button secondary" href="{% url 'collections:community' %}?view=collections">Wyczyść</a></div>{% endif %}
+    </form>
+  {% endif %}
+</section>
+
+<section class="list">
+  {% if selected_view == 'collections' %}
+    {% for collection in collections %}
+      <div class="list-item">
+        <h3><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>
+        <p class="meta">{{ collection.get_kind_display }} | właściciel: <a href="{% url 'accounts:public-profile' collection.owner.pk %}">{{ collection.owner.public_name }}</a></p>
+        <p class="meta">{{ collection.items.count }} modeli</p>
+        {% if collection.description %}<p>{{ collection.description }}</p>{% endif %}
+      </div>
+    {% empty %}
+      <div class="panel"><p>Brak publicznych kolekcji dla tego filtra.</p></div>
+    {% endfor %}
+  {% else %}
+    {% for collector in collectors %}
+      <div class="list-item">
+        <div class="collector-row">
+          <img class="avatar small" src="{% static collector.avatar_static_path %}" alt="Avatar {{ collector.public_name }}">
+          <div>
+            <h3><a href="{% url 'accounts:public-profile' collector.pk %}">{{ collector.public_name }}</a></h3>
+            <p class="meta">Dołączył: {{ collector.date_joined|date:"j E Y" }}</p>
+            {% if collector.bio %}<p>{{ collector.bio }}</p>{% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="panel"><p>Brak kolekcjonerów z publicznymi kolekcjami.</p></div>
+    {% endfor %}
+  {% endif %}
+</section>
+
+{% if is_paginated %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}<a class="button secondary" href="?view={{ selected_view }}{% if selected_kind %}&kind={{ selected_kind }}{% endif %}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+    {% for page_number in paginator.page_range %}
+      {% if page_number == 1 or page_number == paginator.num_pages or page_number >= page_obj.number|add:'-2' and page_number <= page_obj.number|add:'2' %}
+        {% if page_number == page_obj.number %}
+          <span class="button page-number is-current">{{ page_number }}</span>
+        {% else %}
+          <a class="button secondary page-number" href="?view={{ selected_view }}{% if selected_kind %}&kind={{ selected_kind }}{% endif %}&page={{ page_number }}">{{ page_number }}</a>
+        {% endif %}
+      {% elif page_number == page_obj.number|add:'-3' or page_number == page_obj.number|add:'3' %}
+        <span class="meta">…</span>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}<a class="button secondary" href="?view={{ selected_view }}{% if selected_kind %}&kind={{ selected_kind }}{% endif %}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+  </div>
+{% endif %}
+{% endblock %}

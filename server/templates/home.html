@@ -132,7 +132,7 @@
         <div class="hero-actions">
           <a class="button" href="{% url 'catalog:model-list' %}">Przeglądaj katalog</a>
           <a class="button secondary" href="{% url 'accounts:register' %}">Załóż konto</a>
-          <a class="button secondary" href="{% url 'collections:public-collections' %}">Zobacz publiczne kolekcje</a>
+          <a class="button secondary" href="{% url 'collections:community' %}">Zobacz społeczność</a>
         </div>
       {% endif %}
     </div>
@@ -255,7 +255,7 @@
       <div class="launch-card">
         <h3>Publiczne kolekcje</h3>
         <p class="meta">Zobacz, jak inni układają swoje zestawy i wishlisty.</p>
-        <a href="{% url 'collections:public-collections' %}">Przeglądaj kolekcje</a>
+        <a href="{% url 'collections:community' %}">Przeglądaj społeczność</a>
       </div>
     </div>
   </section>
@@ -299,7 +299,7 @@
         <div class="launch-card">
           <h3>Społeczność</h3>
           <p class="meta">Zobacz publiczne kolekcje i profile kolekcjonerów.</p>
-          <a href="{% url 'collections:public-collections' %}">Publiczne kolekcje</a>
+          <a href="{% url 'collections:community' %}">Społeczność</a>
         </div>
       </div>
     </section>

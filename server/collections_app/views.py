@@ -7,14 +7,16 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.paginator import Paginator
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic.edit import FormView
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 from django.db.models import Count, F, Q, Sum
 
+from accounts.models import User
 from catalog.models import HotWheelsModel
 
 from .forms import (
@@ -464,21 +466,70 @@ class CollectionStatsView(LoginRequiredMixin, ListView):
 
 
 class PublicCollectionListView(ListView):
-    model = Collection
-    template_name = 'collections/public_collection_list.html'
-    context_object_name = 'collections'
+    def get(self, request, *args, **kwargs):
+        query = {'view': 'collections'}
+        kind = request.GET.get('kind', '').strip()
+        if kind in {Collection.KIND_OWNED, Collection.KIND_WISHLIST}:
+            query['kind'] = kind
+        return redirect(f"{reverse('collections:community')}?{urlencode(query)}")
+
+
+class CommunityView(TemplateView):
+    template_name = 'collections/community.html'
     paginate_by = 24
 
-    def get_queryset(self):
-        kind = self.request.GET.get('kind', '').strip()
+    def get_selected_view(self):
+        selected_view = self.request.GET.get('view', '').strip()
+        if selected_view in {'collections', 'collectors'}:
+            return selected_view
+        return 'collections'
+
+    def get_selected_kind(self):
+        selected_kind = self.request.GET.get('kind', '').strip()
+        if selected_kind in {Collection.KIND_OWNED, Collection.KIND_WISHLIST}:
+            return selected_kind
+        return ''
+
+    def get_collections_queryset(self):
         queryset = Collection.objects.filter(visibility=Collection.VISIBILITY_PUBLIC).select_related('owner')
-        if kind in {Collection.KIND_OWNED, Collection.KIND_WISHLIST}:
-            queryset = queryset.filter(kind=kind)
+        selected_kind = self.get_selected_kind()
+        if selected_kind:
+            queryset = queryset.filter(kind=selected_kind)
         return queryset.order_by('owner__display_name', 'name')
+
+    def get_collectors_queryset(self):
+        return (
+            User.objects.filter(collections__visibility=Collection.VISIBILITY_PUBLIC)
+            .distinct()
+            .order_by('display_name', 'email')
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['selected_kind'] = self.request.GET.get('kind', '').strip()
+        selected_view = self.get_selected_view()
+        selected_kind = self.get_selected_kind()
+        collections = self.get_collections_queryset()
+        collectors = self.get_collectors_queryset()
+        active_queryset = collectors if selected_view == 'collectors' else collections
+
+        paginator = Paginator(active_queryset, self.paginate_by)
+        page_obj = paginator.get_page(self.request.GET.get('page'))
+
+        context.update(
+            {
+                'selected_view': selected_view,
+                'selected_kind': selected_kind,
+                'collections': page_obj.object_list if selected_view == 'collections' else [],
+                'collectors': page_obj.object_list if selected_view == 'collectors' else [],
+                'page_obj': page_obj,
+                'paginator': paginator,
+                'is_paginated': page_obj.has_other_pages(),
+                'community_counts': {
+                    'collections': collections.count(),
+                    'collectors': collectors.count(),
+                },
+            }
+        )
         return context
 
 
