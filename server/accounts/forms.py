@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from urllib.parse import urlparse
 
 from catalog.models import HotWheelsModel
 
@@ -24,6 +25,21 @@ class EmailAuthenticationForm(AuthenticationForm):
         label='Email lub login',
         widget=forms.TextInput(attrs={'autofocus': True, 'autocomplete': 'username'}),
     )
+
+
+def validate_social_url(value: str, allowed_domains: set[str], service_name: str) -> str:
+    if not value:
+        return value
+
+    parsed = urlparse(value)
+    domain = parsed.netloc.lower()
+    if domain.startswith('www.'):
+        domain = domain[4:]
+
+    if parsed.scheme not in {'http', 'https'} or domain not in allowed_domains:
+        raise forms.ValidationError(f'Podaj poprawny link do serwisu {service_name}.')
+
+    return value
 
 
 class UserRegistrationForm(LoginNormalizationMixin, UserCreationForm):
@@ -75,6 +91,9 @@ class ProfileForm(LoginNormalizationMixin, forms.ModelForm):
         fields = (
             'display_name',
             'bio',
+            'youtube_url',
+            'tiktok_url',
+            'instagram_url',
             'avatar_key',
             'catalog_scope_enabled',
             'catalog_scope_brands',
@@ -99,6 +118,12 @@ class ProfileForm(LoginNormalizationMixin, forms.ModelForm):
         ]
 
         self.fields['catalog_scope_enabled'].label = 'Domyślnie używaj mojego zakresu w katalogu'
+        self.fields['youtube_url'].label = 'YouTube'
+        self.fields['tiktok_url'].label = 'TikTok'
+        self.fields['instagram_url'].label = 'Instagram'
+        self.fields['youtube_url'].help_text = 'Pełny link do Twojego kanału lub profilu.'
+        self.fields['tiktok_url'].help_text = 'Pełny link do Twojego profilu TikTok.'
+        self.fields['instagram_url'].help_text = 'Pełny link do Twojego profilu Instagram.'
         self.fields['catalog_scope_year_from'].label = 'Rok od'
         self.fields['catalog_scope_year_to'].label = 'Rok do'
         self.fields['catalog_scope_year_from'].help_text = 'Opcjonalne ograniczenie dolnej granicy rocznika.'
@@ -121,3 +146,24 @@ class ProfileForm(LoginNormalizationMixin, forms.ModelForm):
         if commit:
             user.save()
         return user
+
+    def clean_youtube_url(self):
+        return validate_social_url(
+            self.cleaned_data.get('youtube_url', ''),
+            {'youtube.com', 'm.youtube.com', 'youtu.be'},
+            'YouTube',
+        )
+
+    def clean_tiktok_url(self):
+        return validate_social_url(
+            self.cleaned_data.get('tiktok_url', ''),
+            {'tiktok.com', 'm.tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com'},
+            'TikTok',
+        )
+
+    def clean_instagram_url(self):
+        return validate_social_url(
+            self.cleaned_data.get('instagram_url', ''),
+            {'instagram.com', 'm.instagram.com'},
+            'Instagram',
+        )

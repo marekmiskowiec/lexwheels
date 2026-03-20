@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from catalog.models import HotWheelsModel
 
+from .forms import ProfileForm
 from .models import User
 
 
@@ -52,6 +53,9 @@ class AccountTests(TestCase):
         response = self.client.post(reverse('accounts:profile-edit'), {
             'display_name': 'Lex',
             'bio': 'Collector profile',
+            'youtube_url': 'https://www.youtube.com/@lexwheels',
+            'tiktok_url': 'https://www.tiktok.com/@lexwheels',
+            'instagram_url': 'https://www.instagram.com/lexwheels/',
             'avatar_key': 'garage-blue',
             'catalog_scope_enabled': 'on',
             'catalog_scope_brands': ['Hot Wheels'],
@@ -64,11 +68,80 @@ class AccountTests(TestCase):
         self.assertEqual(user.login, 'Lex')
         self.assertEqual(user.display_name, 'Lex')
         self.assertEqual(user.avatar_key, 'garage-blue')
+        self.assertEqual(user.youtube_url, 'https://www.youtube.com/@lexwheels')
+        self.assertEqual(user.tiktok_url, 'https://www.tiktok.com/@lexwheels')
+        self.assertEqual(user.instagram_url, 'https://www.instagram.com/lexwheels/')
         self.assertTrue(user.catalog_scope_enabled)
         self.assertEqual(user.catalog_scope_brands, ['Hot Wheels'])
         self.assertEqual(user.catalog_scope_categories, ['Mainline'])
         self.assertEqual(user.catalog_scope_year_from, 2022)
         self.assertEqual(user.catalog_scope_year_to, 2023)
+
+    def test_profile_form_rejects_non_youtube_domain(self):
+        user = User.objects.create_user(email='test@example.com', password='ComplexPass123')
+
+        form = ProfileForm(
+            data={
+                'display_name': 'Lex',
+                'bio': '',
+                'youtube_url': 'https://example.com/channel/test',
+                'tiktok_url': '',
+                'instagram_url': '',
+                'avatar_key': 'garage-blue',
+                'catalog_scope_brands': [],
+                'catalog_scope_categories': [],
+                'catalog_scope_year_from': '',
+                'catalog_scope_year_to': '',
+            },
+            instance=user,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('youtube_url', form.errors)
+
+    def test_profile_form_rejects_non_tiktok_domain(self):
+        user = User.objects.create_user(email='test2@example.com', password='ComplexPass123')
+
+        form = ProfileForm(
+            data={
+                'display_name': 'LexTwo',
+                'bio': '',
+                'youtube_url': '',
+                'tiktok_url': 'https://example.com/@lexwheels',
+                'instagram_url': '',
+                'avatar_key': 'garage-blue',
+                'catalog_scope_brands': [],
+                'catalog_scope_categories': [],
+                'catalog_scope_year_from': '',
+                'catalog_scope_year_to': '',
+            },
+            instance=user,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('tiktok_url', form.errors)
+
+    def test_profile_form_rejects_non_instagram_domain(self):
+        user = User.objects.create_user(email='test3@example.com', password='ComplexPass123')
+
+        form = ProfileForm(
+            data={
+                'display_name': 'LexThree',
+                'bio': '',
+                'youtube_url': '',
+                'tiktok_url': '',
+                'instagram_url': 'https://example.com/lexwheels',
+                'avatar_key': 'garage-blue',
+                'catalog_scope_brands': [],
+                'catalog_scope_categories': [],
+                'catalog_scope_year_from': '',
+                'catalog_scope_year_to': '',
+            },
+            instance=user,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('instagram_url', form.errors)
 
     def test_profile_update_keeps_display_name_and_login_in_sync(self):
         user = User.objects.create_user(email='test@example.com', login='Start', password='ComplexPass123')
