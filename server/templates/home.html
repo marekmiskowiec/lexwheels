@@ -81,7 +81,7 @@
   .tag-cloud { display: flex; flex-wrap: wrap; gap: 10px; }
   .home-info-grid { display: grid; gap: 18px; grid-template-columns: 1.1fr .9fr; }
   .home-section-copy {
-    max-width: 52ch;
+    max-width: 46ch;
     color: #c4d1e2;
   }
   .recent-grid {
@@ -90,6 +90,14 @@
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   }
   .recent-card {
+    min-height: 100%;
+  }
+  .quick-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+  .quick-grid .launch-card {
     min-height: 100%;
   }
 
@@ -111,7 +119,7 @@
       {% if user.is_authenticated %}
         <span class="eyebrow">Dashboard kolekcjonera</span>
         <h1>LexWheels dla {{ user.public_name }}</h1>
-        <p>Najważniejsze rzeczy są od razu na górze: stan kolekcji, progres kompletowania i szybkie przejścia do działań, które realnie wykonujesz najczęściej.</p>
+        <p>Najważniejsze rzeczy są od razu na górze: kolekcje, progres i szybkie przejścia do najczęstszych działań.</p>
         <div class="hero-actions">
           <a class="button" href="{% url 'collections:dashboard' %}">Moje kolekcje</a>
           <a class="button secondary" href="{% url 'collections:stats' %}">Statystyki</a>
@@ -120,7 +128,7 @@
       {% else %}
         <span class="eyebrow">Katalog + kolekcja + wishlist</span>
         <h1>Jedno miejsce do katalogu, kolekcji i braków.</h1>
-        <p>LexWheels łączy przeglądanie modeli Hot Wheels z własną kolekcją, wishlistą i statystykami. Start prowadzi do najważniejszych obszarów bez przeładowania informacjami.</p>
+        <p>Przeglądaj modele, buduj własną kolekcję i trzymaj wishlistę w jednym miejscu.</p>
         <div class="hero-actions">
           <a class="button" href="{% url 'catalog:model-list' %}">Przeglądaj katalog</a>
           <a class="button secondary" href="{% url 'accounts:register' %}">Załóż konto</a>
@@ -171,7 +179,7 @@
       <div class="section-head">
         <div>
           <h2>Stan kolekcji</h2>
-          <p class="home-section-copy">Szybki podgląd tego, ile masz kolekcji, wariantów i ulubionych modeli.</p>
+          <p class="home-section-copy">Szybki podgląd najważniejszych liczb.</p>
         </div>
         <a href="{% url 'collections:dashboard' %}">Zarządzaj kolekcjami</a>
       </div>
@@ -201,7 +209,7 @@
       <div class="section-head">
         <div>
           <h2>Najbliżej ukończenia</h2>
-          <p class="home-section-copy">Serie, które są najbliżej zamknięcia, żeby było wiadomo, co warto domknąć najpierw.</p>
+          <p class="home-section-copy">Serie, które warto domknąć najpierw.</p>
         </div>
         <a href="{% url 'collections:stats' %}">Pełne statystyki</a>
       </div>
@@ -221,58 +229,35 @@
     </section>
   </section>
 
-  <section class="grid" style="margin-bottom: 18px;">
-    <section class="panel">
-      <div class="section-head">
-        <div>
-          <h2>Szybkie wejścia</h2>
-          <p class="home-section-copy">Najczęstsze akcje bez przeklikiwania się przez kilka podstron.</p>
-        </div>
+  <section class="panel" style="margin-bottom: 18px;">
+    <div class="section-head">
+      <div>
+        <h2>Szybkie akcje</h2>
+        <p class="home-section-copy">Najczęstsze miejsca i działania w jednym bloku.</p>
       </div>
-      <div class="launch-list">
-        <div class="launch-card">
-          <h3>Katalog</h3>
-          <p class="meta">Szukaj po roczniku, serii, exclusive i tagach specjalnych.</p>
-          <a href="{% url 'catalog:model-list' %}">Otwórz katalog</a>
-        </div>
-        <div class="launch-card">
-          <h3>Nowa kolekcja</h3>
-          <p class="meta">Utwórz osobną kolekcję albo wishlistę dla konkretnego celu.</p>
-          <a href="{% url 'collections:collection-create' %}">Dodaj kolekcję</a>
-        </div>
-        <div class="launch-card">
-          <h3>Profil</h3>
-          <p class="meta">Edytuj widoczność, opis i ustawienia swojego konta kolekcjonera.</p>
-          <a href="{% url 'accounts:profile' %}">Przejdź do profilu</a>
-        </div>
+    </div>
+    <div class="quick-grid">
+      <div class="launch-card">
+        <h3>Katalog</h3>
+        <p class="meta">Szukaj po roczniku, serii, exclusive i tagach specjalnych.</p>
+        <a href="{% url 'catalog:model-list' %}">Otwórz katalog</a>
       </div>
-    </section>
-
-    <section class="panel">
-      <div class="section-head">
-        <div>
-          <h2>Otwórz dalej</h2>
-          <p class="home-section-copy">Przejście do publicznych zasobów i widoków eksploracyjnych.</p>
-        </div>
+      <div class="launch-card">
+        <h3>Nowa kolekcja</h3>
+        <p class="meta">Utwórz kolekcję albo wishlistę dla konkretnego celu.</p>
+        <a href="{% url 'collections:collection-create' %}">Dodaj kolekcję</a>
       </div>
-      <div class="launch-list">
-        <div class="launch-card">
-          <h3>Publiczne kolekcje</h3>
-          <p class="meta">Zobacz, jak inni układają swoje kolekcje i wishlisty.</p>
-          <a href="{% url 'collections:public-collections' %}">Przeglądaj kolekcje</a>
-        </div>
-        <div class="launch-card">
-          <h3>Kolekcjonerzy</h3>
-          <p class="meta">Przejrzyj profile użytkowników i ich publiczne zestawy.</p>
-          <a href="{% url 'accounts:collector-list' %}">Zobacz kolekcjonerów</a>
-        </div>
-        <div class="launch-card">
-          <h3>Statystyki</h3>
-          <p class="meta">Sprawdź progres po seriach, latach i kategoriach bez listy braków.</p>
-          <a href="{% url 'collections:stats' %}">Otwórz statystyki</a>
-        </div>
+      <div class="launch-card">
+        <h3>Profil</h3>
+        <p class="meta">Edytuj widoczność i ustawienia konta kolekcjonera.</p>
+        <a href="{% url 'accounts:profile' %}">Przejdź do profilu</a>
       </div>
-    </section>
+      <div class="launch-card">
+        <h3>Publiczne kolekcje</h3>
+        <p class="meta">Zobacz, jak inni układają swoje zestawy i wishlisty.</p>
+        <a href="{% url 'collections:public-collections' %}">Przeglądaj kolekcje</a>
+      </div>
+    </div>
   </section>
 {% else %}
   <section class="home-info-grid" style="margin-bottom: 18px;">
@@ -280,7 +265,7 @@
       <div class="section-head">
         <div>
           <h2>Popularne serie</h2>
-          <p class="home-section-copy">Najczęściej występujące serie w katalogu, żeby szybciej złapać orientację.</p>
+          <p class="home-section-copy">Najczęściej występujące serie w katalogu.</p>
         </div>
         <a href="{% url 'catalog:model-list' %}">Cały katalog</a>
       </div>
@@ -297,17 +282,24 @@
       <div class="section-head">
         <div>
           <h2>Jak zacząć</h2>
-          <p class="home-section-copy">Krótko i konkretnie: po co jest ten ekran i dokąd prowadzi dalej.</p>
+          <p class="home-section-copy">Trzy szybkie ścieżki wejścia.</p>
         </div>
       </div>
       <div class="launch-list">
         <div class="launch-card">
-          <h3>Start od celu</h3>
-          <p class="meta">Najpierw kolekcja, wishlista i postęp, a dopiero potem pełna eksploracja katalogu.</p>
+          <h3>Katalog</h3>
+          <p class="meta">Przejdź od razu do modeli, serii i filtrów.</p>
+          <a href="{% url 'catalog:model-list' %}">Przeglądaj katalog</a>
         </div>
         <div class="launch-card">
-          <h3>Lepsza orientacja</h3>
-          <p class="meta">Publiczne kolekcje, kolekcjonerzy i najnowsze modele są pod ręką bez wejścia w filtry.</p>
+          <h3>Konto</h3>
+          <p class="meta">Załóż konto, żeby prowadzić własną kolekcję i wishlistę.</p>
+          <a href="{% url 'accounts:register' %}">Załóż konto</a>
+        </div>
+        <div class="launch-card">
+          <h3>Społeczność</h3>
+          <p class="meta">Zobacz publiczne kolekcje i profile kolekcjonerów.</p>
+          <a href="{% url 'collections:public-collections' %}">Publiczne kolekcje</a>
         </div>
       </div>
     </section>
@@ -318,7 +310,7 @@
   <div class="section-head">
     <div>
       <h2>Ostatnio dodane do katalogu</h2>
-      <p class="home-section-copy">Nowe pozycje dodane do bazy, żeby od razu było widać, co doszło ostatnio.</p>
+      <p class="home-section-copy">Nowe pozycje dodane do bazy.</p>
     </div>
     <a href="{% url 'catalog:model-list' %}">Przeglądaj katalog</a>
   </div>
