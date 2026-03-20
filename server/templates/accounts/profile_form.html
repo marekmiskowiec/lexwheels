@@ -1,6 +1,20 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Edytuj profil | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .field-meta-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-top: 6px;
+  }
+  .char-counter {
+    white-space: nowrap;
+  }
+</style>
+{% endblock %}
 {% block content %}
 <section class="panel" style="max-width: 720px;">
   <h1>Edytuj profil</h1>
@@ -39,6 +53,16 @@
           {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
           {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
         </div>
+      {% elif field.name == 'bio' %}
+        <p>
+          {{ field.label_tag }}
+          {{ field }}
+          <span class="field-meta-row">
+            {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% else %}<span></span>{% endif %}
+            <small class="meta char-counter" data-bio-counter>0/100</small>
+          </span>
+          {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
+        </p>
       {% else %}
         <p>
           {{ field.label_tag }}
@@ -51,4 +75,22 @@
     <button type="submit">Zapisz profil</button>
   </form>
 </section>
+<script>
+  (() => {
+    const bioInput = document.querySelector('[data-bio-input]');
+    const bioCounter = document.querySelector('[data-bio-counter]');
+
+    if (!bioInput || !bioCounter) {
+      return;
+    }
+
+    const maxLength = Number(bioInput.dataset.maxlength || bioInput.maxLength || 100);
+    const updateCounter = () => {
+      bioCounter.textContent = `${bioInput.value.length}/${maxLength}`;
+    };
+
+    bioInput.addEventListener('input', updateCounter);
+    updateCounter();
+  })();
+</script>
 {% endblock %}

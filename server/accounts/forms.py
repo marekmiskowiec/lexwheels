@@ -125,6 +125,10 @@ class ProfileForm(LoginNormalizationMixin, forms.ModelForm):
         self.fields['catalog_scope_enabled'].label = 'Domyślnie używaj mojego zakresu w katalogu'
         self.fields['bio'].label = 'Bio'
         self.fields['bio'].help_text = 'Maksymalnie 100 znaków.'
+        self.fields['bio'].widget.attrs.update({
+            'data-bio-input': 'true',
+            'data-maxlength': '100',
+        })
         self.fields['youtube_url'].label = 'YouTube'
         self.fields['tiktok_url'].label = 'TikTok'
         self.fields['instagram_url'].label = 'Instagram'
