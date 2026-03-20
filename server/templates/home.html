@@ -2,34 +2,105 @@
 {% block title %}LexWheels{% endblock %}
 {% block extra_styles %}
 <style>
-  .home-hero { position: relative; overflow: hidden; padding: 30px; background:
-    radial-gradient(circle at top left, rgba(181, 73, 32, 0.18), transparent 34%),
-    linear-gradient(135deg, #fff6e7 0%, #f3e2c5 48%, #ead0ad 100%);
+  .home-hero {
+    padding: 30px;
+    background:
+      radial-gradient(circle at top left, rgba(255, 107, 44, 0.18), transparent 30%),
+      radial-gradient(circle at top right, rgba(72, 157, 255, 0.16), transparent 28%),
+      linear-gradient(135deg, rgba(16, 30, 52, 0.98) 0%, rgba(10, 19, 35, 0.96) 100%);
   }
-  .home-hero::after { content: ""; position: absolute; inset: auto -80px -120px auto; width: 280px; height: 280px; border-radius: 50%; background: rgba(122, 47, 18, 0.08); }
-  .hero-grid { display: grid; gap: 22px; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .95fr); align-items: start; }
-  .hero-copy h1 { font-size: clamp(2.3rem, 5vw, 4.2rem); line-height: .95; margin-bottom: 12px; letter-spacing: -0.05em; }
-  .hero-copy p { max-width: 58ch; font-size: 1.05rem; }
+  .hero-grid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: minmax(0, 1.3fr) minmax(320px, .9fr);
+    align-items: stretch;
+  }
+  .hero-copy {
+    max-width: 60ch;
+  }
+  .hero-copy p {
+    color: #d8e3f2;
+    font-size: 1.03rem;
+  }
   .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
-  .home-kpis { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .home-kpi { padding: 18px; border-radius: 18px; background: rgba(255, 252, 246, 0.9); border: 1px solid #e5cfac; }
-  .home-kpi strong { display: block; font-size: 2rem; color: var(--accent-dark); }
-  .section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .home-kpis {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+  }
+  .home-kpi {
+    padding: 18px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--line);
+  }
+  .home-kpi .meta {
+    color: #afbed2;
+    margin-bottom: 8px;
+  }
+  .home-kpi strong {
+    display: block;
+    font-size: 2rem;
+    color: #ffffff;
+    line-height: 1;
+  }
   .spotlight-grid { display: grid; gap: 18px; grid-template-columns: 1.2fr .8fr; }
   .progress-list, .launch-list { display: grid; gap: 12px; }
-  .progress-row { padding: 14px 16px; border: 1px solid #eadcc3; border-radius: 16px; background: #fff; }
+  .progress-row {
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.045);
+  }
   .progress-meta { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-  .progress-bar { height: 10px; border-radius: 999px; background: #f2e6d2; overflow: hidden; }
-  .progress-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #b54920 0%, #de8451 100%); }
-  .launch-card { padding: 16px; border: 1px solid #eadcc3; border-radius: 18px; background: linear-gradient(180deg, #fffdf9 0%, #f8efdf 100%); }
+  .progress-meta strong { color: #f6f9ff; }
+  .progress-bar { height: 10px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .progress-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ff6b2c 0%, #ff9d56 100%); }
+  .launch-card {
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.04);
+  }
+  .launch-card h3,
+  .launch-card a,
+  .model-row h3 a { color: #f6f9ff; }
+  .launch-card p,
+  .model-row .meta { color: #afbed2; }
   .model-row { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 14px; align-items: center; }
-  .model-thumb { width: 72px; height: 72px; object-fit: contain; border: 1px solid #eadcc3; border-radius: 14px; background: #fff9f1; }
+  .model-thumb {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.06);
+    padding: 8px;
+  }
   .tag-cloud { display: flex; flex-wrap: wrap; gap: 10px; }
-  .tag-cloud .badge { background: #f7e5cd; }
+  .home-info-grid { display: grid; gap: 18px; grid-template-columns: 1.1fr .9fr; }
+  .home-section-copy {
+    max-width: 52ch;
+    color: #c4d1e2;
+  }
+  .recent-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .recent-card {
+    min-height: 100%;
+  }
 
   @media (max-width: 860px) {
-    .hero-grid, .spotlight-grid { grid-template-columns: 1fr; }
+    .hero-grid, .spotlight-grid, .home-info-grid { grid-template-columns: 1fr; }
     .home-hero { padding: 22px; }
+    .home-kpis { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 640px) {
+    .home-kpis { grid-template-columns: 1fr; }
   }
 </style>
 {% endblock %}
@@ -38,18 +109,18 @@
   <div class="hero-grid">
     <div class="hero-copy">
       {% if user.is_authenticated %}
-        <span class="badge">Dashboard kolekcjonera</span>
+        <span class="eyebrow">Dashboard kolekcjonera</span>
         <h1>LexWheels dla {{ user.public_name }}</h1>
-        <p>Strona główna ma teraz być punktem wejścia do Twojej kolekcji, a nie kopią katalogu. Tu widzisz progres, braki i szybkie przejścia do rzeczy, które chcesz zrobić teraz.</p>
+        <p>Najważniejsze rzeczy są od razu na górze: stan kolekcji, progres kompletowania i szybkie przejścia do działań, które realnie wykonujesz najczęściej.</p>
         <div class="hero-actions">
           <a class="button" href="{% url 'collections:dashboard' %}">Moje kolekcje</a>
           <a class="button secondary" href="{% url 'collections:stats' %}">Statystyki</a>
           <a class="button secondary" href="{% url 'catalog:model-list' %}">Przejdź do katalogu</a>
         </div>
       {% else %}
-        <span class="badge">Katalog + kolekcja + wishlist</span>
-        <h1>Zacznij od kolekcji, nie od listy modeli.</h1>
-        <p>LexWheels łączy katalog Hot Wheels z własną kolekcją, wishlistą i statystykami kompletowania. Katalog jest osobno, a strona główna prowadzi do tego, co najważniejsze.</p>
+        <span class="eyebrow">Katalog + kolekcja + wishlist</span>
+        <h1>Jedno miejsce do katalogu, kolekcji i braków.</h1>
+        <p>LexWheels łączy przeglądanie modeli Hot Wheels z własną kolekcją, wishlistą i statystykami. Start prowadzi do najważniejszych obszarów bez przeładowania informacjami.</p>
         <div class="hero-actions">
           <a class="button" href="{% url 'catalog:model-list' %}">Przeglądaj katalog</a>
           <a class="button secondary" href="{% url 'accounts:register' %}">Załóż konto</a>
@@ -98,7 +169,10 @@
   <section class="spotlight-grid" style="margin-bottom: 18px;">
     <section class="panel">
       <div class="section-head">
-        <h2>Stan kolekcji</h2>
+        <div>
+          <h2>Stan kolekcji</h2>
+          <p class="home-section-copy">Szybki podgląd tego, ile masz kolekcji, wariantów i ulubionych modeli.</p>
+        </div>
         <a href="{% url 'collections:dashboard' %}">Zarządzaj kolekcjami</a>
       </div>
       <div class="stats-strip">
@@ -125,7 +199,10 @@
 
     <section class="panel">
       <div class="section-head">
-        <h2>Najbliżej ukończenia</h2>
+        <div>
+          <h2>Najbliżej ukończenia</h2>
+          <p class="home-section-copy">Serie, które są najbliżej zamknięcia, żeby było wiadomo, co warto domknąć najpierw.</p>
+        </div>
         <a href="{% url 'collections:stats' %}">Pełne statystyki</a>
       </div>
       <div class="progress-list">
@@ -147,7 +224,10 @@
   <section class="grid" style="margin-bottom: 18px;">
     <section class="panel">
       <div class="section-head">
-        <h2>Szybkie wejścia</h2>
+        <div>
+          <h2>Szybkie wejścia</h2>
+          <p class="home-section-copy">Najczęstsze akcje bez przeklikiwania się przez kilka podstron.</p>
+        </div>
       </div>
       <div class="launch-list">
         <div class="launch-card">
@@ -170,7 +250,10 @@
 
     <section class="panel">
       <div class="section-head">
-        <h2>Otwórz dalej</h2>
+        <div>
+          <h2>Otwórz dalej</h2>
+          <p class="home-section-copy">Przejście do publicznych zasobów i widoków eksploracyjnych.</p>
+        </div>
       </div>
       <div class="launch-list">
         <div class="launch-card">
@@ -192,10 +275,13 @@
     </section>
   </section>
 {% else %}
-  <section class="grid" style="margin-bottom: 18px;">
+  <section class="home-info-grid" style="margin-bottom: 18px;">
     <section class="panel">
       <div class="section-head">
-        <h2>Popularne serie</h2>
+        <div>
+          <h2>Popularne serie</h2>
+          <p class="home-section-copy">Najczęściej występujące serie w katalogu, żeby szybciej złapać orientację.</p>
+        </div>
         <a href="{% url 'catalog:model-list' %}">Cały katalog</a>
       </div>
       <div class="tag-cloud">
@@ -209,7 +295,10 @@
 
     <section class="panel">
       <div class="section-head">
-        <h2>Po co osobna strona główna?</h2>
+        <div>
+          <h2>Jak zacząć</h2>
+          <p class="home-section-copy">Krótko i konkretnie: po co jest ten ekran i dokąd prowadzi dalej.</p>
+        </div>
       </div>
       <div class="launch-list">
         <div class="launch-card">
@@ -227,12 +316,15 @@
 
 <section class="panel">
   <div class="section-head">
-    <h2>Ostatnio dodane do katalogu</h2>
+    <div>
+      <h2>Ostatnio dodane do katalogu</h2>
+      <p class="home-section-copy">Nowe pozycje dodane do bazy, żeby od razu było widać, co doszło ostatnio.</p>
+    </div>
     <a href="{% url 'catalog:model-list' %}">Przeglądaj katalog</a>
   </div>
-  <div class="grid">
+  <div class="recent-grid">
     {% for model in recent_models %}
-      <article class="card compact-card">
+      <article class="card compact-card recent-card">
         <div class="model-row">
           {% if model.catalog_primary_image_src %}
             <img class="model-thumb" src="{{ model.catalog_primary_image_src }}" alt="{{ model.model_name }}">

@@ -1,28 +1,57 @@
 {% extends "base.html" %}
 {% block title %}{{ collection_obj.name }} | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .collection-hero-grid {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: minmax(0, 1.35fr) minmax(260px, .85fr);
+    align-items: start;
+  }
+  .collection-summary {
+    display: grid;
+    gap: 12px;
+  }
+  .bulk-panel + .bulk-panel {
+    margin-top: 12px;
+  }
+  .item-variant-thumb {
+    height: 170px;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 900px) {
+    .collection-hero-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
 {% block content %}
 <section class="panel hero">
-  <h1>{{ collection_obj.name }}</h1>
-  <p class="meta">{{ collection_obj.get_kind_display }} | {{ collection_obj.get_visibility_display }} | właściciel: <a href="{% url 'accounts:public-profile' collection_obj.owner.pk %}">{{ collection_obj.owner.public_name }}</a></p>
-  {% if collection_obj.description %}<p>{{ collection_obj.description }}</p>{% endif %}
-  <div class="grid" style="margin-top:18px;">
-    <div class="card"><strong>{{ stats.item_count }}</strong><div class="meta">pozycje</div></div>
-    <div class="card"><strong>{{ stats.variant_count }}</strong><div class="meta">warianty</div></div>
-    <div class="card"><strong>{{ stats.total_quantity }}</strong><div class="meta">sztuk łącznie</div></div>
-    <div class="card"><strong>{{ stats.favorite_count }}</strong><div class="meta">ulubione</div></div>
+  <div class="collection-hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow">{{ collection_obj.get_kind_display }}</span>
+      <h1>{{ collection_obj.name }}</h1>
+      <p class="meta">{{ collection_obj.get_visibility_display }} | właściciel: <a href="{% url 'accounts:public-profile' collection_obj.owner.pk %}">{{ collection_obj.owner.public_name }}</a></p>
+      {% if collection_obj.description %}<p>{{ collection_obj.description }}</p>{% endif %}
+      {% if user == collection_obj.owner %}
+        <div class="actions-row">
+          <a class="button" href="{% url 'collections:item-create' collection_obj.pk %}">Dodaj model</a>
+          <a class="button secondary" href="{% url 'collections:collection-export' collection_obj.pk 'csv' %}">Eksport CSV</a>
+          <a class="button secondary" href="{% url 'collections:collection-export' collection_obj.pk 'json' %}">Eksport JSON</a>
+          <a class="button secondary" href="{% url 'collections:stats' %}?collection={{ collection_obj.pk }}">Statystyki tej kolekcji</a>
+        </div>
+      {% endif %}
+    </div>
+    <div class="collection-summary">
+      <div class="card"><strong>{{ stats.item_count }}</strong><div class="meta">pozycje</div></div>
+      <div class="card"><strong>{{ stats.variant_count }}</strong><div class="meta">warianty</div></div>
+      <div class="card"><strong>{{ stats.total_quantity }}</strong><div class="meta">sztuk łącznie</div></div>
+      <div class="card"><strong>{{ stats.favorite_count }}</strong><div class="meta">ulubione</div></div>
+    </div>
   </div>
-  {% if user == collection_obj.owner %}
-    <p>
-      <a class="button" href="{% url 'collections:item-create' collection_obj.pk %}">Dodaj model</a>
-      <a class="button secondary" href="{% url 'collections:collection-export' collection_obj.pk 'csv' %}">Eksport CSV</a>
-      <a class="button secondary" href="{% url 'collections:collection-export' collection_obj.pk 'json' %}">Eksport JSON</a>
-      <a class="button secondary" href="{% url 'collections:stats' %}?collection={{ collection_obj.pk }}">Statystyki tej kolekcji</a>
-    </p>
-  {% endif %}
 </section>
 <section class="list">
   {% if user == collection_obj.owner %}
-    <form method="post" action="{% url 'collections:item-batch-delete' collection_obj.pk %}" id="batch-delete-form" class="panel">
+    <form method="post" action="{% url 'collections:item-batch-delete' collection_obj.pk %}" id="batch-delete-form" class="panel bulk-panel">
       {% csrf_token %}
       <div class="filters">
         <div><button type="submit" class="secondary">Usuń zaznaczone</button></div>
@@ -31,7 +60,7 @@
       </div>
       <p class="meta" style="margin:12px 0 0;">Zaznaczenie przy modelu usuwa wszystkie jego warianty. Możesz też zaznaczyć pojedyncze warianty poniżej.</p>
     </form>
-    <form method="post" action="{% url 'collections:item-batch-edit' collection_obj.pk %}" id="batch-edit-form" class="panel" style="margin-top:12px;">
+    <form method="post" action="{% url 'collections:item-batch-edit' collection_obj.pk %}" id="batch-edit-form" class="panel bulk-panel">
       {% csrf_token %}
       <h2>Masowa edycja wariantów</h2>
       <div class="filters">
@@ -160,7 +189,7 @@
               </label>
             {% endif %}
             {% if variant.image_src %}
-              <img class="thumb" style="height: 170px; margin-bottom:12px;" src="{{ variant.image_src }}" alt="{{ item.model.model_name }} - {{ variant.get_packaging_state_display }}">
+              <img class="thumb item-variant-thumb" src="{{ variant.image_src }}" alt="{{ item.model.model_name }} - {{ variant.get_packaging_state_display }}">
             {% endif %}
             <p class="meta">{{ variant.get_packaging_state_display }} | stan: {{ variant.get_condition_display }} | ilość: {{ variant.quantity }}</p>
             {% if variant.attribute_badges %}

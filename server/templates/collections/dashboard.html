@@ -1,14 +1,72 @@
 {% extends "base.html" %}
 {% block title %}Moje kolekcje | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .dashboard-hero {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: minmax(0, 1.35fr) minmax(260px, .85fr);
+    align-items: start;
+  }
+  .dashboard-actions {
+    display: grid;
+    gap: 12px;
+  }
+  .dashboard-action-card {
+    padding: 18px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+  }
+  .dashboard-list {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  .collection-card {
+    display: grid;
+    gap: 14px;
+    min-height: 100%;
+  }
+  .collection-card-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  @media (max-width: 860px) {
+    .dashboard-hero { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
 {% block content %}
 <section class="panel hero">
-  <h1>Moje kolekcje</h1>
-  <p>
-    <a class="button" href="{% url 'collections:collection-create' %}">Nowa kolekcja</a>
-    <a class="button secondary" href="{% url 'collections:collection-import' %}">Importuj CSV</a>
-    <a class="button secondary" href="{% url 'collections:import-backlog' %}">Braki z importów</a>
-    <a class="button secondary" href="{% url 'collections:stats' %}">Zobacz pełne statystyki</a>
-  </p>
+  <div class="dashboard-hero">
+    <div class="hero-copy">
+      <span class="eyebrow">Collection Control</span>
+      <h1>Moje kolekcje</h1>
+      <p>Widok startowy jest teraz bardziej jak dashboard aplikacji: szybkie akcje, podsumowanie stanu i osobne sekcje dla kolekcji oraz wishlist.</p>
+      <div class="actions-row">
+        <a class="button" href="{% url 'collections:collection-create' %}">Nowa kolekcja</a>
+        <a class="button secondary" href="{% url 'collections:collection-import' %}">Importuj CSV</a>
+        <a class="button secondary" href="{% url 'collections:import-backlog' %}">Braki z importów</a>
+      </div>
+    </div>
+    <div class="dashboard-actions">
+      <div class="dashboard-action-card">
+        <span class="meta">Szybki skrót</span>
+        <h3>Statystyki kolekcji</h3>
+        <p class="meta">Zobacz completion, podział po seriach i łączną liczbę wariantów.</p>
+        <a class="button secondary" href="{% url 'collections:stats' %}">Otwórz statystyki</a>
+      </div>
+      <div class="dashboard-action-card">
+        <span class="meta">Porządkowanie danych</span>
+        <h3>Import backlogu</h3>
+        <p class="meta">Sprawdź niepowiązane wpisy po imporcie i domknij brakujące modele.</p>
+        <a class="button secondary" href="{% url 'collections:import-backlog' %}">Zobacz backlog</a>
+      </div>
+    </div>
+  </div>
   <div class="grid" style="margin-top: 18px;">
     <div class="card"><strong>{{ stats.collection_count }}</strong><div class="meta">kolekcje</div></div>
     <div class="card"><strong>{{ stats.wishlist_count }}</strong><div class="meta">wishlisty</div></div>
@@ -20,16 +78,24 @@
 </section>
 
 <section class="panel" style="margin-bottom:18px;">
-  <h2>Kolekcje</h2>
-  <section class="list">
+  <div class="section-head">
+    <div>
+      <h2>Kolekcje</h2>
+      <p class="meta">Twoje główne zestawy modeli i serie do kompletowania.</p>
+    </div>
+  </div>
+  <section class="dashboard-list">
   {% for collection in owned_collections %}
-    <div class="list-item">
-      <h3><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>
-      <p class="meta">{{ collection.get_visibility_display }} | {{ collection.items.count }} modeli</p>
+    <div class="list-item collection-card">
+      <div class="collection-card-top">
+        <h3><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>
+        <span class="badge">{{ collection.get_visibility_display }}</span>
+      </div>
+      <p class="meta">{{ collection.items.count }} modeli</p>
       {% if collection.description %}<p>{{ collection.description }}</p>{% endif %}
       <div class="danger-zone">
-        <a href="{% url 'collections:collection-update' collection.pk %}">Edytuj</a>
-        <a href="{% url 'collections:collection-delete' collection.pk %}">Usuń</a>
+        <a class="button secondary" href="{% url 'collections:collection-update' collection.pk %}">Edytuj</a>
+        <a class="button secondary" href="{% url 'collections:collection-delete' collection.pk %}">Usuń</a>
       </div>
     </div>
   {% empty %}
@@ -39,16 +105,24 @@
 </section>
 
 <section class="panel">
-  <h2>Wishlisty</h2>
-  <section class="list">
+  <div class="section-head">
+    <div>
+      <h2>Wishlisty</h2>
+      <p class="meta">Osobne listy polowań, braków i planowanych zakupów.</p>
+    </div>
+  </div>
+  <section class="dashboard-list">
   {% for collection in wishlist_collections %}
-    <div class="list-item">
-      <h3><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>
-      <p class="meta">{{ collection.get_visibility_display }} | {{ collection.items.count }} modeli</p>
+    <div class="list-item collection-card">
+      <div class="collection-card-top">
+        <h3><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>
+        <span class="badge">{{ collection.get_visibility_display }}</span>
+      </div>
+      <p class="meta">{{ collection.items.count }} modeli</p>
       {% if collection.description %}<p>{{ collection.description }}</p>{% endif %}
       <div class="danger-zone">
-        <a href="{% url 'collections:collection-update' collection.pk %}">Edytuj</a>
-        <a href="{% url 'collections:collection-delete' collection.pk %}">Usuń</a>
+        <a class="button secondary" href="{% url 'collections:collection-update' collection.pk %}">Edytuj</a>
+        <a class="button secondary" href="{% url 'collections:collection-delete' collection.pk %}">Usuń</a>
       </div>
     </div>
   {% empty %}

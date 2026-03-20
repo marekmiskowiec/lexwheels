@@ -1,58 +1,100 @@
 {% extends "base.html" %}
 {% block title %}Katalog modeli | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .catalog-hero-grid {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, .9fr);
+    align-items: start;
+  }
+  .catalog-filter-card,
+  .catalog-batch-card {
+    margin-top: 18px;
+    padding: 18px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.035);
+  }
+  .catalog-results-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .catalog-card .meta strong {
+    color: var(--ink);
+  }
+  @media (max-width: 900px) {
+    .catalog-hero-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
 {% block content %}
 <section class="panel hero">
-  <h1>Katalog modeli Hot Wheels</h1>
-  {% if user.is_authenticated %}
-    <div class="list-item" style="margin-bottom:18px;">
-      <p style="margin:0 0 8px;">
-        <strong>Widok katalogu:</strong>
-        {% if selected_scope == 'profile' %}
-          <span class="badge">Mój zakres</span>
-        {% else %}
-          <span class="badge">Wszystko</span>
-        {% endif %}
-      </p>
-      {% if selected_scope == 'profile' %}
-        <p class="meta" style="margin:0 0 10px;">Katalog jest ograniczony do Twoich preferencji kolekcjonowania.</p>
-        {% if scope_summary %}
-          <p class="meta" style="margin:0 0 10px;">{{ scope_summary|join:' | ' }}</p>
-        {% endif %}
-        <a class="button secondary" href="{% url 'catalog:model-list' %}?scope=all">Pokaż cały katalog</a>
-      {% else %}
-        {% if user.catalog_scope_enabled %}
-          <p class="meta" style="margin:0 0 10px;">Masz zapisany własny zakres kolekcjonowania. Możesz przełączyć katalog na ten widok.</p>
-          <a class="button secondary" href="{% url 'catalog:model-list' %}?scope=profile">Pokaż mój zakres</a>
-        {% else %}
-          <p class="meta" style="margin:0 0 10px;">Skonfiguruj swój zakres kolekcjonowania, aby ukrywać niechciane marki i kategorie.</p>
-        {% endif %}
+  <div class="catalog-hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow">Catalog View</span>
+      <h1>Katalog modeli Hot Wheels</h1>
+      <p>Przebudowany katalog ma bardziej produktowy układ: szybkie statystyki, wyraźne filtry i karty modeli, które nie wyglądają już jak tabela przebrana za HTML.</p>
+      {% if user.is_authenticated %}
+        <div class="catalog-filter-card">
+          <p style="margin:0 0 8px;">
+            <strong>Widok katalogu:</strong>
+            {% if selected_scope == 'profile' %}
+              <span class="badge">Mój zakres</span>
+            {% else %}
+              <span class="badge">Wszystko</span>
+            {% endif %}
+          </p>
+          {% if selected_scope == 'profile' %}
+            <p class="meta" style="margin:0 0 10px;">Katalog jest ograniczony do Twoich preferencji kolekcjonowania.</p>
+            {% if scope_summary %}
+              <p class="meta" style="margin:0 0 10px;">{{ scope_summary|join:' | ' }}</p>
+            {% endif %}
+            <div class="actions-row">
+              <a class="button secondary" href="{% url 'catalog:model-list' %}?scope=all">Pokaż cały katalog</a>
+              <a class="button secondary" href="{% url 'accounts:profile-edit' %}">Ustaw zakres</a>
+            </div>
+          {% else %}
+            {% if user.catalog_scope_enabled %}
+              <p class="meta" style="margin:0 0 10px;">Masz zapisany własny zakres kolekcjonowania. Możesz przełączyć katalog na ten widok.</p>
+              <div class="actions-row">
+                <a class="button secondary" href="{% url 'catalog:model-list' %}?scope=profile">Pokaż mój zakres</a>
+                <a class="button secondary" href="{% url 'accounts:profile-edit' %}">Ustaw zakres</a>
+              </div>
+            {% else %}
+              <p class="meta" style="margin:0 0 10px;">Skonfiguruj swój zakres kolekcjonowania, aby ukrywać niechciane marki i kategorie.</p>
+              <a class="button secondary" href="{% url 'accounts:profile-edit' %}">Ustaw zakres</a>
+            {% endif %}
+          {% endif %}
+        </div>
       {% endif %}
-      <a class="button secondary" href="{% url 'accounts:profile-edit' %}" style="margin-left:8px;">Ustaw zakres</a>
     </div>
-  {% endif %}
-  <div class="stats-strip" style="margin-bottom:18px;">
-    <article class="stat-card">
-      <span class="stat-label">Modele w bazie</span>
-      <strong class="stat-value">{{ catalog_stats.total_models }}</strong>
-    </article>
-    <article class="stat-card">
-      <span class="stat-label">Wyniki po filtrach</span>
-      <strong class="stat-value">{{ catalog_stats.filtered_models }}</strong>
-    </article>
-    <article class="stat-card">
-      <span class="stat-label">Marki</span>
-      <strong class="stat-value">{{ catalog_stats.brand_count }}</strong>
-    </article>
-    <article class="stat-card">
-      <span class="stat-label">Roczniki</span>
-      <strong class="stat-value">{{ catalog_stats.year_count }}</strong>
-    </article>
-    <article class="stat-card">
-      <span class="stat-label">Kategorie</span>
-      <strong class="stat-value">{{ catalog_stats.category_count }}</strong>
-    </article>
+    <div class="stats-strip">
+      <article class="stat-card">
+        <span class="stat-label">Modele w bazie</span>
+        <strong class="stat-value">{{ catalog_stats.total_models }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Wyniki po filtrach</span>
+        <strong class="stat-value">{{ catalog_stats.filtered_models }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Marki</span>
+        <strong class="stat-value">{{ catalog_stats.brand_count }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Roczniki</span>
+        <strong class="stat-value">{{ catalog_stats.year_count }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Kategorie</span>
+        <strong class="stat-value">{{ catalog_stats.category_count }}</strong>
+      </article>
+    </div>
   </div>
-  <form method="get" class="filters">
+  <form method="get" class="filters toolbar">
     <input type="hidden" name="scope" value="{{ selected_scope }}">
     <div style="flex: 2 1 300px;">
       <label for="q">Szukaj</label>
@@ -66,14 +108,16 @@
     <div style="flex: 1 1 220px;"><label for="exclusive_store">Exclusive</label><select id="exclusive_store" name="exclusive_store"><option value="">Wszystkie exclusivy</option>{% for exclusive_store in exclusive_store_options %}<option value="{{ exclusive_store }}" {% if selected_exclusive_store == exclusive_store %}selected{% endif %}>{{ exclusive_store }}</option>{% endfor %}</select></div>
     <div style="flex: 1 1 220px;"><label for="special_tag">Tag specjalny</label><select id="special_tag" name="special_tag"><option value="">Wszystkie tagi</option>{% for special_tag in special_tag_options %}<option value="{{ special_tag }}" {% if selected_special_tag == special_tag %}selected{% endif %}>{{ special_tag }}</option>{% endfor %}</select></div>
     <div style="flex: 1 1 220px;"><label for="sort">Sortowanie</label><select id="sort" name="sort"><option value="number" {% if selected_sort == 'number' %}selected{% endif %}>Po numerze</option><option value="year" {% if selected_sort == 'year' %}selected{% endif %}>Po roku</option><option value="category" {% if selected_sort == 'category' %}selected{% endif %}>Po kategorii</option><option value="exclusive" {% if selected_sort == 'exclusive' %}selected{% endif %}>Po exclusive</option><option value="name" {% if selected_sort == 'name' %}selected{% endif %}>Po nazwie</option></select></div>
-    <div><button type="submit">Filtruj</button></div>
-    <div><button type="submit" name="save_filters" value="1" class="secondary">Zapisz filtry</button></div>
-    {% if saved_filters %}<div><a class="button secondary" href="{% url 'catalog:model-list' %}?apply_saved_filters=1">Przywróć zapisane</a></div><div><a class="button secondary" href="{% url 'catalog:model-list' %}?clear_saved_filters=1">Usuń zapisane</a></div>{% endif %}
-    {% if query or selected_brand or selected_series or selected_year or selected_category or selected_exclusive_store or selected_special_tag or selected_sort != 'number' %}<div><a class="button secondary" href="{% url 'catalog:model-list' %}?scope={{ selected_scope }}">Usuń wszystkie filtry</a></div>{% endif %}
+    <div class="catalog-results-toolbar">
+      <button type="submit">Filtruj</button>
+      <button type="submit" name="save_filters" value="1" class="secondary">Zapisz filtry</button>
+      {% if saved_filters %}<a class="button secondary" href="{% url 'catalog:model-list' %}?apply_saved_filters=1">Przywróć zapisane</a><a class="button secondary" href="{% url 'catalog:model-list' %}?clear_saved_filters=1">Usuń zapisane</a>{% endif %}
+      {% if query or selected_brand or selected_series or selected_year or selected_category or selected_exclusive_store or selected_special_tag or selected_sort != 'number' %}<a class="button secondary" href="{% url 'catalog:model-list' %}?scope={{ selected_scope }}">Usuń wszystkie filtry</a>{% endif %}
+    </div>
   </form>
   {% if user.is_authenticated %}
     {% if batch_add_form.fields.collection.queryset %}
-      <form method="post" action="{% url 'collections:batch-add' %}" id="batch-add-form" style="margin-top:18px;">
+      <form method="post" action="{% url 'collections:batch-add' %}" id="batch-add-form" class="catalog-batch-card">
         {% csrf_token %}
         {{ batch_add_form.next }}
         <div class="filters">
