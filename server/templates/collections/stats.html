@@ -1,10 +1,115 @@
 {% extends "base.html" %}
 {% block title %}Statystyki | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .stats-hero-copy {
+    max-width: 58ch;
+  }
+  .stats-toolbar {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.04);
+  }
+  .stats-overview-grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: minmax(280px, .9fr) minmax(0, 1.1fr);
+    align-items: stretch;
+  }
+  .completion-card {
+    display: grid;
+    place-items: center;
+    min-height: 260px;
+  }
+  .completion-ring {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent) 0 {{ completion.percent }}%, rgba(255,255,255,0.1) {{ completion.percent }}% 100%);
+    display: grid;
+    place-items: center;
+  }
+  .completion-ring::before {
+    content: "";
+    position: absolute;
+    inset: 14px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, rgba(10, 21, 38, 0.96) 0%, rgba(14, 27, 48, 0.98) 100%);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .completion-content {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    text-align: center;
+  }
+  .completion-value {
+    font-size: 3rem;
+    line-height: 1;
+    color: #fff;
+  }
+  .stats-section-grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: 1fr 1fr;
+  }
+  .metric-list {
+    display: grid;
+    gap: 12px;
+  }
+  .metric-card {
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.045);
+  }
+  .metric-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .metric-title {
+    color: #f6f9ff;
+    font-size: 1.04rem;
+  }
+  .metric-bar {
+    height: 12px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .metric-bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+  }
+  .metric-bar.year span { background: linear-gradient(90deg, #ff6b2c 0%, #ff9d56 100%); }
+  .metric-bar.category span { background: linear-gradient(90deg, #48c78e 0%, #78e0ae 100%); }
+  .metric-bar.series span { background: linear-gradient(90deg, #4d9dff 0%, #79bcff 100%); }
+
+  @media (max-width: 900px) {
+    .stats-overview-grid,
+    .stats-section-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
 {% block content %}
 <section class="panel hero">
-  <h1>Moje statystyki</h1>
-  <p class="meta">Widok skupiony na kompletowaniu kolekcji: postęp ogólny, roczniki, serie i kategorie.</p>
-  <form method="get" class="filters" style="margin-top:18px;">
+  <div class="stats-hero-copy">
+    <span class="eyebrow">Collection Stats</span>
+    <h1>Moje statystyki</h1>
+    <p class="meta">Widok skupiony na kompletowaniu kolekcji: postęp ogólny, roczniki, serie i kategorie.</p>
+  </div>
+  <form method="get" class="filters stats-toolbar">
     <div style="flex: 1 1 220px;">
       <label for="scope">Zakres</label>
       <select id="scope" name="scope">
@@ -30,12 +135,17 @@
 </section>
 
 <section class="panel" style="margin-bottom:18px;">
-  <h2>Completion Overview</h2>
-  <div class="grid" style="align-items:stretch;">
-    <article class="card" style="display:grid; place-items:center; min-height:260px; background:linear-gradient(180deg, #fffaf2 0%, #f6ead6 100%);">
-      <div style="position:relative; width:220px; height:220px; border-radius:50%; background:conic-gradient(var(--accent) 0 {{ completion.percent }}%, #eadcc3 {{ completion.percent }}% 100%); display:grid; place-items:center;">
-        <div style="width:150px; height:150px; border-radius:50%; background:var(--panel); display:grid; place-items:center; text-align:center;">
-          <strong style="font-size:3rem; line-height:1; color:var(--accent-dark);">{{ completion.percent }}%</strong>
+  <div class="section-head">
+    <div>
+      <h2>Przegląd completion</h2>
+      <p class="meta">Ogólny stan kompletowania oraz liczby bazowe dla aktualnego zakresu.</p>
+    </div>
+  </div>
+  <div class="stats-overview-grid">
+    <article class="card completion-card">
+      <div class="completion-ring">
+        <div class="completion-content">
+          <strong class="completion-value">{{ completion.percent }}%</strong>
           <span class="meta">skompletowane</span>
         </div>
       </div>
@@ -53,20 +163,25 @@
   </div>
 </section>
 
-<section class="grid" style="margin-bottom:18px;">
+<section class="stats-section-grid" style="margin-bottom:18px;">
   <article class="panel">
-    <h2>By Year</h2>
-    <div class="list">
+    <div class="section-head">
+      <div>
+        <h2>Po rocznikach</h2>
+        <p class="meta">Które lata masz najlepiej domknięte.</p>
+      </div>
+    </div>
+    <div class="metric-list">
       {% for row in completion_by_year %}
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; gap:12px; align-items:baseline; margin-bottom:8px;">
-            <strong style="font-size:1.2rem; color:var(--accent-dark);">{{ row.label }}</strong>
+        <div class="metric-card">
+          <div class="metric-head">
+            <strong class="metric-title">{{ row.label }}</strong>
             <span class="badge">{{ row.percent }}%</span>
           </div>
-          <div style="height:12px; background:#f0e4cf; border-radius:999px; overflow:hidden; margin-bottom:10px;">
-            <div style="width:{{ row.percent }}%; height:100%; background:linear-gradient(90deg, var(--accent) 0%, #d68c4f 100%);"></div>
+          <div class="metric-bar year">
+            <span style="width:{{ row.percent }}%;"></span>
           </div>
-          <p class="meta">Owned: {{ row.owned }} / {{ row.total }}</p>
+          <p class="meta">Posiadane: {{ row.owned }} / {{ row.total }}</p>
         </div>
       {% empty %}
         <p class="meta">Brak danych rocznikowych.</p>
@@ -75,18 +190,23 @@
   </article>
 
   <article class="panel">
-    <h2>By Category</h2>
-    <div class="list">
+    <div class="section-head">
+      <div>
+        <h2>Po kategoriach</h2>
+        <p class="meta">Porównanie completion między kategoriami.</p>
+      </div>
+    </div>
+    <div class="metric-list">
       {% for row in completion_by_category %}
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; gap:12px; align-items:baseline; margin-bottom:8px;">
-            <strong>{{ row.label }}</strong>
+        <div class="metric-card">
+          <div class="metric-head">
+            <strong class="metric-title">{{ row.label }}</strong>
             <span class="badge">{{ row.percent }}%</span>
           </div>
-          <div style="height:12px; background:#f0e4cf; border-radius:999px; overflow:hidden; margin-bottom:10px;">
-            <div style="width:{{ row.percent }}%; height:100%; background:#5b8c5a;"></div>
+          <div class="metric-bar category">
+            <span style="width:{{ row.percent }}%;"></span>
           </div>
-          <p class="meta">Owned: {{ row.owned }} / {{ row.total }}</p>
+          <p class="meta">Posiadane: {{ row.owned }} / {{ row.total }}</p>
         </div>
       {% empty %}
         <p class="meta">Brak danych kategorii.</p>
@@ -96,18 +216,23 @@
 </section>
 
 <section class="panel">
-  <h2>By Series</h2>
-  <div class="list">
+  <div class="section-head">
+    <div>
+      <h2>Po seriach</h2>
+      <p class="meta">Serie z największym postępem i liczbą braków.</p>
+    </div>
+  </div>
+  <div class="metric-list">
     {% for row in completion_by_series %}
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:8px;">
-          <strong>{{ row.label }}</strong>
+      <div class="metric-card">
+        <div class="metric-head">
+          <strong class="metric-title">{{ row.label }}</strong>
           <span class="badge">{{ row.percent }}%</span>
         </div>
-        <div style="height:12px; background:#f0e4cf; border-radius:999px; overflow:hidden; margin-bottom:10px;">
-          <div style="width:{{ row.percent }}%; height:100%; background:#4d7298;"></div>
+        <div class="metric-bar series">
+          <span style="width:{{ row.percent }}%;"></span>
         </div>
-        <p class="meta">Owned: {{ row.owned }} / {{ row.total }} | Brakuje: {{ row.missing }}</p>
+        <p class="meta">Posiadane: {{ row.owned }} / {{ row.total }} | Brakuje: {{ row.missing }}</p>
       </div>
     {% empty %}
       <p class="meta">Nie masz jeszcze żadnego postępu w seriach.</p>
