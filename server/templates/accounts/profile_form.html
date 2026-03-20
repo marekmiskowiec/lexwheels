@@ -3,6 +3,12 @@
 {% block title %}Edytuj profil | LexWheels{% endblock %}
 {% block extra_styles %}
 <style>
+  .profile-form {
+    max-width: 760px;
+  }
+  .profile-bio-input {
+    min-height: 132px;
+  }
   .field-meta-row {
     display: flex;
     justify-content: space-between;
@@ -16,7 +22,7 @@
 </style>
 {% endblock %}
 {% block content %}
-<section class="panel" style="max-width: 720px;">
+<section class="panel profile-form">
   <h1>Edytuj profil</h1>
   <form method="post" class="list">
     {% csrf_token %}
@@ -59,7 +65,7 @@
           {{ field }}
           <span class="field-meta-row">
             {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% else %}<span></span>{% endif %}
-            <small class="meta char-counter" data-bio-counter>0/100</small>
+            <small class="meta char-counter" data-bio-counter>0/200</small>
           </span>
           {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
         </p>
@@ -84,7 +90,7 @@
       return;
     }
 
-    const maxLength = Number(bioInput.dataset.maxlength || bioInput.maxLength || 100);
+    const maxLength = Number(bioInput.dataset.maxlength || bioInput.maxLength || 200);
     const updateCounter = () => {
       bioCounter.textContent = `${bioInput.value.length}/${maxLength}`;
     };

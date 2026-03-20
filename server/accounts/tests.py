@@ -160,13 +160,13 @@ class AccountTests(TestCase):
         self.assertEqual(user.display_name, 'NowyLogin')
         self.assertEqual(user.login, 'NowyLogin')
 
-    def test_profile_form_rejects_bio_longer_than_100_characters(self):
+    def test_profile_form_rejects_bio_longer_than_200_characters(self):
         user = User.objects.create_user(email='bio@example.com', password='ComplexPass123')
 
         form = ProfileForm(
             data={
                 'display_name': 'BioUser',
-                'bio': 'a' * 101,
+                'bio': 'a' * 201,
                 'youtube_url': '',
                 'tiktok_url': '',
                 'instagram_url': '',

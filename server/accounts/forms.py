@@ -68,8 +68,8 @@ class ProfileForm(LoginNormalizationMixin, forms.ModelForm):
     )
     bio = forms.CharField(
         required=False,
-        max_length=100,
-        widget=forms.Textarea(attrs={'maxlength': 100}),
+        max_length=200,
+        widget=forms.Textarea(attrs={'maxlength': 200, 'rows': 5}),
     )
     avatar_key = forms.ChoiceField(
         choices=AVATAR_CHOICES,
@@ -124,10 +124,11 @@ class ProfileForm(LoginNormalizationMixin, forms.ModelForm):
 
         self.fields['catalog_scope_enabled'].label = 'Domyślnie używaj mojego zakresu w katalogu'
         self.fields['bio'].label = 'Bio'
-        self.fields['bio'].help_text = 'Maksymalnie 100 znaków.'
+        self.fields['bio'].help_text = 'Maksymalnie 200 znaków.'
         self.fields['bio'].widget.attrs.update({
             'data-bio-input': 'true',
-            'data-maxlength': '100',
+            'data-maxlength': '200',
+            'class': 'profile-bio-input',
         })
         self.fields['youtube_url'].label = 'YouTube'
         self.fields['tiktok_url'].label = 'TikTok'

@@ -68,7 +68,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     login = models.CharField(max_length=80, unique=True)
     display_name = models.CharField(max_length=80, blank=True)
-    bio = models.CharField(max_length=100, blank=True)
+    bio = models.CharField(max_length=200, blank=True)
     youtube_url = models.URLField(blank=True)
     tiktok_url = models.URLField(blank=True)
     instagram_url = models.URLField(blank=True)
