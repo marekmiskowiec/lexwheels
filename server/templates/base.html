@@ -102,6 +102,80 @@
       text-transform: uppercase;
     }
     .nav-auth form { margin: 0; }
+    .nav-user-menu {
+      position: relative;
+    }
+    .nav-user-summary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      color: var(--ink);
+      cursor: pointer;
+      list-style: none;
+    }
+    .nav-user-summary::-webkit-details-marker { display: none; }
+    .nav-user-summary::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid var(--muted);
+      border-bottom: 2px solid var(--muted);
+      transform: rotate(45deg) translateY(-1px);
+      transition: transform .18s ease;
+    }
+    .nav-user-menu[open] .nav-user-summary::after {
+      transform: rotate(-135deg) translateY(-1px);
+    }
+    .nav-user-menu[open] .nav-user-summary {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--line-strong);
+    }
+    .nav-user-panel {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 220px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(8, 17, 31, 0.96);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 8px;
+    }
+    .nav-user-panel .nav-user-action,
+    .nav-user-panel form .nav-user-action {
+      display: flex;
+      width: 100%;
+      justify-content: flex-start;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      min-height: 44px;
+      font-size: .96rem;
+      font-weight: 600;
+      color: var(--ink);
+      background: rgba(255,255,255,0.04);
+      box-shadow: none;
+      cursor: pointer;
+      text-align: left;
+      text-decoration: none;
+    }
+    .nav-user-panel .nav-user-action:hover,
+    .nav-user-panel form .nav-user-action:hover {
+      transform: none;
+      box-shadow: none;
+      color: var(--ink);
+      background: rgba(255,255,255,0.08);
+      border-color: var(--line-strong);
+    }
     .panel {
       border: 1px solid var(--line);
       border-radius: var(--radius-xl);
@@ -326,6 +400,14 @@
       .nav-links, .nav-auth { gap: 10px; }
       .nav-links a, .nav-auth a { width: 100%; justify-content: flex-start; }
       .brand { width: 100%; justify-content: center; margin-right: 0; }
+      .nav-user-menu,
+      .nav-user-summary,
+      .nav-user-panel { width: 100%; }
+      .nav-user-panel {
+        position: static;
+        min-width: 0;
+        margin-top: 8px;
+      }
       .panel { padding: 16px; border-radius: 20px; }
       .grid { grid-template-columns: 1fr; }
       .filters { flex-direction: column; align-items: stretch; }
@@ -354,13 +436,20 @@
         <a href="{% url 'accounts:collector-list' %}">Kolekcjonerzy</a>
         {% if user.is_authenticated %}<a href="{% url 'collections:dashboard' %}">Moje kolekcje</a>{% endif %}
         {% if user.is_authenticated %}<a href="{% url 'collections:stats' %}">Statystyki</a>{% endif %}
-        {% if user.is_authenticated %}<a href="{% url 'accounts:profile' %}">Profil</a>{% endif %}
         <a href="/admin/">Admin</a>
       </div>
       <div class="nav-auth">
         {% if user.is_authenticated %}
-          <span class="meta">{{ user.login }}</span>
-          <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="secondary" type="submit">Wyloguj</button></form>
+          <details class="nav-user-menu">
+            <summary class="nav-user-summary">{{ user.login }}</summary>
+            <div class="nav-user-panel">
+              <a class="nav-user-action" href="{% url 'accounts:profile' %}">Profil</a>
+              <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button class="nav-user-action" type="submit">Wyloguj</button>
+              </form>
+            </div>
+          </details>
         {% else %}
           <a href="{% url 'login' %}">Logowanie</a>
           <a href="{% url 'accounts:register' %}">Rejestracja</a>
