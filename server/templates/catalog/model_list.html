@@ -37,6 +37,9 @@
       <span class="eyebrow">Widok katalogu</span>
       <h1>Katalog modeli Hot Wheels</h1>
       <p>Przebudowany katalog ma bardziej produktowy układ: szybkie statystyki, wyraźne filtry i karty modeli, które nie wyglądają już jak tabela przebrana za HTML.</p>
+      <div class="actions-row" style="margin-top:0;">
+        <a class="button secondary" href="{% url 'catalog:coverage' %}">Zobacz zakres bazy</a>
+      </div>
       {% if user.is_authenticated %}
         <div class="catalog-filter-card">
           <p style="margin:0 0 8px;">

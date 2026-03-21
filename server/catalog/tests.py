@@ -824,6 +824,77 @@ class CatalogViewTests(TestCase):
         apply_response = self.client.get(reverse('catalog:model-list'), {'apply_saved_filters': '1'})
         self.assertRedirects(apply_response, f"{reverse('catalog:model-list')}?brand=Hot+Wheels&sort=name")
 
+    def test_catalog_coverage_groups_models_by_category_and_series_family(self):
+        HotWheelsModel.objects.create(
+            app_id='premium-1',
+            brand='Hot Wheels',
+            toy='JBL17',
+            number='1/5',
+            model_name='Porsche 935',
+            year=2025,
+            category='Premium',
+            series='Hot Wheels Boulevard - Mix 1',
+            series_number='1/5',
+        )
+        HotWheelsModel.objects.create(
+            app_id='premium-2',
+            brand='Hot Wheels',
+            toy='JBL19',
+            number='1/5',
+            model_name='Porsche 911 Carrera RS 2.7',
+            year=2025,
+            category='Premium',
+            series='Hot Wheels Boulevard - Mix 2',
+            series_number='1/5',
+        )
+        HotWheelsModel.objects.create(
+            app_id='matchbox-1',
+            brand='Matchbox',
+            toy='MBX01',
+            number='1/5',
+            model_name='MBX Road Car',
+            year=2024,
+            category='Collectors',
+            series='MBX Road Trip',
+            series_number='1/5',
+        )
+
+        response = self.client.get(reverse('catalog:coverage'))
+
+        self.assertContains(response, 'Co jest już w bazie')
+        self.assertContains(response, 'Mainline')
+        self.assertContains(response, 'Hot Wheels Boulevard')
+        self.assertContains(response, 'MBX Road Trip')
+        self.assertContains(response, '2025')
+        self.assertContains(response, '2024')
+        self.assertContains(response, f'{reverse("catalog:model-list")}?scope=all&amp;year=2025&amp;category=Premium&amp;q=Hot+Wheels+Boulevard')
+        self.assertContains(response, f'{reverse("catalog:model-list")}?scope=all&amp;year=2022&amp;category=Mainline')
+
+    def test_catalog_coverage_can_use_profile_scope(self):
+        user = User.objects.create_user(email='scope@example.com', password='ComplexPass123')
+        user.catalog_scope_enabled = True
+        user.catalog_scope_categories = ['Mainline']
+        user.save(update_fields=['catalog_scope_enabled', 'catalog_scope_categories'])
+
+        HotWheelsModel.objects.create(
+            app_id='premium-1',
+            brand='Hot Wheels',
+            toy='JBL17',
+            number='1/5',
+            model_name='Porsche 935',
+            year=2025,
+            category='Premium',
+            series='Hot Wheels Boulevard - Mix 1',
+            series_number='1/5',
+        )
+
+        self.client.force_login(user)
+        response = self.client.get(reverse('catalog:coverage'), {'scope': 'profile'})
+
+        self.assertContains(response, 'Mój zakres')
+        self.assertContains(response, 'Mainline')
+        self.assertNotContains(response, 'Hot Wheels Boulevard')
+
     def test_model_detail(self):
         response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
         self.assertContains(response, 'HCT05')

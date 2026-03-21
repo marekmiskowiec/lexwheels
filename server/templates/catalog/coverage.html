@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Zakres bazy | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .coverage-hero-grid {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr);
+    align-items: start;
+  }
+  .coverage-brand-block {
+    display: grid;
+    gap: 16px;
+  }
+  .coverage-group-card {
+    display: grid;
+    gap: 14px;
+  }
+  .coverage-year-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  }
+  .coverage-year-link {
+    display: grid;
+    gap: 4px;
+    min-height: 110px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.035);
+    color: var(--ink);
+  }
+  .coverage-year-link:hover {
+    border-color: var(--line-strong);
+    background: rgba(255,255,255,0.06);
+    color: var(--ink);
+  }
+  .coverage-year-link strong {
+    font-size: 1.25rem;
+  }
+  .coverage-year-link span:last-child {
+    color: var(--muted);
+    font-size: .92rem;
+  }
+  @media (max-width: 900px) {
+    .coverage-hero-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<section class="panel hero">
+  <div class="coverage-hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow">Zakres katalogu</span>
+      <h1>Co jest już w bazie</h1>
+      <p>Ta strona pokazuje realny stan katalogu: marki, linie i roczniki, które są już zaimportowane. Każdy rocznik prowadzi od razu do gotowego widoku w katalogu.</p>
+      {% if user.is_authenticated %}
+        <div class="toolbar">
+          <p style="margin:0;">
+            <strong>Widok zakresu:</strong>
+            {% if selected_scope == 'profile' %}
+              <span class="badge">Mój zakres</span>
+            {% else %}
+              <span class="badge">Wszystko</span>
+            {% endif %}
+          </p>
+          {% if selected_scope == 'profile' %}
+            <p class="meta" style="margin:0;">Zakres bazy jest ograniczony do Twoich preferencji katalogu.</p>
+            {% if scope_summary %}
+              <p class="meta" style="margin:0;">{{ scope_summary|join:' | ' }}</p>
+            {% endif %}
+            <div class="actions-row" style="margin-top:0;">
+              <a class="button secondary" href="{% url 'catalog:coverage' %}?scope=all">Pokaż cały zakres</a>
+              <a class="button secondary" href="{% url 'accounts:catalog-scope' %}">Ustaw zakres</a>
+            </div>
+          {% else %}
+            {% if user.catalog_scope_enabled %}
+              <p class="meta" style="margin:0;">Masz zapisany własny zakres kolekcjonowania. Możesz podejrzeć tylko to, co mieści się w Twoich preferencjach.</p>
+              <div class="actions-row" style="margin-top:0;">
+                <a class="button secondary" href="{% url 'catalog:coverage' %}?scope=profile">Pokaż mój zakres</a>
+                <a class="button secondary" href="{% url 'accounts:catalog-scope' %}">Ustaw zakres</a>
+              </div>
+            {% else %}
+              <p class="meta" style="margin:0;">Jeśli chcesz, możesz później ograniczyć katalog i tę stronę do własnych preferencji.</p>
+            {% endif %}
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+    <div class="stats-strip">
+      <article class="stat-card">
+        <span class="stat-label">Modele w zestawieniu</span>
+        <strong class="stat-value">{{ coverage_stats.model_count }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Marki</span>
+        <strong class="stat-value">{{ coverage_stats.brand_count }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Linie i serie</span>
+        <strong class="stat-value">{{ coverage_stats.group_count }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Roczniki</span>
+        <strong class="stat-value">{{ coverage_stats.year_count }}</strong>
+      </article>
+    </div>
+  </div>
+</section>
+
+{% if coverage_groups %}
+  {% for brand_group in coverage_groups %}
+    <section class="panel coverage-brand-block">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">{{ brand_group.brand }}</span>
+          <h2>{{ brand_group.brand }}</h2>
+          <p class="meta">{{ brand_group.group_count }} linii lub serii · {{ brand_group.model_total }} modeli</p>
+        </div>
+      </div>
+      <div class="grid">
+        {% for item in brand_group.items %}
+          <article class="card coverage-group-card">
+            <div>
+              <h3>{{ item.name }}</h3>
+              <p class="meta">Kategoria: {{ item.category }} · {{ item.group_count }} modeli</p>
+            </div>
+            <div class="coverage-year-grid">
+              {% for year_row in item.year_rows %}
+                <a class="coverage-year-link" href="{{ year_row.url }}">
+                  <strong>{% if year_row.year %}{{ year_row.year }}{% else %}Bez roku{% endif %}</strong>
+                  <span class="badge">{{ year_row.count }} modeli</span>
+                  <span>Otwórz ten zakres w katalogu</span>
+                </a>
+              {% endfor %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+{% else %}
+  <section class="panel">
+    <h2>Brak danych w tym zakresie</h2>
+    <p class="meta">Aktualnie baza nie zawiera jeszcze modeli dla wybranego widoku.</p>
+  </section>
+{% endif %}
+{% endblock %}

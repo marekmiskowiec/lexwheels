@@ -1,7 +1,8 @@
 from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import redirect
-from django.views.generic import DetailView, ListView
+from django.urls import reverse
+from django.views.generic import DetailView, ListView, TemplateView
 import shlex
 from urllib.parse import urlencode
 
@@ -15,7 +16,24 @@ CATALOG_SCOPE_PROFILE = 'profile'
 CATALOG_SCOPE_ALL = 'all'
 
 
-class ModelListView(ListView):
+class CatalogScopeMixin:
+    def get_scope_mode(self) -> str:
+        requested_scope = self.request.GET.get('scope', '').strip().lower()
+        if requested_scope in {CATALOG_SCOPE_ALL, CATALOG_SCOPE_PROFILE}:
+            return requested_scope
+        if self.request.user.is_authenticated and self.request.user.catalog_scope_enabled:
+            return CATALOG_SCOPE_PROFILE
+        return CATALOG_SCOPE_ALL
+
+    def apply_profile_scope(self, queryset):
+        if self.get_scope_mode() != CATALOG_SCOPE_PROFILE:
+            return queryset
+        if not self.request.user.is_authenticated:
+            return queryset
+        return self.request.user.apply_catalog_scope(queryset)
+
+
+class ModelListView(CatalogScopeMixin, ListView):
     model = HotWheelsModel
     template_name = 'catalog/model_list.html'
     context_object_name = 'models'
@@ -50,21 +68,6 @@ class ModelListView(ListView):
             return redirect(base_url)
 
         return super().get(request, *args, **kwargs)
-
-    def get_scope_mode(self) -> str:
-        requested_scope = self.request.GET.get('scope', '').strip().lower()
-        if requested_scope in {CATALOG_SCOPE_ALL, CATALOG_SCOPE_PROFILE}:
-            return requested_scope
-        if self.request.user.is_authenticated and self.request.user.catalog_scope_enabled:
-            return CATALOG_SCOPE_PROFILE
-        return CATALOG_SCOPE_ALL
-
-    def apply_profile_scope(self, queryset):
-        if self.get_scope_mode() != CATALOG_SCOPE_PROFILE:
-            return queryset
-        if not self.request.user.is_authenticated:
-            return queryset
-        return self.request.user.apply_catalog_scope(queryset)
 
     def get_queryset(self):
         queryset = HotWheelsModel.objects.all()
@@ -235,3 +238,112 @@ class ModelDetailView(DetailView):
     model = HotWheelsModel
     template_name = 'catalog/model_detail.html'
     context_object_name = 'model_obj'
+
+
+class CatalogCoverageView(CatalogScopeMixin, TemplateView):
+    template_name = 'catalog/coverage.html'
+
+    @staticmethod
+    def normalize_group_name(category: str, series: str) -> tuple[str, bool]:
+        category = (category or '').strip()
+        series = (series or '').strip()
+
+        if category == 'Mainline':
+            return category, False
+        if series and ' - Mix ' in series:
+            return series.split(' - Mix ', 1)[0], True
+        if series:
+            return series, False
+        return category or 'Bez kategorii', False
+
+    @staticmethod
+    def build_catalog_url(scope_mode: str, category: str, year: int | None, group_name: str, uses_search: bool) -> str:
+        params: dict[str, str | int] = {'scope': scope_mode}
+        if year:
+            params['year'] = year
+        if category:
+            params['category'] = category
+
+        if uses_search:
+            params['q'] = group_name
+        elif category != group_name:
+            params['series'] = group_name
+
+        return f"{reverse('catalog:model-list')}?{urlencode(params)}"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        scope_mode = self.get_scope_mode()
+        queryset = self.apply_profile_scope(HotWheelsModel.objects.all())
+        rows = queryset.values('brand', 'category', 'series', 'year').order_by('brand', 'category', 'series', 'year')
+
+        coverage_map: dict[str, dict[str, dict]] = {}
+        total_years = set()
+
+        for row in rows:
+            brand = (row['brand'] or 'Nieznana marka').strip()
+            category = (row['category'] or 'Bez kategorii').strip()
+            year = row['year']
+            group_name, uses_search = self.normalize_group_name(category, row['series'])
+
+            brand_bucket = coverage_map.setdefault(brand, {})
+            group_bucket = brand_bucket.setdefault(
+                group_name,
+                {
+                    'name': group_name,
+                    'category': category,
+                    'year_rows': {},
+                    'uses_search': uses_search,
+                },
+            )
+            if year not in group_bucket['year_rows']:
+                group_bucket['year_rows'][year] = {
+                    'year': year,
+                    'count': 0,
+                    'url': self.build_catalog_url(scope_mode, category, year, group_name, group_bucket['uses_search']),
+                }
+            group_bucket['year_rows'][year]['count'] += 1
+            if year is not None:
+                total_years.add(year)
+
+        coverage_groups = []
+        for brand, groups in coverage_map.items():
+            items = []
+            model_total = 0
+            for group in sorted(groups.values(), key=lambda item: (item['category'].lower(), item['name'].lower())):
+                year_rows = sorted(
+                    group['year_rows'].values(),
+                    key=lambda item: (item['year'] is None, item['year']),
+                )
+                group_count = sum(row['count'] for row in year_rows)
+                model_total += group_count
+                items.append(
+                    {
+                        'name': group['name'],
+                        'category': group['category'],
+                        'year_rows': year_rows,
+                        'group_count': group_count,
+                    }
+                )
+            coverage_groups.append(
+                {
+                    'brand': brand,
+                    'items': items,
+                    'model_total': model_total,
+                    'group_count': len(items),
+                }
+            )
+
+        coverage_groups.sort(key=lambda item: item['brand'].lower())
+        context['coverage_groups'] = coverage_groups
+        context['coverage_stats'] = {
+            'brand_count': len(coverage_groups),
+            'group_count': sum(group['group_count'] for group in coverage_groups),
+            'year_count': len(total_years),
+            'model_count': queryset.count(),
+        }
+        context['selected_scope'] = scope_mode
+        context['scope_summary'] = self.request.user.catalog_scope_summary if (
+            self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
+        ) else []
+        return context
