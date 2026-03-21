@@ -553,8 +553,8 @@ class CollectionTests(TestCase):
         self.assertRedirects(response, self.private_collection.get_absolute_url())
         item = CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj)
         self.assertEqual(item.quantity, 2)
-        self.assertIn('Imported price: 20 zl', item.notes)
-        self.assertIn('Imported location: Shelf A', item.notes)
+        self.assertIn('Cena z importu: 20 zl', item.notes)
+        self.assertIn('Miejsce z importu: Shelf A', item.notes)
 
     def test_collection_import_preview_records_unmatched_backlog_entry(self):
         self.client.force_login(self.owner)
@@ -733,7 +733,7 @@ class CollectionTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Moje statystyki')
-        self.assertContains(response, 'Przegląd completion')
+        self.assertContains(response, 'Przegląd postępu')
         self.assertContains(response, 'Po rocznikach')
         self.assertContains(response, 'Po seriach')
         self.assertContains(response, 'Posiadane: 1 / 1')
@@ -837,9 +837,9 @@ class CollectionTests(TestCase):
         response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
 
         self.assertContains(response, 'Łącznie: 3 szt.')
-        self.assertContains(response, 'Krótka karta | stan: Mint | ilość: 1')
-        self.assertContains(response, 'Luzak | stan: Good | ilość: 2')
-        self.assertContains(response, 'Cechy: Sealed')
+        self.assertContains(response, 'Krótka karta | stan: Idealny | ilość: 1')
+        self.assertContains(response, 'Luzak | stan: Dobry | ilość: 2')
+        self.assertContains(response, 'Cechy: Zafoliowany')
         self.assertContains(response, '<strong>1</strong><div class="meta">pozycje</div>', html=False)
         self.assertContains(response, '<strong>2</strong><div class="meta">warianty</div>', html=False)
 
@@ -901,8 +901,8 @@ class CollectionTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Luzak | stan: Good | ilość: 2')
-        self.assertNotContains(response, 'Krótka karta | stan: Mint | ilość: 1')
+        self.assertContains(response, 'Luzak | stan: Dobry | ilość: 2')
+        self.assertNotContains(response, 'Krótka karta | stan: Idealny | ilość: 1')
 
     def test_collection_detail_can_filter_by_packaging_attributes(self):
         CollectionItem.objects.create(
@@ -929,9 +929,9 @@ class CollectionTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Krótka karta | stan: Mint | ilość: 1')
-        self.assertContains(response, 'Cechy: Sealed, Protector')
-        self.assertNotContains(response, 'Luzak | stan: Good | ilość: 2')
+        self.assertContains(response, 'Krótka karta | stan: Idealny | ilość: 1')
+        self.assertContains(response, 'Cechy: Zafoliowany, Protektor')
+        self.assertNotContains(response, 'Luzak | stan: Dobry | ilość: 2')
 
     def test_collection_detail_can_filter_by_bent_hook_and_cracked_blister(self):
         CollectionItem.objects.create(
@@ -957,9 +957,9 @@ class CollectionTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Długa karta | stan: Good | ilość: 2')
-        self.assertContains(response, 'Cechy: Cracked blister')
-        self.assertNotContains(response, 'Krótka karta | stan: Mint | ilość: 1')
+        self.assertContains(response, 'Długa karta | stan: Dobry | ilość: 2')
+        self.assertContains(response, 'Cechy: Pęknięty blister')
+        self.assertNotContains(response, 'Krótka karta | stan: Idealny | ilość: 1')
 
     def test_collection_detail_can_filter_for_missing_packaging_attribute(self):
         CollectionItem.objects.create(
@@ -984,8 +984,8 @@ class CollectionTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Luzak | stan: Good | ilość: 2')
-        self.assertNotContains(response, 'Krótka karta | stan: Mint | ilość: 1')
+        self.assertContains(response, 'Luzak | stan: Dobry | ilość: 2')
+        self.assertNotContains(response, 'Krótka karta | stan: Idealny | ilość: 1')
 
     def test_collection_detail_can_filter_by_brand(self):
         second_model = HotWheelsModel.objects.create(

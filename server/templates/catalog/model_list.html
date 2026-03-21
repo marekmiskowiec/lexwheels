@@ -34,7 +34,7 @@
 <section class="panel hero">
   <div class="catalog-hero-grid">
     <div class="hero-copy">
-      <span class="eyebrow">Catalog View</span>
+      <span class="eyebrow">Widok katalogu</span>
       <h1>Katalog modeli Hot Wheels</h1>
       <p>Przebudowany katalog ma bardziej produktowy układ: szybkie statystyki, wyraźne filtry i karty modeli, które nie wyglądają już jak tabela przebrana za HTML.</p>
       {% if user.is_authenticated %}
@@ -173,10 +173,10 @@
           <p class="meta">{{ item.category|default:"-" }}</p>
         </div>
         <p class="meta">{{ item.brand|default:"-" }}</p>
-        <p class="meta">Toy: {{ item.toy }} | No: {{ item.number }}</p>
+        <p class="meta">Toy: {{ item.toy }} | Nr: {{ item.number }}</p>
         <p class="meta">{{ item.series|default:"Bez serii" }}{% if item.series_number %} | {{ item.series_number }}{% endif %}</p>
         {% if item.exclusive_store or item.special_tag %}
-          <p class="meta">{% if item.exclusive_store %}Exclusive: {{ item.exclusive_store }}{% endif %}{% if item.exclusive_store and item.special_tag %} | {% endif %}{% if item.special_tag %}Tag: {{ item.special_tag }}{% endif %}</p>
+          <p class="meta">{% if item.exclusive_store %}Ekskluzywny: {{ item.exclusive_store }}{% endif %}{% if item.exclusive_store and item.special_tag %} | {% endif %}{% if item.special_tag %}Tag: {{ item.special_tag }}{% endif %}</p>
         {% endif %}
       </div>
       <div class="actions-row" style="margin-top:0;">
@@ -218,12 +218,12 @@
                 </div>
                 {% if packaging_value != 'loose' %}
                   <div class="filters" style="margin-top:10px;">
-                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="is_sealed_{{ packaging_value }}" style="width:auto;">Sealed</label>
-                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_soft_corners_{{ packaging_value }}" style="width:auto;">Soft corners</label>
-                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_protector_{{ packaging_value }}" style="width:auto;">Protector</label>
-                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="is_signed_{{ packaging_value }}" style="width:auto;">Signed</label>
-                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_bent_hook_{{ packaging_value }}" style="width:auto;">Bent hook</label>
-                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_cracked_blister_{{ packaging_value }}" style="width:auto;">Cracked blister</label>
+                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="is_sealed_{{ packaging_value }}" style="width:auto;">Zafoliowany</label>
+                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_soft_corners_{{ packaging_value }}" style="width:auto;">Miękkie rogi</label>
+                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_protector_{{ packaging_value }}" style="width:auto;">Protektor</label>
+                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="is_signed_{{ packaging_value }}" style="width:auto;">Podpisany</label>
+                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_bent_hook_{{ packaging_value }}" style="width:auto;">Zagięty haczyk</label>
+                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_cracked_blister_{{ packaging_value }}" style="width:auto;">Pęknięty blister</label>
                   </div>
                 {% endif %}
               </div>

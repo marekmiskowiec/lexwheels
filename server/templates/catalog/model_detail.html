@@ -14,11 +14,11 @@
     <div>
       <h1>{{ model_obj.model_name }}</h1>
       <p><strong>Marka:</strong> {{ model_obj.brand|default:"-" }}</p>
-      <p><span class="badge">Toy {{ model_obj.toy }}</span> <span class="badge">Number {{ model_obj.number }}</span></p>
+      <p><span class="badge">Toy {{ model_obj.toy }}</span> <span class="badge">Nr {{ model_obj.number }}</span></p>
       <p><strong>Rok:</strong> {{ model_obj.year|default:"-" }}</p>
       <p><strong>Kategoria:</strong> {{ model_obj.category|default:"-" }}</p>
       <p><strong>Seria:</strong> {{ model_obj.series|default:"-" }}</p>
-      {% if model_obj.exclusive_store %}<p><strong>Exclusive:</strong> {{ model_obj.exclusive_store }}</p>{% endif %}
+      {% if model_obj.exclusive_store %}<p><strong>Ekskluzywny:</strong> {{ model_obj.exclusive_store }}</p>{% endif %}
       {% if model_obj.special_tag %}<p><strong>Tag specjalny:</strong> {{ model_obj.special_tag }}</p>{% endif %}
       <p><strong>Numer serii:</strong> {{ model_obj.series_number|default:"-" }}</p>
       {% if user.is_authenticated %}

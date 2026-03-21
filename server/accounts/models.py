@@ -3,16 +3,16 @@ from django.db import models
 
 
 AVATAR_CHOICES = (
-    ('flame-red', 'Flame Red'),
-    ('track-orange', 'Track Orange'),
-    ('garage-blue', 'Garage Blue'),
-    ('mint-green', 'Mint Green'),
-    ('sunburst-yellow', 'Sunburst Yellow'),
-    ('midnight-black', 'Midnight Black'),
-    ('chrome-silver', 'Chrome Silver'),
-    ('purple-rush', 'Purple Rush'),
-    ('teal-speed', 'Teal Speed'),
-    ('sand-racer', 'Sand Racer'),
+    ('flame-red', 'Płomienna czerwień'),
+    ('track-orange', 'Torowy pomarańcz'),
+    ('garage-blue', 'Garażowy błękit'),
+    ('mint-green', 'Miętowa zieleń'),
+    ('sunburst-yellow', 'Słoneczny żółty'),
+    ('midnight-black', 'Północna czerń'),
+    ('chrome-silver', 'Chromowane srebro'),
+    ('purple-rush', 'Fioletowy pęd'),
+    ('teal-speed', 'Turkusowa prędkość'),
+    ('sand-racer', 'Pustynny rajd'),
 )
 
 

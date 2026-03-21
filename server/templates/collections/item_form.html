@@ -6,7 +6,7 @@
     <form method="get" class="filters" style="margin-bottom:16px;">
       <div style="flex:1 1 360px;">
         <label for="model-search">Znajdź model</label>
-        <input id="model-search" type="search" name="q" value="{{ model_query }}" placeholder="Nazwa, Toy, Number, marka, seria">
+        <input id="model-search" type="search" name="q" value="{{ model_query }}" placeholder="Nazwa, Toy, numer, marka, seria">
       </div>
       <div><button type="submit">Szukaj modeli</button></div>
       {% if model_query or form.initial.model %}
@@ -16,7 +16,7 @@
     {% if model_query %}
       <p class="meta" style="margin-top:0; margin-bottom:14px;">Znalezione modele: {{ model_results_count }}{% if model_results_count == 100 %}+{% endif %}</p>
     {% else %}
-      <p class="meta" style="margin-top:0; margin-bottom:14px;">Wpisz fragment nazwy, Toy, Number, markę albo serię, aby zawęzić listę modeli.</p>
+      <p class="meta" style="margin-top:0; margin-bottom:14px;">Wpisz fragment nazwy, Toy, numeru, marki albo serii, aby zawęzić listę modeli.</p>
     {% endif %}
   {% endif %}
   <form method="post" class="list">
@@ -49,12 +49,12 @@
             </div>
             {% if section.supports_card_attributes %}
               <div class="filters" style="margin-top:10px;">
-                <label style="display:flex; align-items:center; gap:8px;">{{ section.is_sealed }} <span>Sealed</span></label>
-                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_soft_corners }} <span>Soft corners</span></label>
-                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_protector }} <span>Protector</span></label>
-                <label style="display:flex; align-items:center; gap:8px;">{{ section.is_signed }} <span>Signed</span></label>
-                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_bent_hook }} <span>Bent hook</span></label>
-                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_cracked_blister }} <span>Cracked blister</span></label>
+                <label style="display:flex; align-items:center; gap:8px;">{{ section.is_sealed }} <span>Zafoliowany</span></label>
+                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_soft_corners }} <span>Miękkie rogi</span></label>
+                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_protector }} <span>Protektor</span></label>
+                <label style="display:flex; align-items:center; gap:8px;">{{ section.is_signed }} <span>Podpisany</span></label>
+                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_bent_hook }} <span>Zagięty haczyk</span></label>
+                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_cracked_blister }} <span>Pęknięty blister</span></label>
               </div>
             {% endif %}
           </div>

@@ -140,11 +140,11 @@ def preferred_packaging_for_model(model):
 def build_import_notes(row_data, include_price=True, include_location=True, include_color=False):
     notes = []
     if include_price and row_data.get('price'):
-        notes.append(f"Imported price: {row_data['price']}")
+        notes.append(f"Cena z importu: {row_data['price']}")
     if include_location and row_data.get('location'):
-        notes.append(f"Imported location: {row_data['location']}")
+        notes.append(f"Miejsce z importu: {row_data['location']}")
     if include_color and row_data.get('color'):
-        notes.append(f"Imported color: {row_data['color']}")
+        notes.append(f"Kolor z importu: {row_data['color']}")
     return '\n'.join(notes)
 
 
@@ -220,7 +220,7 @@ def match_import_row(row_data):
         exact_match = exact_match.filter(series_number__iexact=series_number)
     exact_match = exact_match.order_by('year', 'number', 'model_name')
     if exact_match.count() == 1:
-        return {'status': 'matched', 'model': exact_match.first(), 'reason': 'Name + Year + Category + Series'}
+        return {'status': 'matched', 'model': exact_match.first(), 'reason': 'Nazwa + rok + kategoria + seria'}
     if exact_match.count() > 1:
         return {'status': 'ambiguous', 'model': None, 'reason': 'Wiele modeli pasuje dokładnie'}
 
@@ -231,7 +231,7 @@ def match_import_row(row_data):
         fallback_match = fallback_match.filter(series__iexact=series)
     fallback_match = fallback_match.order_by('year', 'number', 'model_name')
     if fallback_match.count() == 1:
-        return {'status': 'matched', 'model': fallback_match.first(), 'reason': 'Name + Year + Series'}
+        return {'status': 'matched', 'model': fallback_match.first(), 'reason': 'Nazwa + rok + seria'}
     if fallback_match.count() > 1:
         return {'status': 'ambiguous', 'model': None, 'reason': 'Kilka modeli pasuje po nazwie i serii'}
 
@@ -240,7 +240,7 @@ def match_import_row(row_data):
         relaxed_match = relaxed_match.filter(year=year)
     relaxed_match = relaxed_match.order_by('year', 'number', 'model_name')
     if relaxed_match.count() == 1:
-        return {'status': 'matched', 'model': relaxed_match.first(), 'reason': 'Name + Year'}
+        return {'status': 'matched', 'model': relaxed_match.first(), 'reason': 'Nazwa + rok'}
     if relaxed_match.count() > 1:
         return {'status': 'ambiguous', 'model': None, 'reason': 'Kilka modeli pasuje po nazwie'}
 
@@ -1063,22 +1063,22 @@ class CollectionExportView(LoginRequiredMixin, View):
             writer = csv.writer(response)
             writer.writerow([
                 'Toy',
-                'Number',
-                'Model Name',
-                'Series',
-                'Series Number',
-                'Quantity',
-                'Condition',
-                'Packaging State',
-                'Sealed',
-                'Soft Corners',
-                'Protector',
-                'Signed',
-                'Bent Hook',
-                'Cracked Blister',
-                'Acquired At',
-                'Is Favorite',
-                'Notes',
+                'Numer',
+                'Nazwa modelu',
+                'Seria',
+                'Numer serii',
+                'Ilość',
+                'Stan',
+                'Opakowanie',
+                'Zafoliowany',
+                'Miękkie rogi',
+                'Protektor',
+                'Podpisany',
+                'Zagięty haczyk',
+                'Pęknięty blister',
+                'Data pozyskania',
+                'Ulubione',
+                'Notatki',
             ])
             for item in items:
                 writer.writerow([

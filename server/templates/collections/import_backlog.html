@@ -3,18 +3,18 @@
 {% block content %}
 <section class="panel hero">
   <h1>Braki z importów</h1>
-  <p class="meta">Tu trafiają modele nierozpoznane podczas importu kolekcji. To jest roboczy backlog tego, czego jeszcze nie ma w bazie LexWheels albo co wymaga lepszego dopasowania.</p>
+  <p class="meta">Tu trafiają modele nierozpoznane podczas importu kolekcji. To jest robocza lista tego, czego jeszcze nie ma w bazie LexWheels albo co wymaga lepszego dopasowania.</p>
   <div class="stats-strip" style="margin-top:18px;">
-    <div class="stat-card"><span class="stat-label">Open</span><strong class="stat-value">{{ backlog_stats.open_count }}</strong></div>
-    <div class="stat-card"><span class="stat-label">Resolved</span><strong class="stat-value">{{ backlog_stats.resolved_count }}</strong></div>
-    <div class="stat-card"><span class="stat-label">Ignored</span><strong class="stat-value">{{ backlog_stats.ignored_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Otwarte</span><strong class="stat-value">{{ backlog_stats.open_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Rozwiązane</span><strong class="stat-value">{{ backlog_stats.resolved_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Zignorowane</span><strong class="stat-value">{{ backlog_stats.ignored_count }}</strong></div>
   </div>
 </section>
 
 <section class="panel">
   <form method="get" class="filters" style="margin-bottom:18px;">
     <div style="flex:1 1 260px;">
-      <label for="status">Status</label>
+      <label for="status">Stan</label>
       <select id="status" name="status">
         <option value="">Wszystkie</option>
         {% for value, label in status_options %}

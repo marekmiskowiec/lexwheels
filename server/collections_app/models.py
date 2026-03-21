@@ -47,9 +47,9 @@ class Collection(models.Model):
 
 class CollectionItem(models.Model):
     CONDITION_CHOICES = (
-        ('mint', 'Mint'),
-        ('good', 'Good'),
-        ('used', 'Used'),
+        ('mint', 'Idealny'),
+        ('good', 'Dobry'),
+        ('used', 'Używany'),
     )
     PACKAGING_CHOICES = (
         ('short_card', 'Krótka karta'),
@@ -104,17 +104,17 @@ class CollectionItem(models.Model):
             return []
         badges = []
         if self.is_sealed:
-            badges.append('Sealed')
+            badges.append('Zafoliowany')
         if self.has_soft_corners:
-            badges.append('Soft corners')
+            badges.append('Miękkie rogi')
         if self.has_protector:
-            badges.append('Protector')
+            badges.append('Protektor')
         if self.is_signed:
-            badges.append('Signed')
+            badges.append('Podpisany')
         if self.has_bent_hook:
-            badges.append('Bent hook')
+            badges.append('Zagięty haczyk')
         if self.has_cracked_blister:
-            badges.append('Cracked blister')
+            badges.append('Pęknięty blister')
         return badges
 
 
@@ -156,9 +156,9 @@ class ImportBacklogEntry(models.Model):
     STATUS_RESOLVED = 'resolved'
     STATUS_IGNORED = 'ignored'
     STATUS_CHOICES = (
-        (STATUS_OPEN, 'Open'),
-        (STATUS_RESOLVED, 'Resolved'),
-        (STATUS_IGNORED, 'Ignored'),
+        (STATUS_OPEN, 'Otwarte'),
+        (STATUS_RESOLVED, 'Rozwiązane'),
+        (STATUS_IGNORED, 'Zignorowane'),
     )
 
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_OPEN)

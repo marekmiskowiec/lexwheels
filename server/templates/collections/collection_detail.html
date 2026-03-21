@@ -82,7 +82,7 @@
     <form method="get" class="filters">
       <div style="flex: 1 1 320px;">
         <label for="q">Szukaj w kolekcji</label>
-        <input id="q" type="search" name="q" value="{{ query }}" placeholder="Nazwa modelu, Toy, Number, seria">
+        <input id="q" type="search" name="q" value="{{ query }}" placeholder="Nazwa modelu, Toy, numer, seria">
       </div>
       <div style="flex: 1 1 220px;">
         <label for="brand">Marka</label>
@@ -112,7 +112,7 @@
         </select>
       </div>
       <div style="flex: 1 1 180px;">
-        <label for="sealed">Sealed</label>
+        <label for="sealed">Zafoliowany</label>
         <select id="sealed" name="sealed">
           {% for value, label in boolean_filter_options %}
             <option value="{{ value }}" {% if selected_sealed == value %}selected{% endif %}>{{ label }}</option>
@@ -120,7 +120,7 @@
         </select>
       </div>
       <div style="flex: 1 1 180px;">
-        <label for="soft_corners">Soft corners</label>
+        <label for="soft_corners">Miękkie rogi</label>
         <select id="soft_corners" name="soft_corners">
           {% for value, label in boolean_filter_options %}
             <option value="{{ value }}" {% if selected_soft_corners == value %}selected{% endif %}>{{ label }}</option>
@@ -128,7 +128,7 @@
         </select>
       </div>
       <div style="flex: 1 1 180px;">
-        <label for="protector">Protector</label>
+        <label for="protector">Protektor</label>
         <select id="protector" name="protector">
           {% for value, label in boolean_filter_options %}
             <option value="{{ value }}" {% if selected_protector == value %}selected{% endif %}>{{ label }}</option>
@@ -136,7 +136,7 @@
         </select>
       </div>
       <div style="flex: 1 1 180px;">
-        <label for="signed">Signed</label>
+        <label for="signed">Podpisany</label>
         <select id="signed" name="signed">
           {% for value, label in boolean_filter_options %}
             <option value="{{ value }}" {% if selected_signed == value %}selected{% endif %}>{{ label }}</option>
@@ -144,7 +144,7 @@
         </select>
       </div>
       <div style="flex: 1 1 180px;">
-        <label for="bent_hook">Bent hook</label>
+        <label for="bent_hook">Zagięty haczyk</label>
         <select id="bent_hook" name="bent_hook">
           {% for value, label in boolean_filter_options %}
             <option value="{{ value }}" {% if selected_bent_hook == value %}selected{% endif %}>{{ label }}</option>
@@ -152,7 +152,7 @@
         </select>
       </div>
       <div style="flex: 1 1 180px;">
-        <label for="cracked_blister">Cracked blister</label>
+        <label for="cracked_blister">Pęknięty blister</label>
         <select id="cracked_blister" name="cracked_blister">
           {% for value, label in boolean_filter_options %}
             <option value="{{ value }}" {% if selected_cracked_blister == value %}selected{% endif %}>{{ label }}</option>

@@ -8,7 +8,7 @@ from .models import Collection, CollectionItem, WantedItem
 
 class CatalogModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        return f'{obj.model_name} | {obj.brand or "-"} | {obj.year or "-"} | Toy: {obj.toy} | Number: {obj.number}'
+        return f'{obj.model_name} | {obj.brand or "-"} | {obj.year or "-"} | Toy: {obj.toy} | Nr: {obj.number}'
 
 
 class CollectionForm(forms.ModelForm):
@@ -113,12 +113,12 @@ class VariantSectionsMixin:
                 initial='good',
                 label='Stan',
             )
-            self.fields[sealed_name] = forms.BooleanField(required=False, label='Sealed')
-            self.fields[soft_corners_name] = forms.BooleanField(required=False, label='Soft corners')
-            self.fields[protector_name] = forms.BooleanField(required=False, label='Protector')
-            self.fields[signed_name] = forms.BooleanField(required=False, label='Signed')
-            self.fields[bent_hook_name] = forms.BooleanField(required=False, label='Bent hook')
-            self.fields[cracked_blister_name] = forms.BooleanField(required=False, label='Cracked blister')
+            self.fields[sealed_name] = forms.BooleanField(required=False, label='Zafoliowany')
+            self.fields[soft_corners_name] = forms.BooleanField(required=False, label='Miękkie rogi')
+            self.fields[protector_name] = forms.BooleanField(required=False, label='Protektor')
+            self.fields[signed_name] = forms.BooleanField(required=False, label='Podpisany')
+            self.fields[bent_hook_name] = forms.BooleanField(required=False, label='Zagięty haczyk')
+            self.fields[cracked_blister_name] = forms.BooleanField(required=False, label='Pęknięty blister')
             self.variant_sections.append(
                 {
                     'packaging_value': packaging_value,
@@ -505,37 +505,37 @@ class CollectionBulkEditForm(forms.Form):
         required=False,
         choices=(('', 'Bez zmian'), ('true', 'Tak'), ('false', 'Nie')),
         coerce=lambda value: {'true': True, 'false': False}.get(value, ''),
-        label='Sealed',
+        label='Zafoliowany',
     )
     has_soft_corners = forms.TypedChoiceField(
         required=False,
         choices=(('', 'Bez zmian'), ('true', 'Tak'), ('false', 'Nie')),
         coerce=lambda value: {'true': True, 'false': False}.get(value, ''),
-        label='Soft corners',
+        label='Miękkie rogi',
     )
     has_protector = forms.TypedChoiceField(
         required=False,
         choices=(('', 'Bez zmian'), ('true', 'Tak'), ('false', 'Nie')),
         coerce=lambda value: {'true': True, 'false': False}.get(value, ''),
-        label='Protector',
+        label='Protektor',
     )
     is_signed = forms.TypedChoiceField(
         required=False,
         choices=(('', 'Bez zmian'), ('true', 'Tak'), ('false', 'Nie')),
         coerce=lambda value: {'true': True, 'false': False}.get(value, ''),
-        label='Signed',
+        label='Podpisany',
     )
     has_bent_hook = forms.TypedChoiceField(
         required=False,
         choices=(('', 'Bez zmian'), ('true', 'Tak'), ('false', 'Nie')),
         coerce=lambda value: {'true': True, 'false': False}.get(value, ''),
-        label='Bent hook',
+        label='Zagięty haczyk',
     )
     has_cracked_blister = forms.TypedChoiceField(
         required=False,
         choices=(('', 'Bez zmian'), ('true', 'Tak'), ('false', 'Nie')),
         coerce=lambda value: {'true': True, 'false': False}.get(value, ''),
-        label='Cracked blister',
+        label='Pęknięty blister',
     )
 
     def __init__(self, *args, **kwargs):
