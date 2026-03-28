@@ -1,42 +1,102 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Profil | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .profile-layout {
+    display: grid;
+    gap: 18px;
+  }
+  .profile-summary {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr);
+    align-items: start;
+  }
+  .profile-identity {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+  }
+  .profile-side {
+    display: grid;
+    gap: 12px;
+  }
+  .profile-side .card-surface {
+    min-height: 100%;
+  }
+  .profile-socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .profile-list {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .profile-list .list-item {
+    min-height: 100%;
+    display: grid;
+    gap: 10px;
+  }
+  @media (max-width: 860px) {
+    .profile-summary { grid-template-columns: 1fr; }
+    .profile-identity { flex-direction: column; }
+  }
+</style>
+{% endblock %}
 {% block content %}
-<section class="panel">
-  <div class="profile-head">
-    <img class="avatar" src="{% static profile_user.avatar_static_path %}" alt="Avatar {{ profile_user.public_name }}">
-    <div>
-      <h1>{{ profile_user.public_name }}</h1>
-      <p class="meta">Dołączył: {{ profile_user.date_joined|date:"j E Y" }}</p>
-      {% if profile_user.bio %}<p>{{ profile_user.bio }}</p>{% endif %}
-      {% if profile_user.youtube_url or profile_user.tiktok_url or profile_user.instagram_url %}
-        <div class="danger-zone">
-          {% if profile_user.youtube_url %}<a class="button secondary" href="{{ profile_user.youtube_url }}" target="_blank" rel="noopener noreferrer">YouTube</a>{% endif %}
-          {% if profile_user.tiktok_url %}<a class="button secondary" href="{{ profile_user.tiktok_url }}" target="_blank" rel="noopener noreferrer">TikTok</a>{% endif %}
-          {% if profile_user.instagram_url %}<a class="button secondary" href="{{ profile_user.instagram_url }}" target="_blank" rel="noopener noreferrer">Instagram</a>{% endif %}
-        </div>
-      {% endif %}
+<section class="panel hero">
+  <div class="profile-summary">
+    <div class="profile-identity">
+      <img class="avatar" src="{% static profile_user.avatar_static_path %}" alt="Avatar {{ profile_user.public_name }}">
+      <div class="hero-copy">
+        <span class="eyebrow">{% if is_own_profile %}Twój profil{% else %}Profil kolekcjonera{% endif %}</span>
+        <h1>{{ profile_user.public_name }}</h1>
+        <p class="meta">Dołączył: {{ profile_user.date_joined|date:"j E Y" }}</p>
+        {% if profile_user.bio %}<p>{{ profile_user.bio }}</p>{% endif %}
+        {% if profile_user.youtube_url or profile_user.tiktok_url or profile_user.instagram_url %}
+          <div class="profile-socials">
+            {% if profile_user.youtube_url %}<a class="button secondary" href="{{ profile_user.youtube_url }}" target="_blank" rel="noopener noreferrer">YouTube</a>{% endif %}
+            {% if profile_user.tiktok_url %}<a class="button secondary" href="{{ profile_user.tiktok_url }}" target="_blank" rel="noopener noreferrer">TikTok</a>{% endif %}
+            {% if profile_user.instagram_url %}<a class="button secondary" href="{{ profile_user.instagram_url }}" target="_blank" rel="noopener noreferrer">Instagram</a>{% endif %}
+          </div>
+        {% endif %}
+        {% if is_own_profile %}<div class="actions-row"><a class="button" href="{% url 'accounts:profile-edit' %}">Edytuj profil</a></div>{% endif %}
+      </div>
+    </div>
+    <div class="profile-side">
+      <div class="card-surface">
+        <span class="meta">Profil publiczny</span>
+        <h3>{% if is_own_profile %}Jak widzą Cię inni{% else %}Kontakt i aktywność{% endif %}</h3>
+        <p class="meta">Na profilu widać kolekcje, aktywne szukane i linki społecznościowe, jeśli zostały uzupełnione.</p>
+      </div>
+      <div class="card-surface">
+        <span class="meta">Najważniejsze liczby</span>
+        <p class="meta">Szybki podgląd aktywności kolekcjonera bez przeklikiwania całego profilu.</p>
+      </div>
     </div>
   </div>
-  <div class="grid" style="margin-top:18px;">
-    <div class="card"><strong>{{ stats.collection_count }}</strong><div class="meta">kolekcje publiczne{% if is_own_profile %} / własne{% endif %}</div></div>
-    <div class="card"><strong>{{ stats.wanted_count }}</strong><div class="meta">aktywne szukane</div></div>
-    <div class="card"><strong>{{ stats.item_count }}</strong><div class="meta">pozycje</div></div>
-    <div class="card"><strong>{{ stats.total_quantity }}</strong><div class="meta">sztuk łącznie</div></div>
-    <div class="card"><strong>{{ stats.favorite_count }}</strong><div class="meta">ulubione</div></div>
+  <div class="stats-strip" style="margin-top:18px;">
+    <div class="stat-card"><span class="stat-label">Kolekcje</span><strong class="stat-value">{{ stats.collection_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Aktywne szukane</span><strong class="stat-value">{{ stats.wanted_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Pozycje</span><strong class="stat-value">{{ stats.item_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Sztuk łącznie</span><strong class="stat-value">{{ stats.total_quantity }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Ulubione</span><strong class="stat-value">{{ stats.favorite_count }}</strong></div>
   </div>
-  {% if is_own_profile %}<p><a class="button" href="{% url 'accounts:profile-edit' %}">Edytuj profil</a></p>{% endif %}
 </section>
 
 <section class="panel" style="margin-top:18px;">
   <div class="section-head">
-    <div>
+    <div class="section-copy">
       <h2>{% if is_own_profile %}Twoje szukane{% else %}Aktualnie szukane{% endif %}</h2>
       <p class="meta">Modele, których ten kolekcjoner obecnie szuka.</p>
     </div>
     {% if is_own_profile %}<a href="{% url 'collections:wanted-list' %}">Zarządzaj szukanymi</a>{% endif %}
   </div>
-  <section class="list">
+  <section class="profile-list">
     {% for wanted in wanted_items %}
       <div class="list-item">
         <h3><a href="{{ wanted.model.get_absolute_url }}">{{ wanted.model.model_name }}</a></h3>
@@ -51,8 +111,13 @@
 </section>
 
 <section class="panel" style="margin-top:18px;">
-  <h2>{% if is_own_profile %}Twoje kolekcje{% else %}Publiczne kolekcje{% endif %}</h2>
-  <section class="list">
+  <div class="section-head">
+    <div class="section-copy">
+      <h2>{% if is_own_profile %}Twoje kolekcje{% else %}Publiczne kolekcje{% endif %}</h2>
+      <p class="meta">Zestawy modeli widoczne na profilu tego kolekcjonera.</p>
+    </div>
+  </div>
+  <section class="profile-list">
     {% for collection in collections_list %}
       <div class="list-item">
         <h3><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>

@@ -73,6 +73,25 @@
       box-shadow: var(--shadow);
     }
     .nav-links, .nav-auth { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .nav-links {
+      flex: 1 1 720px;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .nav-primary,
+    .nav-utility {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .nav-primary {
+      flex: 1 1 520px;
+    }
+    .nav-utility {
+      flex: 0 1 auto;
+      justify-content: flex-end;
+    }
     .nav-links a, .nav-auth a {
       display: inline-flex;
       align-items: center;
@@ -96,6 +115,13 @@
       border-color: rgba(255, 107, 44, 0.45);
       color: #fff6f1;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    .nav-links a.is-quiet {
+      color: var(--muted);
+    }
+    .nav-links a.is-quiet:hover,
+    .nav-links a.is-quiet.is-active {
+      color: var(--ink);
     }
     .brand {
       margin-right: 8px;
@@ -376,8 +402,46 @@
     .stat-value { font-size: 1.8rem; line-height: 1; color: #fff; }
     .section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
     .section-head p { margin: 0; }
+    .section-copy {
+      display: grid;
+      gap: 6px;
+    }
+    .section-copy h2,
+    .section-copy h3 {
+      margin-bottom: 0;
+    }
     .actions-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
     .stack-lg { display: grid; gap: 18px; }
+    .split-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, .85fr);
+      align-items: start;
+    }
+    .section-stack {
+      display: grid;
+      gap: 16px;
+    }
+    .card-surface {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .card-surface h3:last-child,
+    .card-surface p:last-child {
+      margin-bottom: 0;
+    }
+    .info-cluster {
+      display: grid;
+      gap: 12px;
+    }
+    .kpi-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
     .toolbar {
       display: grid;
       gap: 16px;
@@ -412,6 +476,14 @@
       .shell { padding: 14px 10px 28px; }
       .nav { position: static; padding: 14px; gap: 10px; border-radius: 20px; }
       .nav-links, .nav-auth { gap: 10px; }
+      .nav-links {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .nav-primary,
+      .nav-utility {
+        width: 100%;
+      }
       .nav-links a, .nav-auth a { width: 100%; justify-content: flex-start; }
       .brand { width: 100%; justify-content: center; margin-right: 0; }
       .nav-user-menu,
@@ -435,6 +507,7 @@
       .catalog-grid { grid-template-columns: 1fr; gap: 16px; }
       .catalog-card .thumb { height: 150px; }
       .stats-strip { grid-template-columns: 1fr 1fr; }
+      .split-grid { grid-template-columns: 1fr; }
     }
   </style>
   {% block extra_styles %}{% endblock %}
@@ -444,14 +517,18 @@
     {% with current_namespace=request.resolver_match.namespace|default:'' current_url_name=request.resolver_match.url_name|default:'' current_path=request.path %}
     <nav class="nav">
       <div class="nav-links">
-        <a class="brand" href="{% url 'home' %}">LexWheels</a>
-        <a class="{% if current_url_name == 'home' %}is-active{% endif %}" href="{% url 'home' %}">Start</a>
-        <a class="{% if current_namespace == 'catalog' and current_url_name != 'coverage' %}is-active{% endif %}" href="{% url 'catalog:model-list' %}">Katalog</a>
-        <a class="{% if current_namespace == 'catalog' and current_url_name == 'coverage' %}is-active{% endif %}" href="{% url 'catalog:coverage' %}">Zakres bazy</a>
-        <a class="{% if current_namespace == 'collections' and current_url_name == 'community' %}is-active{% endif %}" href="{% url 'collections:community' %}">Społeczność</a>
-        {% if user.is_authenticated %}<a class="{% if current_namespace == 'collections' and current_url_name in 'dashboard collection-detail collection-create collection-update collection-delete item-create item-update item-delete batch-add batch-edit batch-delete import collection-import collection-import-confirm import-backlog quick-add' %}is-active{% endif %}" href="{% url 'collections:dashboard' %}">Moje kolekcje</a>{% endif %}
-        {% if user.is_authenticated %}<a class="{% if current_namespace == 'collections' and current_url_name == 'stats' %}is-active{% endif %}" href="{% url 'collections:stats' %}">Statystyki</a>{% endif %}
-        <a class="{% if current_path|slice:':7' == '/admin/' %}is-active{% endif %}" href="/admin/">Admin</a>
+        <div class="nav-primary">
+          <a class="brand" href="{% url 'home' %}">LexWheels</a>
+          <a class="{% if current_url_name == 'home' %}is-active{% endif %}" href="{% url 'home' %}">Start</a>
+          <a class="{% if current_namespace == 'catalog' and current_url_name != 'coverage' %}is-active{% endif %}" href="{% url 'catalog:model-list' %}">Katalog</a>
+          <a class="{% if current_namespace == 'collections' and current_url_name == 'community' %}is-active{% endif %}" href="{% url 'collections:community' %}">Społeczność</a>
+          {% if user.is_authenticated %}<a class="{% if current_namespace == 'collections' and current_url_name in 'dashboard collection-detail collection-create collection-update collection-delete item-create item-update item-delete batch-add batch-edit batch-delete import collection-import collection-import-confirm import-backlog quick-add' %}is-active{% endif %}" href="{% url 'collections:dashboard' %}">Moje kolekcje</a>{% endif %}
+        </div>
+        <div class="nav-utility">
+          <a class="is-quiet {% if current_namespace == 'catalog' and current_url_name == 'coverage' %}is-active{% endif %}" href="{% url 'catalog:coverage' %}">Zakres bazy</a>
+          {% if user.is_authenticated %}<a class="is-quiet {% if current_namespace == 'collections' and current_url_name == 'stats' %}is-active{% endif %}" href="{% url 'collections:stats' %}">Statystyki</a>{% endif %}
+          <a class="is-quiet {% if current_path|slice:':7' == '/admin/' %}is-active{% endif %}" href="/admin/">Admin</a>
+        </div>
       </div>
       <div class="nav-auth">
         {% if user.is_authenticated %}

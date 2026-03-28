@@ -34,6 +34,15 @@
     gap: 12px;
     align-items: flex-start;
   }
+  .dashboard-card {
+    min-height: 100%;
+  }
+  .dashboard-card .danger-zone {
+    margin-top: auto;
+  }
+  .dashboard-kpis .stat-card {
+    min-height: 100%;
+  }
   @media (max-width: 860px) {
     .dashboard-hero { grid-template-columns: 1fr; }
   }
@@ -45,7 +54,7 @@
     <div class="hero-copy">
       <span class="eyebrow">Panel kolekcji</span>
       <h1>Moje kolekcje</h1>
-      <p>Widok startowy skupia kolekcje, aktywne ogłoszenia szukane i szybkie przejścia do najważniejszych działań.</p>
+      <p>To Twoje centrum zarządzania. Stąd wejdziesz do kolekcji, aktywnych szukanych i najważniejszych narzędzi porządkowania danych.</p>
       <div class="actions-row">
         <a class="button" href="{% url 'collections:collection-create' %}">Nowa kolekcja</a>
         <a class="button secondary" href="{% url 'collections:wanted-list' %}">Moje szukane</a>
@@ -54,13 +63,13 @@
       </div>
     </div>
     <div class="dashboard-actions">
-      <div class="dashboard-action-card">
+      <div class="dashboard-action-card card-surface">
         <span class="meta">Szybki skrót</span>
         <h3>Statystyki kolekcji</h3>
         <p class="meta">Zobacz postęp, podział po seriach i łączną liczbę wariantów.</p>
         <a class="button secondary" href="{% url 'collections:stats' %}">Otwórz statystyki</a>
       </div>
-      <div class="dashboard-action-card">
+      <div class="dashboard-action-card card-surface">
         <span class="meta">Porządkowanie danych</span>
         <h3>Braki z importu</h3>
         <p class="meta">Sprawdź niepowiązane wpisy po imporcie i domknij brakujące modele.</p>
@@ -68,26 +77,26 @@
       </div>
     </div>
   </div>
-  <div class="grid" style="margin-top: 18px;">
-    <div class="card"><strong>{{ stats.collection_count }}</strong><div class="meta">kolekcje</div></div>
-    <div class="card"><strong>{{ stats.wanted_count }}</strong><div class="meta">aktywne szukane</div></div>
-    <div class="card"><strong>{{ stats.item_count }}</strong><div class="meta">pozycje</div></div>
-    <div class="card"><strong>{{ stats.variant_count }}</strong><div class="meta">warianty</div></div>
-    <div class="card"><strong>{{ stats.total_quantity }}</strong><div class="meta">sztuk łącznie</div></div>
-    <div class="card"><strong>{{ stats.favorite_count }}</strong><div class="meta">ulubione</div></div>
+  <div class="stats-strip dashboard-kpis" style="margin-top: 18px;">
+    <div class="stat-card"><span class="stat-label">Kolekcje</span><strong class="stat-value">{{ stats.collection_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Aktywne szukane</span><strong class="stat-value">{{ stats.wanted_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Pozycje</span><strong class="stat-value">{{ stats.item_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Warianty</span><strong class="stat-value">{{ stats.variant_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Sztuk łącznie</span><strong class="stat-value">{{ stats.total_quantity }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Ulubione</span><strong class="stat-value">{{ stats.favorite_count }}</strong></div>
   </div>
 </section>
 
 <section class="panel" style="margin-bottom:18px;">
   <div class="section-head">
-    <div>
+    <div class="section-copy">
       <h2>Kolekcje</h2>
       <p class="meta">Twoje główne zestawy modeli i serie do kompletowania.</p>
     </div>
   </div>
   <section class="dashboard-list">
   {% for collection in owned_collections %}
-    <div class="list-item collection-card">
+    <div class="list-item collection-card dashboard-card">
       <div class="collection-card-top">
         <h3><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>
         <span class="badge">{{ collection.get_visibility_display }}</span>
@@ -107,7 +116,7 @@
 
 <section class="panel">
   <div class="section-head">
-    <div>
+    <div class="section-copy">
       <h2>Szukane</h2>
       <p class="meta">Aktywne modele, których szukasz wraz z warunkami i budżetem.</p>
     </div>
@@ -115,7 +124,7 @@
   </div>
   <section class="dashboard-list">
   {% for wanted in wanted_items %}
-    <div class="list-item collection-card">
+    <div class="list-item collection-card dashboard-card">
       <div class="collection-card-top">
         <h3><a href="{% url 'collections:wanted-update' wanted.pk %}">{{ wanted.model.model_name }}</a></h3>
         <span class="badge">{% if wanted.is_active %}Aktywne{% else %}Nieaktywne{% endif %}</span>
