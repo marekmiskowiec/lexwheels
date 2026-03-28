@@ -89,6 +89,14 @@
       border-color: var(--line);
       transform: translateY(-1px);
     }
+    .nav-links a.is-active,
+    .nav-auth a.is-active,
+    .nav-user-summary.is-active {
+      background: linear-gradient(135deg, rgba(255, 107, 44, 0.22), rgba(255, 107, 44, 0.08));
+      border-color: rgba(255, 107, 44, 0.45);
+      color: #fff6f1;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    }
     .brand {
       margin-right: 8px;
       padding: 12px 16px;
@@ -175,6 +183,12 @@
       color: var(--ink);
       background: rgba(255,255,255,0.08);
       border-color: var(--line-strong);
+    }
+    .nav-user-panel .nav-user-action.is-active,
+    .nav-user-panel form .nav-user-action.is-active {
+      color: #fff6f1;
+      background: linear-gradient(135deg, rgba(255, 107, 44, 0.22), rgba(255, 107, 44, 0.08));
+      border-color: rgba(255, 107, 44, 0.45);
     }
     .panel {
       border: 1px solid var(--line);
@@ -427,25 +441,26 @@
 </head>
 <body>
   <div class="shell">
+    {% with current_namespace=request.resolver_match.namespace|default:'' current_url_name=request.resolver_match.url_name|default:'' current_path=request.path %}
     <nav class="nav">
       <div class="nav-links">
         <a class="brand" href="{% url 'home' %}">LexWheels</a>
-        <a href="{% url 'home' %}">Start</a>
-        <a href="{% url 'catalog:model-list' %}">Katalog</a>
-        <a href="{% url 'catalog:coverage' %}">Zakres bazy</a>
-        <a href="{% url 'collections:community' %}">Społeczność</a>
-        {% if user.is_authenticated %}<a href="{% url 'collections:dashboard' %}">Moje kolekcje</a>{% endif %}
-        {% if user.is_authenticated %}<a href="{% url 'collections:stats' %}">Statystyki</a>{% endif %}
-        <a href="/admin/">Admin</a>
+        <a class="{% if current_url_name == 'home' %}is-active{% endif %}" href="{% url 'home' %}">Start</a>
+        <a class="{% if current_namespace == 'catalog' and current_url_name != 'coverage' %}is-active{% endif %}" href="{% url 'catalog:model-list' %}">Katalog</a>
+        <a class="{% if current_namespace == 'catalog' and current_url_name == 'coverage' %}is-active{% endif %}" href="{% url 'catalog:coverage' %}">Zakres bazy</a>
+        <a class="{% if current_namespace == 'collections' and current_url_name == 'community' %}is-active{% endif %}" href="{% url 'collections:community' %}">Społeczność</a>
+        {% if user.is_authenticated %}<a class="{% if current_namespace == 'collections' and current_url_name in 'dashboard collection-detail collection-create collection-update collection-delete item-create item-update item-delete batch-add batch-edit batch-delete import collection-import collection-import-confirm import-backlog quick-add' %}is-active{% endif %}" href="{% url 'collections:dashboard' %}">Moje kolekcje</a>{% endif %}
+        {% if user.is_authenticated %}<a class="{% if current_namespace == 'collections' and current_url_name == 'stats' %}is-active{% endif %}" href="{% url 'collections:stats' %}">Statystyki</a>{% endif %}
+        <a class="{% if current_path|slice:':7' == '/admin/' %}is-active{% endif %}" href="/admin/">Admin</a>
       </div>
       <div class="nav-auth">
         {% if user.is_authenticated %}
           <details class="nav-user-menu">
-            <summary class="nav-user-summary">{{ user.login }}</summary>
+            <summary class="nav-user-summary{% if current_namespace == 'accounts' or current_namespace == 'collections' and current_url_name == 'wanted-list' %} is-active{% endif %}">{{ user.login }}</summary>
             <div class="nav-user-panel">
-              <a class="nav-user-action" href="{% url 'accounts:profile' %}">Profil</a>
-              <a class="nav-user-action" href="{% url 'collections:wanted-list' %}">Szukane</a>
-              <a class="nav-user-action" href="{% url 'accounts:catalog-scope' %}">Zakres katalogu</a>
+              <a class="nav-user-action{% if current_namespace == 'accounts' and current_url_name in 'profile profile-edit public-profile' %} is-active{% endif %}" href="{% url 'accounts:profile' %}">Profil</a>
+              <a class="nav-user-action{% if current_namespace == 'collections' and current_url_name == 'wanted-list' %} is-active{% endif %}" href="{% url 'collections:wanted-list' %}">Szukane</a>
+              <a class="nav-user-action{% if current_namespace == 'accounts' and current_url_name == 'catalog-scope' %} is-active{% endif %}" href="{% url 'accounts:catalog-scope' %}">Zakres katalogu</a>
               <form method="post" action="{% url 'logout' %}">
                 {% csrf_token %}
                 <button class="nav-user-action" type="submit">Wyloguj</button>
@@ -458,6 +473,7 @@
         {% endif %}
       </div>
     </nav>
+    {% endwith %}
     {% if messages %}
       <div class="messages">
         {% for message in messages %}
