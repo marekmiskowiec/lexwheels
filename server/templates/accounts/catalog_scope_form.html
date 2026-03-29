@@ -2,9 +2,6 @@
 {% block title %}Zakres katalogu | LexWheels{% endblock %}
 {% block extra_styles %}
 <style>
-  .scope-form {
-    max-width: 760px;
-  }
   .category-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -28,41 +25,87 @@
 </style>
 {% endblock %}
 {% block content %}
-<section class="panel scope-form">
-  <span class="eyebrow">Zakres katalogu</span>
-  <h1>Zakres katalogu</h1>
-  <p class="meta">Tutaj ustawiasz, jakie marki, kategorie i roczniki mają domyślnie pojawiać się w katalogu.</p>
-  <form method="post" class="list">
+<section class="panel hero form-shell">
+  <div class="hero-copy">
+    <span class="eyebrow">Zakres katalogu</span>
+    <h1>Zakres katalogu</h1>
+    <p class="meta">Tutaj ustawiasz, jakie marki, kategorie i roczniki mają domyślnie pojawiać się w katalogu.</p>
+  </div>
+</section>
+
+<section class="panel form-shell">
+  <form method="post" class="form-layout">
     {% csrf_token %}
     {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
 
-    {% for field in form.visible_fields %}
-      {% if field.name == 'catalog_scope_categories' %}
-        <div>
-          <label>{{ field.label }}</label>
-          <div class="category-grid">
-            {% for checkbox in field %}
-              <label class="category-chip">
-                {{ checkbox.tag }}
-                <span>{{ checkbox.choice_label }}</span>
-              </label>
-            {% empty %}
-              <p class="meta">Brak kategorii w bazie.</p>
-            {% endfor %}
+    <div class="form-section">
+      <div class="section-copy">
+        <h2>Włączanie zakresu</h2>
+        <p class="meta">Najpierw zdecyduj, czy katalog ma używać Twoich preferencji jako domyślnego widoku.</p>
+      </div>
+      <div class="form-grid">
+        {% for field in form.visible_fields %}
+          {% if field.name != 'catalog_scope_brands' and field.name != 'catalog_scope_categories' and field.name != 'catalog_scope_year_from' and field.name != 'catalog_scope_year_to' %}
+            <div class="form-field is-full">
+              {{ field.label_tag }}
+              {{ field }}
+              {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
+              {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-copy">
+        <h2>Filtry domyślne</h2>
+        <p class="meta">Te ustawienia będą ograniczać katalog, gdy zakres katalogu jest aktywny.</p>
+      </div>
+      <div class="form-grid">
+        {% for field in form.visible_fields %}
+          {% if field.name == 'catalog_scope_brands' or field.name == 'catalog_scope_year_from' or field.name == 'catalog_scope_year_to' %}
+            <div class="form-field{% if field.name == 'catalog_scope_brands' %} is-full{% endif %}">
+              {{ field.label_tag }}
+              {{ field }}
+              {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
+              {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-copy">
+        <h2>Kategorie</h2>
+        <p class="meta">Wybierz, które kategorie mają być widoczne w Twoim domyślnym widoku katalogu.</p>
+      </div>
+      {% for field in form.visible_fields %}
+        {% if field.name == 'catalog_scope_categories' %}
+          <div class="form-field is-full">
+            <label>{{ field.label }}</label>
+            <div class="category-grid">
+              {% for checkbox in field %}
+                <label class="category-chip">
+                  {{ checkbox.tag }}
+                  <span>{{ checkbox.choice_label }}</span>
+                </label>
+              {% empty %}
+                <p class="meta">Brak kategorii w bazie.</p>
+              {% endfor %}
+            </div>
+            {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
+            {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
           </div>
-          {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
-          {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
-        </div>
-      {% else %}
-        <p>
-          {{ field.label_tag }}
-          {{ field }}
-          {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
-          {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
-        </p>
-      {% endif %}
-    {% endfor %}
-    <button type="submit">Zapisz zakres</button>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="form-actions">
+      <button type="submit">Zapisz zakres</button>
+      <a class="button secondary" href="{% url 'catalog:model-list' %}?scope=profile">Zobacz mój zakres</a>
+    </div>
   </form>
 </section>
 {% endblock %}

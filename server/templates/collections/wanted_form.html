@@ -1,28 +1,51 @@
 {% extends "base.html" %}
 {% block title %}{% if form.instance.pk %}Edytuj szukane{% else %}Dodaj do szukanych{% endif %} | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .wanted-model-card {
+    display: grid;
+    gap: 8px;
+  }
+</style>
+{% endblock %}
 {% block content %}
-<section class="panel" style="max-width: 760px;">
-  <h1>{% if form.instance.pk %}Edytuj szukane{% else %}Dodaj do szukanych{% endif %}</h1>
+<section class="panel hero form-shell">
+  <div class="hero-copy">
+    <span class="eyebrow">Szukane</span>
+    <h1>{% if form.instance.pk %}Edytuj szukane{% else %}Dodaj do szukanych{% endif %}</h1>
+    <p class="meta">Określ, jakiego modelu szukasz, w jakim stanie i z jakim budżetem.</p>
+  </div>
+</section>
+
+<section class="panel form-shell">
   {% if wanted_model %}
-    <div class="card" style="margin-bottom:18px;">
+    <div class="card wanted-model-card" style="margin-bottom:18px;">
       <h3 style="margin-bottom:6px;"><a href="{{ wanted_model.get_absolute_url }}">{{ wanted_model.model_name }}</a></h3>
       <p class="meta">{{ wanted_model.brand|default:"-" }} | {{ wanted_model.year|default:"-" }} | {{ wanted_model.category|default:"-" }}</p>
       <p class="meta">{{ wanted_model.series|default:"Bez serii" }}{% if wanted_model.series_number %} | {{ wanted_model.series_number }}{% endif %}</p>
     </div>
   {% endif %}
-  <form method="post" class="list">
+  <form method="post" class="form-layout">
     {% csrf_token %}
     {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-    {% for field in form.visible_fields %}
-      <p>
-        {{ field.label_tag }}
-        {{ field }}
-        {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
-        {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
-      </p>
-    {% endfor %}
+    <div class="form-section">
+      <div class="section-copy">
+        <h2>Warunki</h2>
+        <p class="meta">Ustaw preferowane opakowanie, minimalny stan i budżet maksymalny.</p>
+      </div>
+      <div class="form-grid">
+        {% for field in form.visible_fields %}
+          <div class="form-field{% if field.name == 'notes' %} is-full{% endif %}">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
+            {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
     {% if form.non_field_errors %}<p class="meta">{{ form.non_field_errors|join:', ' }}</p>{% endif %}
-    <div class="danger-zone">
+    <div class="form-actions">
       <button type="submit">{% if form.instance.pk %}Zapisz zmiany{% else %}Dodaj do szukanych{% endif %}</button>
       <a class="button secondary" href="{% url 'collections:wanted-list' %}">Anuluj</a>
     </div>

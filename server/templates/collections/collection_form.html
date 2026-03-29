@@ -1,7 +1,37 @@
 {% extends "base.html" %}
+{% block title %}{% if form.instance.pk %}Edytuj kolekcję{% else %}Nowa kolekcja{% endif %} | LexWheels{% endblock %}
 {% block content %}
-<section class="panel" style="max-width: 720px;">
-  <h1>{% if form.instance.pk %}Edytuj kolekcję{% else %}Nowa kolekcja{% endif %}</h1>
-  <form method="post" class="list">{% csrf_token %}{{ form.as_p }}<button type="submit">Zapisz kolekcję</button></form>
+<section class="panel hero form-shell">
+  <div class="hero-copy">
+    <span class="eyebrow">Kolekcje</span>
+    <h1>{% if form.instance.pk %}Edytuj kolekcję{% else %}Nowa kolekcja{% endif %}</h1>
+    <p class="meta">Nadaj kolekcji nazwę, opisz jej cel i zdecyduj, czy ma być widoczna publicznie.</p>
+  </div>
+</section>
+
+<section class="panel form-shell">
+  <form method="post" class="form-layout">
+    {% csrf_token %}
+    <div class="form-section">
+      <div class="section-copy">
+        <h2>Podstawowe informacje</h2>
+        <p class="meta">To ustawienia, które wpływają na nazwę, opis i widoczność kolekcji.</p>
+      </div>
+      <div class="form-grid">
+        {% for field in form.visible_fields %}
+          <div class="form-field{% if field.name == 'name' or field.name == 'description' %} is-full{% endif %}">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
+            {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit">Zapisz kolekcję</button>
+      <a class="button secondary" href="{% url 'collections:dashboard' %}">Wróć do kolekcji</a>
+    </div>
+  </form>
 </section>
 {% endblock %}

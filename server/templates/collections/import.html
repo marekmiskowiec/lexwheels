@@ -1,24 +1,47 @@
 {% extends "base.html" %}
 {% block title %}Import kolekcji | LexWheels{% endblock %}
 {% block content %}
-<section class="panel hero">
-  <h1>Import kolekcji</h1>
-  <p class="meta">Wersja 1 obsługuje pliki CSV i TSV z Excela lub Google Sheets. Najlepiej działają kolumny typu `Toy`, `Name`, `Year`, `Type`, `Series`, `Series Number`, `Amount`, `Price`, `Where`, czyli odpowiednio identyfikator Toy, nazwa, rok, typ, seria, numer serii, ilość, cena i miejsce.</p>
+<section class="panel hero form-shell">
+  <div class="hero-copy">
+    <span class="eyebrow">Import</span>
+    <h1>Import kolekcji</h1>
+    <p class="meta">Wersja 1 obsługuje pliki CSV i TSV z Excela lub Google Sheets. Najlepiej działają kolumny typu `Toy`, `Name`, `Year`, `Type`, `Series`, `Series Number`, `Amount`, `Price`, `Where`.</p>
+  </div>
 </section>
 
-<section class="panel" style="margin-bottom:18px;">
-  <h2>Wczytaj plik</h2>
-  <form method="post" enctype="multipart/form-data" class="list">
+<section class="panel form-shell" style="margin-bottom:18px;">
+  <form method="post" enctype="multipart/form-data" class="form-layout">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Sprawdź dopasowania</button>
+    <div class="form-section">
+      <div class="section-copy">
+        <h2>Wczytaj plik</h2>
+        <p class="meta">Najpierw sprawdź dopasowania, zanim zapiszesz pozycje do kolekcji.</p>
+      </div>
+      <div class="form-grid">
+        {% for field in form.visible_fields %}
+          <div class="form-field{% if field.name == 'file' %} is-full{% endif %}">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
+            {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit">Sprawdź dopasowania</button>
+      <a class="button secondary" href="{% url 'collections:dashboard' %}">Wróć do kolekcji</a>
+    </div>
   </form>
 </section>
 
 {% if preview %}
-  <section class="panel" style="margin-bottom:18px;">
-    <h2>Podgląd importu</h2>
-    <div class="stats-strip" style="margin-bottom:18px;">
+  <section class="panel form-shell" style="margin-bottom:18px;">
+    <div class="section-copy">
+      <h2>Podgląd importu</h2>
+      <p class="meta">Przed zatwierdzeniem możesz sprawdzić, które wiersze zostaną dopasowane automatycznie.</p>
+    </div>
+    <div class="stats-strip" style="margin:18px 0;">
       <div class="stat-card"><span class="stat-label">Wiersze</span><strong class="stat-value">{{ preview.summary.total_rows }}</strong></div>
       <div class="stat-card"><span class="stat-label">Dopasowane</span><strong class="stat-value">{{ preview.summary.matched_rows }}</strong></div>
       <div class="stat-card"><span class="stat-label">Niejednoznaczne</span><strong class="stat-value">{{ preview.summary.ambiguous_rows }}</strong></div>

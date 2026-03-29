@@ -3,9 +3,6 @@
 {% block title %}Edytuj profil | LexWheels{% endblock %}
 {% block extra_styles %}
 <style>
-  .profile-form {
-    max-width: 760px;
-  }
   .profile-bio-input {
     min-height: 132px;
   }
@@ -22,47 +19,85 @@
 </style>
 {% endblock %}
 {% block content %}
-<section class="panel profile-form">
-  <h1>Edytuj profil</h1>
-  <form method="post" class="list">
+<section class="panel hero form-shell">
+  <div class="hero-copy">
+    <span class="eyebrow">Profil</span>
+    <h1>Edytuj profil</h1>
+    <p class="meta">Uzupełnij dane, które zobaczą inni kolekcjonerzy. Ten formularz skupia się wyłącznie na informacjach profilowych i linkach społecznościowych.</p>
+  </div>
+</section>
+
+<section class="panel form-shell">
+  <form method="post" class="form-layout">
     {% csrf_token %}
     {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
 
-    {% for field in form.visible_fields %}
-      {% if field.name == 'avatar_key' %}
-        <div>
-          <label>{{ field.label }}</label>
-          <div class="avatar-options">
-            {% for radio in field %}
-              <label class="avatar-option{% if radio.data.selected %} selected{% endif %}">
-                {{ radio.tag }}
-                <img class="avatar small" src="{% static 'accounts/avatars/'|add:radio.data.value|add:'.svg' %}" alt="{{ radio.choice_label }}">
-                <span>{{ radio.choice_label }}</span>
-              </label>
-            {% endfor %}
-          </div>
-          {% if field.errors %}<p class="meta">{{ field.errors|join:', ' }}</p>{% endif %}
-        </div>
-      {% elif field.name == 'bio' %}
-        <p>
-          {{ field.label_tag }}
-          {{ field }}
-          <span class="field-meta-row">
-            {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% else %}<span></span>{% endif %}
-            <small class="meta char-counter" data-bio-counter>0/200</small>
-          </span>
-          {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
-        </p>
-      {% else %}
-        <p>
-          {{ field.label_tag }}
-          {{ field }}
-          {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
-          {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
-        </p>
-      {% endif %}
-    {% endfor %}
-    <button type="submit">Zapisz profil</button>
+    <div class="form-section">
+      <div class="section-copy">
+        <h2>Tożsamość i avatar</h2>
+        <p class="meta">Te elementy budują Twój profil publiczny i sposób, w jaki widzą Cię inni użytkownicy.</p>
+      </div>
+      <div class="form-grid">
+        {% for field in form.visible_fields %}
+          {% if field.name == 'avatar_key' %}
+            <div class="form-field is-full">
+              <label>{{ field.label }}</label>
+              <div class="avatar-options">
+                {% for radio in field %}
+                  <label class="avatar-option{% if radio.data.selected %} selected{% endif %}">
+                    {{ radio.tag }}
+                    <img class="avatar small" src="{% static 'accounts/avatars/'|add:radio.data.value|add:'.svg' %}" alt="{{ radio.choice_label }}">
+                    <span>{{ radio.choice_label }}</span>
+                  </label>
+                {% endfor %}
+              </div>
+              {% if field.errors %}<p class="meta">{{ field.errors|join:', ' }}</p>{% endif %}
+            </div>
+          {% elif field.name != 'bio' and field.name != 'youtube_url' and field.name != 'tiktok_url' and field.name != 'instagram_url' %}
+            <div class="form-field{% if field.name == 'display_name' or field.name == 'login' %} is-full{% endif %}">
+              {{ field.label_tag }}
+              {{ field }}
+              {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
+              {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-copy">
+        <h2>Opis i linki</h2>
+        <p class="meta">Dodaj krótki opis i miejsca, przez które inni mogą się z Tobą skontaktować.</p>
+      </div>
+      <div class="form-grid">
+        {% for field in form.visible_fields %}
+          {% if field.name == 'bio' %}
+            <div class="form-field is-full">
+              {{ field.label_tag }}
+              {{ field }}
+              <span class="field-meta-row">
+                {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% else %}<span></span>{% endif %}
+                <small class="meta char-counter" data-bio-counter>0/200</small>
+              </span>
+              {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
+            </div>
+          {% elif field.name == 'youtube_url' or field.name == 'tiktok_url' or field.name == 'instagram_url' %}
+            <div class="form-field">
+              {{ field.label_tag }}
+              {{ field }}
+              {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
+              {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit">Zapisz profil</button>
+      <a class="button secondary" href="{% url 'accounts:profile' %}">Wróć do profilu</a>
+    </div>
   </form>
 </section>
 <script>

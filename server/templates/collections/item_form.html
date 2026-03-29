@@ -1,7 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="panel" style="max-width: 760px;">
-  <h1>{% if is_multi_variant_form %}Dodaj model do kolekcji{% else %}Pozycja kolekcji{% endif %}</h1>
+<section class="panel hero form-shell">
+  <div class="hero-copy">
+    <span class="eyebrow">Pozycje kolekcji</span>
+    <h1>{% if is_multi_variant_form %}Dodaj model do kolekcji{% else %}Pozycja kolekcji{% endif %}</h1>
+    <p class="meta">{% if is_multi_variant_form %}Wyszukaj model i dodaj jeden lub kilka wariantów opakowania naraz.{% else %}Zaktualizuj ilość, stan i atrybuty wybranego wariantu.{% endif %}</p>
+  </div>
+</section>
+
+<section class="panel form-shell">
   {% if is_multi_variant_form %}
     <form method="get" class="filters" style="margin-bottom:16px;">
       <div style="flex:1 1 360px;">
@@ -19,51 +26,81 @@
       <p class="meta" style="margin-top:0; margin-bottom:14px;">Wpisz fragment nazwy, Toy, numeru, marki albo serii, aby zawęzić listę modeli.</p>
     {% endif %}
   {% endif %}
-  <form method="post" class="list">
+  <form method="post" class="form-layout">
     {% csrf_token %}
     {% if form.non_field_errors %}
       <div class="message">{{ form.non_field_errors|join:', ' }}</div>
     {% endif %}
     {% if is_multi_variant_form %}
       {% if model_query %}<input type="hidden" name="_model_query" value="{{ model_query }}">{% endif %}
-      <p>
-        {{ form.model.label_tag }}
-        {{ form.model }}
-        {% if form.model.errors %}<small class="meta">{{ form.model.errors|join:', ' }}</small>{% endif %}
-      </p>
-      <div class="list">
-        {% for section in form.variant_sections %}
-          <div class="card">
-            <label style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">{{ section.enabled }} <strong>{{ section.packaging_label }}</strong></label>
-            <div class="filters">
-              <div style="flex: 1 1 140px;">
-                {{ section.quantity.label_tag }}
-                {{ section.quantity }}
-                {% if section.quantity.errors %}<small class="meta">{{ section.quantity.errors|join:', ' }}</small>{% endif %}
+      <div class="form-section">
+        <div class="section-copy">
+          <h2>Wybór modelu</h2>
+          <p class="meta">Najpierw wskaż model, a potem włącz warianty, które chcesz dodać.</p>
+        </div>
+        <div class="form-field is-full">
+          {{ form.model.label_tag }}
+          {{ form.model }}
+          {% if form.model.errors %}<small class="meta">{{ form.model.errors|join:', ' }}</small>{% endif %}
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="section-copy">
+          <h2>Warianty</h2>
+          <p class="meta">Możesz dodać kilka wariantów tego samego modelu w jednym zapisie.</p>
+        </div>
+        <div class="list">
+          {% for section in form.variant_sections %}
+            <div class="card">
+              <label style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">{{ section.enabled }} <strong>{{ section.packaging_label }}</strong></label>
+              <div class="filters">
+                <div style="flex: 1 1 140px;">
+                  {{ section.quantity.label_tag }}
+                  {{ section.quantity }}
+                  {% if section.quantity.errors %}<small class="meta">{{ section.quantity.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div style="flex: 1 1 220px;">
+                  {{ section.condition.label_tag }}
+                  {{ section.condition }}
+                  {% if section.condition.errors %}<small class="meta">{{ section.condition.errors|join:', ' }}</small>{% endif %}
+                </div>
               </div>
-              <div style="flex: 1 1 220px;">
-                {{ section.condition.label_tag }}
-                {{ section.condition }}
-                {% if section.condition.errors %}<small class="meta">{{ section.condition.errors|join:', ' }}</small>{% endif %}
-              </div>
+              {% if section.supports_card_attributes %}
+                <div class="inline-checks" style="margin-top:10px;">
+                  <label class="inline-check">{{ section.is_sealed }} <span>Zafoliowany</span></label>
+                  <label class="inline-check">{{ section.has_soft_corners }} <span>Miękkie rogi</span></label>
+                  <label class="inline-check">{{ section.has_protector }} <span>Protektor</span></label>
+                  <label class="inline-check">{{ section.is_signed }} <span>Podpisany</span></label>
+                  <label class="inline-check">{{ section.has_bent_hook }} <span>Zagięty haczyk</span></label>
+                  <label class="inline-check">{{ section.has_cracked_blister }} <span>Pęknięty blister</span></label>
+                </div>
+              {% endif %}
             </div>
-            {% if section.supports_card_attributes %}
-              <div class="filters" style="margin-top:10px;">
-                <label style="display:flex; align-items:center; gap:8px;">{{ section.is_sealed }} <span>Zafoliowany</span></label>
-                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_soft_corners }} <span>Miękkie rogi</span></label>
-                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_protector }} <span>Protektor</span></label>
-                <label style="display:flex; align-items:center; gap:8px;">{{ section.is_signed }} <span>Podpisany</span></label>
-                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_bent_hook }} <span>Zagięty haczyk</span></label>
-                <label style="display:flex; align-items:center; gap:8px;">{{ section.has_cracked_blister }} <span>Pęknięty blister</span></label>
-              </div>
-            {% endif %}
-          </div>
-        {% endfor %}
+          {% endfor %}
+        </div>
       </div>
     {% else %}
-      {{ form.as_p }}
+      <div class="form-section">
+        <div class="section-copy">
+          <h2>Szczegóły pozycji</h2>
+          <p class="meta">Uzupełnij stan, ilość i cechy wariantu, który już jest przypięty do modelu.</p>
+        </div>
+        <div class="form-grid">
+          {% for field in form.visible_fields %}
+            <div class="form-field{% if field.name == 'notes' %} is-full{% endif %}">
+              {{ field.label_tag }}
+              {{ field }}
+              {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
+              {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
     {% endif %}
-    <button type="submit">Zapisz</button>
+    <div class="form-actions">
+      <button type="submit">Zapisz</button>
+      <a class="button secondary" href="{{ collection_obj.get_absolute_url }}">Wróć do kolekcji</a>
+    </div>
   </form>
 </section>
 {% endblock %}
