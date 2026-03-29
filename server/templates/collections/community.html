@@ -3,6 +3,12 @@
 {% block title %}Społeczność | LexWheels{% endblock %}
 {% block extra_styles %}
 <style>
+  .community-hero {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: minmax(0, 1.25fr) minmax(280px, .9fr);
+    align-items: start;
+  }
   .community-switcher {
     display: flex;
     flex-wrap: wrap;
@@ -28,17 +34,63 @@
   .community-toolbar {
     margin-top: 18px;
   }
+  .community-stats {
+    display: grid;
+    gap: 12px;
+  }
+  .community-list {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .community-list .list-item {
+    min-height: 100%;
+    display: grid;
+    gap: 10px;
+  }
+  .collector-card {
+    display: grid;
+    gap: 12px;
+  }
+  .community-empty {
+    display: grid;
+    gap: 8px;
+    text-align: center;
+  }
+  @media (max-width: 900px) {
+    .community-hero {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
 {% endblock %}
 {% block content %}
 <section class="panel hero">
-  <span class="eyebrow">Społeczność</span>
-  <h1>Społeczność</h1>
-  <p class="meta">Jedno miejsce do przeglądania publicznych kolekcji, profili kolekcjonerów i aktywnych szukanych modeli.</p>
-  <div class="community-switcher">
-    <a class="community-tab{% if selected_view == 'collections' %} is-active{% endif %}" href="{% url 'collections:community' %}?view=collections">Kolekcje <span class="badge">{{ community_counts.collections }}</span></a>
-    <a class="community-tab{% if selected_view == 'wanted' %} is-active{% endif %}" href="{% url 'collections:community' %}?view=wanted">Szukane <span class="badge">{{ community_counts.wanted }}</span></a>
-    <a class="community-tab{% if selected_view == 'collectors' %} is-active{% endif %}" href="{% url 'collections:community' %}?view=collectors">Kolekcjonerzy <span class="badge">{{ community_counts.collectors }}</span></a>
+  <div class="community-hero">
+    <div class="hero-copy">
+      <span class="eyebrow">Społeczność</span>
+      <h1>Społeczność</h1>
+      <p class="meta">Jedno miejsce do przeglądania publicznych kolekcji, profili kolekcjonerów i aktywnych szukanych modeli.</p>
+      <div class="community-switcher">
+        <a class="community-tab{% if selected_view == 'collections' %} is-active{% endif %}" href="{% url 'collections:community' %}?view=collections">Kolekcje <span class="badge">{{ community_counts.collections }}</span></a>
+        <a class="community-tab{% if selected_view == 'wanted' %} is-active{% endif %}" href="{% url 'collections:community' %}?view=wanted">Szukane <span class="badge">{{ community_counts.wanted }}</span></a>
+        <a class="community-tab{% if selected_view == 'collectors' %} is-active{% endif %}" href="{% url 'collections:community' %}?view=collectors">Kolekcjonerzy <span class="badge">{{ community_counts.collectors }}</span></a>
+      </div>
+    </div>
+    <div class="community-stats">
+      <article class="stat-card">
+        <span class="stat-label">Publiczne kolekcje</span>
+        <strong class="stat-value">{{ community_counts.collections }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Aktywne szukane</span>
+        <strong class="stat-value">{{ community_counts.wanted }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Kolekcjonerzy</span>
+        <strong class="stat-value">{{ community_counts.collectors }}</strong>
+      </article>
+    </div>
   </div>
   {% if selected_view == 'collections' %}
     <form method="get" class="filters community-toolbar">
@@ -70,7 +122,7 @@
   {% endif %}
 </section>
 
-<section class="list">
+<section class="community-list">
   {% if selected_view == 'collections' %}
     {% for collection in collections %}
       <div class="list-item">
@@ -80,11 +132,11 @@
         {% if collection.description %}<p>{{ collection.description }}</p>{% endif %}
       </div>
     {% empty %}
-      <div class="panel"><p>Brak publicznych kolekcji dla tego filtra.</p></div>
+      <div class="panel community-empty"><h3>Brak publicznych kolekcji</h3><p class="meta">Spróbuj wyczyścić filtry albo wróć później, gdy społeczność się rozrośnie.</p></div>
     {% endfor %}
   {% elif selected_view == 'collectors' %}
     {% for collector in collectors %}
-      <div class="list-item">
+      <div class="list-item collector-card">
         <div class="collector-row">
           <img class="avatar small" src="{% static collector.avatar_static_path %}" alt="Avatar {{ collector.public_name }}">
           <div>
@@ -93,9 +145,12 @@
             {% if collector.bio %}<p>{{ collector.bio }}</p>{% endif %}
           </div>
         </div>
+        <div class="actions-row" style="margin-top:0;">
+          <a class="button secondary" href="{% url 'accounts:public-profile' collector.pk %}">Zobacz profil</a>
+        </div>
       </div>
     {% empty %}
-      <div class="panel"><p>Brak kolekcjonerów z publicznymi kolekcjami.</p></div>
+      <div class="panel community-empty"><h3>Brak kolekcjonerów</h3><p class="meta">Na razie nie ma profili z publicznymi kolekcjami do pokazania.</p></div>
     {% endfor %}
   {% else %}
     {% for wanted in wanted_items %}
@@ -113,7 +168,7 @@
         </div>
       </div>
     {% empty %}
-      <div class="panel"><p>Brak aktywnych szukanych dla tego filtra.</p></div>
+      <div class="panel community-empty"><h3>Brak aktywnych szukanych</h3><p class="meta">Spróbuj poluzować filtry albo wróć później, gdy pojawią się nowe wpisy.</p></div>
     {% endfor %}
   {% endif %}
 </section>

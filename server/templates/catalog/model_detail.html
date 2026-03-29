@@ -1,41 +1,123 @@
 {% extends "base.html" %}
 {% block title %}{{ model_obj.model_name }} | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .model-detail-layout {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+    align-items: start;
+  }
+  .model-gallery {
+    display: grid;
+    gap: 14px;
+  }
+  .model-gallery .card {
+    overflow: hidden;
+  }
+  .model-gallery .thumb {
+    height: 220px;
+  }
+  .model-summary {
+    display: grid;
+    gap: 18px;
+  }
+  .model-meta-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+  .model-meta-card {
+    display: grid;
+    gap: 6px;
+  }
+  .model-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .collection-link-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  @media (max-width: 860px) {
+    .model-detail-layout { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
 {% block content %}
-<section class="panel">
-  <div class="grid" style="grid-template-columns: minmax(260px, 360px) 1fr;">
-    <div class="list">
+<section class="panel hero">
+  <div class="model-detail-layout">
+    <div class="model-gallery">
       {% for panel in model_obj.packaging_image_panels %}
         <div class="card compact-card">
           <p class="meta" style="margin-bottom:10px;">{% if panel.key == 'loose' %}Luzak{% else %}{{ panel.label }} karta{% endif %}</p>
-          <img class="thumb" style="height: 220px;" src="{{ panel.src }}" alt="{{ model_obj.model_name }} - {{ panel.label|lower }}">
+          <img class="thumb" src="{{ panel.src }}" alt="{{ model_obj.model_name }} - {{ panel.label|lower }}">
         </div>
       {% endfor %}
     </div>
-    <div>
+    <div class="model-summary">
+      <div class="hero-copy">
+        <span class="eyebrow">Szczegóły modelu</span>
       <h1>{{ model_obj.model_name }}</h1>
-      <p><strong>Marka:</strong> {{ model_obj.brand|default:"-" }}</p>
-      <p><span class="badge">Toy {{ model_obj.toy }}</span> <span class="badge">Nr {{ model_obj.number }}</span></p>
-      <p><strong>Rok:</strong> {{ model_obj.year|default:"-" }}</p>
-      <p><strong>Kategoria:</strong> {{ model_obj.category|default:"-" }}</p>
-      <p><strong>Seria:</strong> {{ model_obj.series|default:"-" }}</p>
-      {% if model_obj.exclusive_store %}<p><strong>Ekskluzywny:</strong> {{ model_obj.exclusive_store }}</p>{% endif %}
-      {% if model_obj.special_tag %}<p><strong>Tag specjalny:</strong> {{ model_obj.special_tag }}</p>{% endif %}
-      <p><strong>Numer serii:</strong> {{ model_obj.series_number|default:"-" }}</p>
+        <p class="meta">Pojedynczy widok modelu z pełnym zestawem podstawowych danych i szybkimi akcjami do kolekcji oraz szukanych.</p>
+        <div class="catalog-summary">
+          <span class="badge">Toy {{ model_obj.toy }}</span>
+          <span class="badge">Nr {{ model_obj.number }}</span>
+          <span class="badge">{{ model_obj.year|default:"-" }}</span>
+          <span class="badge">{{ model_obj.category|default:"-" }}</span>
+        </div>
+      </div>
+      <div class="model-meta-grid">
+        <div class="card-surface model-meta-card">
+          <span class="meta">Marka</span>
+          <strong>{{ model_obj.brand|default:"-" }}</strong>
+        </div>
+        <div class="card-surface model-meta-card">
+          <span class="meta">Seria</span>
+          <strong>{{ model_obj.series|default:"-" }}</strong>
+        </div>
+        <div class="card-surface model-meta-card">
+          <span class="meta">Numer serii</span>
+          <strong>{{ model_obj.series_number|default:"-" }}</strong>
+        </div>
+        {% if model_obj.exclusive_store %}
+          <div class="card-surface model-meta-card">
+            <span class="meta">Exclusive</span>
+            <strong>{{ model_obj.exclusive_store }}</strong>
+          </div>
+        {% endif %}
+        {% if model_obj.special_tag %}
+          <div class="card-surface model-meta-card">
+            <span class="meta">Tag specjalny</span>
+            <strong>{{ model_obj.special_tag }}</strong>
+          </div>
+        {% endif %}
+      </div>
       {% if user.is_authenticated %}
-        <p>
+        <div class="card-surface">
+          <div class="section-copy">
+            <h3>Szybkie działania</h3>
+            <p class="meta">Dodaj model do własnej kolekcji albo oznacz go jako szukany.</p>
+          </div>
+          <div class="model-actions" style="margin-top:12px;">
           <a class="button" href="{% url 'collections:dashboard' %}">Przejdź do swoich kolekcji</a>
           <a class="button secondary" href="{% url 'collections:wanted-create' %}?model={{ model_obj.pk }}">Szukam tego modelu</a>
+          </div>
           {% with collections=user.collections.all %}
             {% if collections %}
-              <span class="meta" style="display:block; margin-top:10px;">Dodaj bezpośrednio do:</span>
+              <span class="meta" style="display:block; margin-top:14px;">Dodaj bezpośrednio do wybranej kolekcji:</span>
+              <div class="collection-link-grid" style="margin-top:8px;">
               {% for collection in collections %}
                 {% if collection.kind == 'owned' %}
-                  <a class="button secondary" style="margin:6px 6px 0 0;" href="{% url 'collections:item-create' collection.pk %}?model={{ model_obj.pk }}">{{ collection.name }}</a>
+                  <a class="button secondary" href="{% url 'collections:item-create' collection.pk %}?model={{ model_obj.pk }}">{{ collection.name }}</a>
                 {% endif %}
               {% endfor %}
+              </div>
             {% endif %}
           {% endwith %}
-        </p>
+        </div>
       {% endif %}
     </div>
   </div>
