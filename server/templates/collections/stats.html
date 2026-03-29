@@ -18,6 +18,12 @@
     grid-template-columns: minmax(280px, .9fr) minmax(0, 1.1fr);
     align-items: stretch;
   }
+  .stats-hero-grid {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr);
+    align-items: start;
+  }
   .completion-card {
     display: grid;
     place-items: center;
@@ -95,6 +101,7 @@
   .metric-bar.series span { background: linear-gradient(90deg, #4d9dff 0%, #79bcff 100%); }
 
   @media (max-width: 900px) {
+    .stats-hero-grid,
     .stats-overview-grid,
     .stats-section-grid {
       grid-template-columns: 1fr;
@@ -104,38 +111,46 @@
 {% endblock %}
 {% block content %}
 <section class="panel hero">
-  <div class="stats-hero-copy">
-    <span class="eyebrow">Statystyki kolekcji</span>
-    <h1>Moje statystyki</h1>
-    <p class="meta">Widok skupiony na kompletowaniu kolekcji: postęp ogólny, roczniki, serie i kategorie.</p>
+  <div class="stats-hero-grid">
+    <div class="stats-hero-copy">
+      <span class="eyebrow">Statystyki kolekcji</span>
+      <h1>Moje statystyki</h1>
+      <p class="meta">Widok skupiony na kompletowaniu kolekcji: postęp ogólny, roczniki, serie i kategorie.</p>
+    </div>
+    <form method="get" class="filters stats-toolbar">
+      <div style="flex: 1 1 220px;">
+        <label for="scope">Zakres</label>
+        <select id="scope" name="scope">
+          <option value="all" {% if selected_scope == 'all' %}selected{% endif %}>Wszystkie moje kolekcje</option>
+          <option value="owned" {% if selected_scope == 'owned' %}selected{% endif %}>Tylko kolekcje</option>
+        </select>
+      </div>
+      <div style="flex: 1 1 320px;">
+        <label for="collection">Jedna kolekcja</label>
+        <select id="collection" name="collection">
+          <option value="">Wszystkie kolekcje</option>
+          {% for collection in collection_options %}
+            <option value="{{ collection.pk }}" {% if selected_collection_id == collection.pk|stringformat:"s" %}selected{% endif %}>{{ collection.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div><button type="submit">Pokaż statystyki</button></div>
+      {% if selected_scope != 'all' or selected_collection_id %}
+        <div><a class="button secondary" href="{% url 'collections:stats' %}">Wyczyść</a></div>
+      {% endif %}
+    </form>
   </div>
-  <form method="get" class="filters stats-toolbar">
-    <div style="flex: 1 1 220px;">
-      <label for="scope">Zakres</label>
-      <select id="scope" name="scope">
-        <option value="all" {% if selected_scope == 'all' %}selected{% endif %}>Wszystkie moje kolekcje</option>
-        <option value="owned" {% if selected_scope == 'owned' %}selected{% endif %}>Tylko kolekcje</option>
-      </select>
-    </div>
-    <div style="flex: 1 1 320px;">
-      <label for="collection">Jedna kolekcja</label>
-      <select id="collection" name="collection">
-        <option value="">Wszystkie kolekcje</option>
-        {% for collection in collection_options %}
-          <option value="{{ collection.pk }}" {% if selected_collection_id == collection.pk|stringformat:"s" %}selected{% endif %}>{{ collection.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div><button type="submit">Pokaż statystyki</button></div>
-    {% if selected_scope != 'all' or selected_collection_id %}
-      <div><a class="button secondary" href="{% url 'collections:stats' %}">Wyczyść</a></div>
+  <div class="catalog-summary">
+    <span class="badge">Zakres: {% if selected_scope == 'owned' %}Tylko kolekcje{% else %}Wszystkie moje kolekcje{% endif %}</span>
+    {% if selected_collection_id and selected_collection_name %}
+      <span class="badge">{{ selected_collection_name }}</span>
     {% endif %}
-  </form>
+  </div>
 </section>
 
 <section class="panel" style="margin-bottom:18px;">
   <div class="section-head">
-    <div>
+    <div class="section-copy">
       <h2>Przegląd postępu</h2>
       <p class="meta">Ogólny stan kompletowania oraz liczby bazowe dla aktualnego zakresu.</p>
     </div>
@@ -165,7 +180,7 @@
 <section class="stats-section-grid" style="margin-bottom:18px;">
   <article class="panel">
     <div class="section-head">
-      <div>
+      <div class="section-copy">
         <h2>Po rocznikach</h2>
         <p class="meta">Które lata masz najlepiej domknięte.</p>
       </div>
@@ -190,7 +205,7 @@
 
   <article class="panel">
     <div class="section-head">
-      <div>
+      <div class="section-copy">
         <h2>Po kategoriach</h2>
         <p class="meta">Porównanie postępu między kategoriami.</p>
       </div>
@@ -216,7 +231,7 @@
 
 <section class="panel">
   <div class="section-head">
-    <div>
+    <div class="section-copy">
       <h2>Po seriach</h2>
       <p class="meta">Serie z największym postępem i liczbą braków.</p>
     </div>

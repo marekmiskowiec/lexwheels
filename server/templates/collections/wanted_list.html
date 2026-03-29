@@ -1,26 +1,64 @@
 {% extends "base.html" %}
 {% block title %}Szukane | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .wanted-hero {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr);
+    align-items: start;
+  }
+  .wanted-kpis {
+    display: grid;
+    gap: 12px;
+  }
+  .wanted-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .wanted-grid .list-item {
+    display: grid;
+    gap: 10px;
+    min-height: 100%;
+  }
+  .wanted-empty {
+    display: grid;
+    gap: 8px;
+    text-align: center;
+  }
+  @media (max-width: 860px) {
+    .wanted-hero {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
 {% block content %}
 <section class="panel hero">
-  <span class="eyebrow">Lista szukanych</span>
-  <h1>Moje szukane</h1>
-  <p class="meta">Tu zarządzasz modelami, których szukasz. Każdy wpis może mieć warunki i budżet oraz być widoczny publicznie przez Twój profil i zakładkę społeczności.</p>
-  <div class="actions-row">
-    <a class="button" href="{% url 'catalog:model-list' %}">Przeglądaj katalog</a>
-    <a class="button secondary" href="{% url 'collections:community' %}?view=wanted">Publiczne szukane</a>
-  </div>
-  <div class="stats-strip" style="margin-top:18px;">
-    <div class="stat-card"><span class="stat-label">Aktywne</span><strong class="stat-value">{{ wanted_stats.active_count }}</strong></div>
-    <div class="stat-card"><span class="stat-label">Nieaktywne</span><strong class="stat-value">{{ wanted_stats.inactive_count }}</strong></div>
-    <div class="stat-card"><span class="stat-label">Z budżetem</span><strong class="stat-value">{{ wanted_stats.budgeted_count }}</strong></div>
+  <div class="wanted-hero">
+    <div class="hero-copy">
+      <span class="eyebrow">Lista szukanych</span>
+      <h1>Moje szukane</h1>
+      <p class="meta">Tu zarządzasz modelami, których szukasz. Każdy wpis może mieć warunki i budżet oraz być widoczny publicznie przez Twój profil i zakładkę społeczności.</p>
+      <div class="actions-row">
+        <a class="button" href="{% url 'catalog:model-list' %}">Przeglądaj katalog</a>
+        <a class="button secondary" href="{% url 'collections:community' %}?view=wanted">Publiczne szukane</a>
+      </div>
+    </div>
+    <div class="wanted-kpis">
+      <div class="stat-card"><span class="stat-label">Aktywne</span><strong class="stat-value">{{ wanted_stats.active_count }}</strong></div>
+      <div class="stat-card"><span class="stat-label">Nieaktywne</span><strong class="stat-value">{{ wanted_stats.inactive_count }}</strong></div>
+      <div class="stat-card"><span class="stat-label">Z budżetem</span><strong class="stat-value">{{ wanted_stats.budgeted_count }}</strong></div>
+    </div>
   </div>
 </section>
 
-<section class="list">
+<section class="wanted-grid">
   {% for wanted in wanted_items %}
     <div class="list-item">
       <div class="section-head">
-        <div>
+        <div class="section-copy">
           <h3><a href="{{ wanted.model.get_absolute_url }}">{{ wanted.model.model_name }}</a></h3>
           <p class="meta">{{ wanted.model.brand|default:"-" }} | {{ wanted.model.year|default:"-" }} | {{ wanted.model.category|default:"-" }}</p>
         </div>
@@ -34,8 +72,9 @@
       </div>
     </div>
   {% empty %}
-    <div class="panel">
-      <p>Nie masz jeszcze żadnych szukanych. Dodaj pierwszy model z katalogu albo z widoku szczegółów modelu.</p>
+    <div class="panel wanted-empty">
+      <h3>Nie masz jeszcze żadnych szukanych</h3>
+      <p class="meta">Dodaj pierwszy model z katalogu albo z widoku szczegółów modelu.</p>
       <p><a class="button" href="{% url 'catalog:model-list' %}">Przejdź do katalogu</a></p>
     </div>
   {% endfor %}

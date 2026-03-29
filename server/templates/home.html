@@ -105,10 +105,23 @@
     .hero-grid, .spotlight-grid, .home-info-grid { grid-template-columns: 1fr; }
     .home-hero { padding: 22px; }
     .home-kpis { grid-template-columns: 1fr 1fr; }
+    .hero-actions { margin-top: 18px; }
   }
 
   @media (max-width: 640px) {
     .home-kpis { grid-template-columns: 1fr; }
+    .hero-actions,
+    .tag-cloud {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+    .model-row {
+      grid-template-columns: 1fr;
+    }
+    .model-thumb {
+      width: 100%;
+      height: 120px;
+    }
   }
 </style>
 {% endblock %}
