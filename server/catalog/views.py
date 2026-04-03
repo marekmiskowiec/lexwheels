@@ -404,6 +404,19 @@ def load_case_year_metadata(year: int) -> dict:
     return payload if isinstance(payload, dict) else {}
 
 
+def discover_case_metadata_years() -> list[int]:
+    if not CASE_METADATA_ROOT.exists():
+        return []
+
+    years = []
+    for path in CASE_METADATA_ROOT.glob('*.json'):
+        try:
+            years.append(int(path.stem))
+        except ValueError:
+            continue
+    return sorted(set(years), reverse=True)
+
+
 class CaseMixListView(CatalogScopeMixin, TemplateView):
     template_name = 'catalog/case_mix_list.html'
 
@@ -433,14 +446,27 @@ class CaseMixListView(CatalogScopeMixin, TemplateView):
             elif model.special_tag == 'Super Treasure Hunt':
                 year_bucket['sth_count'] += 1
 
+        all_years = sorted(set(year_map) | set(discover_case_metadata_years()), reverse=True)
         case_years = []
-        for year, row in sorted(year_map.items(), reverse=True):
+        for year in all_years:
+            row = year_map.get(
+                year,
+                {
+                    'year': year,
+                    'case_codes': set(),
+                    'model_count': 0,
+                    'th_count': 0,
+                    'sth_count': 0,
+                },
+            )
             metadata = load_case_year_metadata(year)
+            meta_cases = metadata.get('cases', {}) if isinstance(metadata.get('cases', {}), dict) else {}
+            case_codes = sorted(set(row['case_codes']) | {code for code in meta_cases if code})
             case_years.append(
                 {
                     'year': year,
-                    'case_codes': sorted(row['case_codes']),
-                    'case_count': len(row['case_codes']),
+                    'case_codes': case_codes,
+                    'case_count': len(case_codes),
                     'model_count': row['model_count'],
                     'th_count': row['th_count'],
                     'sth_count': row['sth_count'],
@@ -485,6 +511,17 @@ class CaseMixYearView(CatalogScopeMixin, TemplateView):
                 elif model.special_tag == 'Super Treasure Hunt':
                     bucket['sth_models'].append(model)
 
+        case_meta_codes = sorted(case_meta_map)
+        for case_code in case_meta_codes:
+            case_map.setdefault(
+                case_code,
+                {
+                    'models': [],
+                    'th_models': [],
+                    'sth_models': [],
+                },
+            )
+
         if not case_map:
             raise Http404('No case mixes found for this year.')
 
@@ -523,12 +560,12 @@ class CaseMixDetailView(CatalogScopeMixin, TemplateView):
             HotWheelsModel.objects.filter(year=year, category='Mainline')
         ).filter(ModelListView.build_case_filter(case_code)).order_by('number', 'model_name')
 
-        if not queryset.exists():
-            raise Http404('Case mix not found.')
-
         metadata = load_case_year_metadata(year)
         case_meta_map = metadata.get('cases', {}) if isinstance(metadata.get('cases', {}), dict) else {}
         case_meta = case_meta_map.get(case_code, {}) if isinstance(case_meta_map.get(case_code, {}), dict) else {}
+
+        if not queryset.exists() and not case_meta:
+            raise Http404('Case mix not found.')
 
         th_models = [model for model in queryset if model.special_tag == 'Treasure Hunt']
         sth_models = [model for model in queryset if model.special_tag == 'Super Treasure Hunt']
@@ -549,6 +586,7 @@ class CaseMixDetailView(CatalogScopeMixin, TemplateView):
             'notes': str(case_meta.get('notes', '')).strip(),
             'th_notes': str(case_meta.get('th_notes', '')).strip(),
             'sth_notes': str(case_meta.get('sth_notes', '')).strip(),
+            'source_url': str(case_meta.get('source_url', '')).strip(),
         }
         context['back_to_year_url'] = reverse('catalog:case-mix-year', args=[year])
         context['catalog_url'] = f"{reverse('catalog:model-list')}?year={year}&category=Mainline&case_code={case_code}"

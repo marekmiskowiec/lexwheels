@@ -966,6 +966,19 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Super Treasure Hunt')
         self.assertContains(response, 'Otwórz ten case w katalogu')
 
+    def test_case_mix_views_can_render_from_metadata_without_models(self):
+        response = self.client.get(reverse('catalog:case-mix-list'))
+        self.assertContains(response, '2025')
+        self.assertContains(response, reverse('catalog:case-mix-year', args=[2025]))
+
+        year_response = self.client.get(reverse('catalog:case-mix-year', args=[2025]))
+        self.assertContains(year_response, 'Case Q')
+        self.assertContains(year_response, reverse('catalog:case-mix-detail', args=[2025, 'q']))
+
+        detail_response = self.client.get(reverse('catalog:case-mix-detail', args=[2025, 'q']))
+        self.assertContains(detail_response, 'Mainline 2025 Case Q')
+        self.assertContains(detail_response, 'Źródło 164custom')
+
     def test_catalog_can_filter_by_brand(self):
         HotWheelsModel.objects.create(
             app_id='def456',
