@@ -67,6 +67,9 @@
           <span class="badge">Nr {{ model_obj.number }}</span>
           <span class="badge">{{ model_obj.year|default:"-" }}</span>
           <span class="badge">{{ model_obj.category|default:"-" }}</span>
+          {% for case_code in model_obj.case_code_list %}
+            <span class="badge">Case {{ case_code }}</span>
+          {% endfor %}
         </div>
       </div>
       <div class="model-meta-grid">
@@ -82,6 +85,12 @@
           <span class="meta">Numer serii</span>
           <strong>{{ model_obj.series_number|default:"-" }}</strong>
         </div>
+        {% if model_obj.case_code_list %}
+          <div class="card-surface model-meta-card">
+            <span class="meta">Case mix</span>
+            <strong>{{ model_obj.case_code_list|join:", " }}</strong>
+          </div>
+        {% endif %}
         {% if model_obj.exclusive_store %}
           <div class="card-surface model-meta-card">
             <span class="meta">Exclusive</span>

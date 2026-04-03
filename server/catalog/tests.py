@@ -571,6 +571,45 @@ class ImportModelsCommandTests(TestCase):
         self.assertEqual(model.series, 'Compact Kings')
         self.assertEqual(model.special_tag, '')
 
+    def test_import_normalizes_and_merges_case_codes(self):
+        initial_payload = [{
+            'Toy': 'ABC',
+            'Number': '001',
+            'Model Name': 'Test Car',
+            'Series': 'Series A',
+            'Series Number': '1/5',
+            'Case': 'A case',
+        }]
+        second_payload = [{
+            'Toy': 'ABC',
+            'Number': '001',
+            'Model Name': 'Test Car',
+            'Series': 'Series A',
+            'Series Number': '1/5',
+            'Case': 'B',
+        }]
+        third_payload = [{
+            'Toy': 'ABC',
+            'Number': '001',
+            'Model Name': 'Test Car',
+            'Series': 'Series A',
+            'Series Number': '1/5',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            first_path = Path(tmpdir) / 'first.json'
+            second_path = Path(tmpdir) / 'second.json'
+            third_path = Path(tmpdir) / 'third.json'
+            first_path.write_text(json.dumps(initial_payload))
+            second_path.write_text(json.dumps(second_payload))
+            third_path.write_text(json.dumps(third_payload))
+            call_command('import_models', path=str(first_path))
+            call_command('import_models', path=str(second_path))
+            call_command('import_models', path=str(third_path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.case_codes, 'A,B')
+
 
 class CatalogViewTests(TestCase):
     def setUp(self):
@@ -794,6 +833,51 @@ class CatalogViewTests(TestCase):
 
         self.assertContains(response, 'Custom Mustang')
         self.assertNotContains(response, '1970 Pontiac Firebird')
+
+    def test_catalog_can_filter_by_case_code(self):
+        self.model_obj.case_codes = 'A,C'
+        self.model_obj.save(update_fields=['case_codes'])
+        HotWheelsModel.objects.create(
+            app_id='def458',
+            brand='Hot Wheels',
+            toy='HCT08',
+            number='003',
+            model_name='Other Car',
+            year=2024,
+            category='Mainline',
+            series='Muscle Mania',
+            case_codes='B',
+            series_number='3/5',
+            photo_url='https://example.com/other.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:model-list'), {'case_code': 'A'})
+
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertNotContains(response, 'Other Car')
+        self.assertContains(response, '<option value="A" selected>', html=False)
+
+    def test_catalog_search_can_parse_case_shortcut(self):
+        self.model_obj.case_codes = 'A,C'
+        self.model_obj.save(update_fields=['case_codes'])
+        HotWheelsModel.objects.create(
+            app_id='def459',
+            brand='Hot Wheels',
+            toy='HCT09',
+            number='004',
+            model_name='Case B Car',
+            year=2024,
+            category='Mainline',
+            series='HW Dream Garage',
+            case_codes='B',
+            series_number='4/5',
+            photo_url='https://example.com/case-b.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:model-list'), {'q': 'firebird case:a'})
+
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertNotContains(response, 'Case B Car')
 
     def test_catalog_can_filter_by_brand(self):
         HotWheelsModel.objects.create(

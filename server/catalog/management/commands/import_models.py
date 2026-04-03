@@ -38,6 +38,7 @@ class Command(BaseCommand):
     )
     DEFAULT_DATASET_PATH = settings.PROJECT_ROOT / 'data' / 'catalog' / 'hot-wheels' / 'mainline' / '2022.json'
     DEFAULT_DATASET_ROOT = settings.PROJECT_ROOT / 'data' / 'catalog'
+    CASE_TOKEN_PATTERN = re.compile(r'[^A-Z0-9]+')
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -93,13 +94,14 @@ class Command(BaseCommand):
                 parsed_series = self.parse_series_metadata(row.get('Series', ''))
                 exclusive_store = self.clean_optional_text(row.get('Exclusive Store')) or parsed_series['exclusive_store']
                 special_tag = self.clean_optional_text(row.get('Special Tag')) or parsed_series['special_tag']
+                case_codes = self.normalize_case_codes(row.get('Case'))
                 short_card_photo_url = self.clean_optional_text(row.get('Short Card Photo'))
                 long_card_photo_url = self.clean_optional_text(row.get('Long Card Photo')) or photo_url
                 loose_photo_url = self.clean_optional_text(row.get('Loose Photo')) or photo_url
                 short_card_local_photo = self.clean_optional_text(row.get('Short Card Local Photo'))
                 long_card_local_photo = self.clean_optional_text(row.get('Long Card Local Photo')) or local_photo
                 loose_local_photo = self.clean_optional_text(row.get('Loose Local Photo')) or local_photo
-                excludes_short_card = category.lower() in {'premium', 'semi premium', 'xl', 'rlc'} or bool(exclusive_store)
+                excludes_short_card = category.lower() in {'premium', 'semi premium', 'xl', 'rlc', '5 pack'} or bool(exclusive_store)
                 if not excludes_short_card:
                     short_card_photo_url = short_card_photo_url or photo_url
                     short_card_local_photo = short_card_local_photo or local_photo
@@ -116,6 +118,7 @@ class Command(BaseCommand):
                     'series': parsed_series['series'],
                     'exclusive_store': exclusive_store,
                     'special_tag': special_tag,
+                    'case_codes': case_codes,
                     'series_number': row.get('Series Number', ''),
                     'photo_url': photo_url,
                     'local_photo_path': local_photo,
@@ -126,7 +129,18 @@ class Command(BaseCommand):
                     'loose_photo_url': loose_photo_url,
                     'loose_local_photo_path': loose_local_photo,
                 }
-                _, was_created = HotWheelsModel.objects.update_or_create(app_id=app_id, defaults=defaults)
+                model, was_created = HotWheelsModel.objects.get_or_create(app_id=app_id, defaults=defaults)
+                if not was_created:
+                    updated_fields = []
+                    for field, value in defaults.items():
+                        if field == 'case_codes':
+                            value = self.merge_case_codes(model.case_codes, case_codes)
+                        if getattr(model, field) == value:
+                            continue
+                        setattr(model, field, value)
+                        updated_fields.append(field)
+                    if updated_fields:
+                        model.save(update_fields=updated_fields)
                 if was_created:
                     created += 1
                 else:
@@ -240,6 +254,40 @@ class Command(BaseCommand):
         if value is None:
             return ''
         return str(value).strip()
+
+    @classmethod
+    def normalize_case_codes(cls, value) -> str:
+        if value is None:
+            return ''
+
+        if isinstance(value, (list, tuple, set)):
+            raw_values = value
+        else:
+            raw_values = [value]
+
+        normalized_codes = []
+        seen_codes = set()
+        for raw_value in raw_values:
+            for token in re.split(r'[,;/|]+', str(raw_value)):
+                cleaned = re.sub(r'\bcase\b', ' ', token, flags=re.IGNORECASE).strip().upper()
+                cleaned = cls.CASE_TOKEN_PATTERN.sub('', cleaned)
+                if not cleaned or cleaned in seen_codes:
+                    continue
+                seen_codes.add(cleaned)
+                normalized_codes.append(cleaned)
+        return ','.join(normalized_codes)
+
+    @classmethod
+    def merge_case_codes(cls, current_value, incoming_value) -> str:
+        merged = []
+        seen_codes = set()
+        for source in (current_value, incoming_value):
+            for code in cls.normalize_case_codes(source).split(','):
+                if not code or code in seen_codes:
+                    continue
+                seen_codes.add(code)
+                merged.append(code)
+        return ','.join(merged)
 
     @staticmethod
     def build_app_id(row: dict) -> str:

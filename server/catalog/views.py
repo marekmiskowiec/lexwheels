@@ -45,7 +45,7 @@ class ModelListView(CatalogScopeMixin, ListView):
             filters = {
                 key: request.GET.get(key, '').strip()
                 for key in (
-                    'q', 'brand', 'series', 'year', 'category', 'exclusive_store', 'special_tag', 'sort', 'scope'
+                    'q', 'brand', 'series', 'year', 'category', 'exclusive_store', 'special_tag', 'case_code', 'sort', 'scope'
                 )
                 if request.GET.get(key, '').strip()
             }
@@ -81,6 +81,7 @@ class ModelListView(CatalogScopeMixin, ListView):
         category = self.request.GET.get('category', '').strip() or parsed_query['category']
         exclusive_store = self.request.GET.get('exclusive_store', '').strip() or parsed_query['exclusive_store']
         special_tag = self.request.GET.get('special_tag', '').strip() or parsed_query['special_tag']
+        case_code = self.normalize_case_code(self.request.GET.get('case_code', '').strip() or parsed_query['case_code'])
         sort = self.request.GET.get('sort', 'number').strip()
 
         if query:
@@ -103,6 +104,8 @@ class ModelListView(CatalogScopeMixin, ListView):
             queryset = queryset.filter(exclusive_store=exclusive_store)
         if special_tag:
             queryset = queryset.filter(special_tag=special_tag)
+        if case_code:
+            queryset = queryset.filter(self.build_case_filter(case_code))
 
         sort_options = {
             'number': ('number', 'model_name'),
@@ -123,6 +126,7 @@ class ModelListView(CatalogScopeMixin, ListView):
             'series': '',
             'exclusive_store': '',
             'special_tag': '',
+            'case_code': '',
         }
         if not raw_query:
             return parsed
@@ -155,6 +159,8 @@ class ModelListView(CatalogScopeMixin, ListView):
                 parsed['exclusive_store'] = normalized_value
             elif normalized_key in {'t', 'tag'}:
                 parsed['special_tag'] = normalized_value
+            elif normalized_key in {'k', 'case', 'mix'}:
+                parsed['case_code'] = normalized_value
             else:
                 free_text_tokens.append(token)
 
@@ -178,6 +184,9 @@ class ModelListView(CatalogScopeMixin, ListView):
         context['selected_category'] = self.request.GET.get('category', '').strip() or parsed_query['category']
         context['selected_exclusive_store'] = self.request.GET.get('exclusive_store', '').strip() or parsed_query['exclusive_store']
         context['selected_special_tag'] = self.request.GET.get('special_tag', '').strip() or parsed_query['special_tag']
+        context['selected_case_code'] = self.normalize_case_code(
+            self.request.GET.get('case_code', '').strip() or parsed_query['case_code']
+        )
         context['selected_sort'] = self.request.GET.get('sort', 'number').strip() or 'number'
         context['current_path'] = self.request.get_full_path()
         context['series_options'] = (
@@ -216,6 +225,7 @@ class ModelListView(CatalogScopeMixin, ListView):
             .distinct()
             .order_by('special_tag')
         )
+        context['case_code_options'] = self.extract_case_code_options(filter_options_queryset)
         stats_queryset = scoped_total_queryset if scope_mode == CATALOG_SCOPE_PROFILE else total_queryset
         context['catalog_stats'] = {
             'total_models': stats_queryset.count(),
@@ -232,6 +242,32 @@ class ModelListView(CatalogScopeMixin, ListView):
             context['quick_add_form'] = CatalogQuickAddForm(owner=self.request.user, initial={'next': self.request.get_full_path()})
         context['saved_filters'] = self.request.session.get(CATALOG_FILTER_SESSION_KEY, {})
         return context
+
+    @staticmethod
+    def normalize_case_code(value: str) -> str:
+        return ''.join(char for char in value.strip().upper() if char.isalnum())
+
+    @classmethod
+    def build_case_filter(cls, case_code: str) -> Q:
+        normalized = cls.normalize_case_code(case_code)
+        if not normalized:
+            return Q()
+        return (
+            Q(case_codes=normalized)
+            | Q(case_codes__startswith=f'{normalized},')
+            | Q(case_codes__endswith=f',{normalized}')
+            | Q(case_codes__contains=f',{normalized},')
+        )
+
+    @staticmethod
+    def extract_case_code_options(queryset) -> list[str]:
+        case_codes = set()
+        for raw_value in queryset.exclude(case_codes='').values_list('case_codes', flat=True):
+            for code in str(raw_value).split(','):
+                normalized = code.strip().upper()
+                if normalized:
+                    case_codes.add(normalized)
+        return sorted(case_codes)
 
 
 class ModelDetailView(DetailView):

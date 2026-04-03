@@ -19,6 +19,7 @@ class HotWheelsModel(models.Model):
     series = models.CharField(max_length=255, blank=True)
     exclusive_store = models.CharField(max_length=128, blank=True)
     special_tag = models.CharField(max_length=128, blank=True)
+    case_codes = models.CharField(max_length=64, blank=True)
     series_number = models.CharField(max_length=32, blank=True)
     photo_url = models.URLField(blank=True)
     local_photo_path = models.CharField(max_length=512, blank=True)
@@ -44,7 +45,7 @@ class HotWheelsModel(models.Model):
     @property
     def excluded_packaging_states(self) -> set[str]:
         category = (self.category or '').strip().lower()
-        if category in {'premium', 'semi premium', 'xl', 'rlc'} or self.exclusive_store:
+        if category in {'premium', 'semi premium', 'xl', 'rlc', '5 pack'} or self.exclusive_store:
             return {'short_card'}
         return set()
 
@@ -66,6 +67,10 @@ class HotWheelsModel(models.Model):
 
     def get_absolute_url(self):
         return reverse('catalog:model-detail', args=[self.pk])
+
+    @property
+    def case_code_list(self) -> list[str]:
+        return [code.strip() for code in self.case_codes.split(',') if code.strip()]
 
     @property
     def local_photo_exists(self) -> bool:
