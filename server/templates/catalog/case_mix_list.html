@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Case Mixy | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .case-year-grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  .case-year-card {
+    display: grid;
+    gap: 14px;
+    min-height: 100%;
+  }
+  .case-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<section class="panel hero">
+  <div class="hero-copy">
+    <span class="eyebrow">Case mixy</span>
+    <h1>Roczniki i rozpiska case’ów</h1>
+    <p>Osobna sekcja do przeglądania mixów z danego roku. Po wejściu w rocznik dostajesz listę case’ów, a dalej osobną stronę pojedynczego mixu z miejscem na opis, TH, STH i własne notatki.</p>
+  </div>
+</section>
+
+<section class="case-year-grid">
+  {% for item in case_years %}
+    <article class="card case-year-card">
+      <div>
+        <p class="eyebrow" style="margin-bottom:10px;">Rok {{ item.year }}</p>
+        <h2 style="margin-bottom:8px;"><a href="{{ item.url }}">{{ item.year }}</a></h2>
+        {% if item.headline %}<p>{{ item.headline }}</p>{% endif %}
+        {% if item.intro %}<p class="meta">{{ item.intro }}</p>{% endif %}
+      </div>
+      <div class="stats-strip">
+        <div class="stat-card"><span class="stat-label">Case’y</span><strong class="stat-value">{{ item.case_count }}</strong></div>
+        <div class="stat-card"><span class="stat-label">Modele</span><strong class="stat-value">{{ item.model_count }}</strong></div>
+        <div class="stat-card"><span class="stat-label">TH</span><strong class="stat-value">{{ item.th_count }}</strong></div>
+        <div class="stat-card"><span class="stat-label">STH</span><strong class="stat-value">{{ item.sth_count }}</strong></div>
+      </div>
+      <div class="case-chip-row">
+        {% for case_code in item.case_codes %}
+          <span class="badge">Case {{ case_code }}</span>
+        {% endfor %}
+      </div>
+      <div class="actions-row" style="margin-top:0;">
+        <a class="button" href="{{ item.url }}">Zobacz case’y z {{ item.year }}</a>
+      </div>
+    </article>
+  {% empty %}
+    <div class="panel empty-panel">
+      <h3>Brak danych case mix</h3>
+      <p class="meta">Dodaj modele z przypisanym polem `Case`, a roczniki pojawią się tutaj automatycznie.</p>
+    </div>
+  {% endfor %}
+</section>
+{% endblock %}

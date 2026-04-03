@@ -1,0 +1,54 @@
+{
+  "headline": "Mainline 2026 z rozbiciem na case mixy A-F.",
+  "intro": "To jest warstwa opisowa nad katalogiem. Możesz tu dopisywać komentarz do rocznika i edytować każdy case osobno bez ruszania rekordów modeli.",
+  "cases": {
+    "A": {
+      "title": "2026 Case A",
+      "teaser": "Pierwszy mix roku i wejście w startowe numery mainline.",
+      "description": "",
+      "notes": "",
+      "th_notes": "",
+      "sth_notes": ""
+    },
+    "B": {
+      "title": "2026 Case B",
+      "teaser": "Drugi mix roku z kolejną partią mainline i dalszym ciągiem numeracji.",
+      "description": "",
+      "notes": "",
+      "th_notes": "",
+      "sth_notes": ""
+    },
+    "C": {
+      "title": "2026 Case C",
+      "teaser": "Mix C z kolejnymi kolorami i wejściem w środek pierwszej części rocznika.",
+      "description": "",
+      "notes": "",
+      "th_notes": "",
+      "sth_notes": ""
+    },
+    "D": {
+      "title": "2026 Case D",
+      "teaser": "Mix D z dalszą rozbudową rocznika i większą liczbą nowych pozycji.",
+      "description": "",
+      "notes": "",
+      "th_notes": "",
+      "sth_notes": ""
+    },
+    "E": {
+      "title": "2026 Case E",
+      "teaser": "Mix E z wejściem w późniejszą część numeracji 2026.",
+      "description": "",
+      "notes": "",
+      "th_notes": "",
+      "sth_notes": ""
+    },
+    "F": {
+      "title": "2026 Case F",
+      "teaser": "Mix F z późniejszymi numerami, kolejnymi recolorami i dodatkowymi highlightami.",
+      "description": "",
+      "notes": "",
+      "th_notes": "",
+      "sth_notes": ""
+    }
+  }
+}

@@ -137,6 +137,7 @@
           <a class="button" href="{% url 'collections:dashboard' %}">Moje kolekcje</a>
           <a class="button secondary" href="{% url 'collections:stats' %}">Statystyki</a>
           <a class="button secondary" href="{% url 'catalog:model-list' %}">Przejdź do katalogu</a>
+          <a class="button secondary" href="{% url 'catalog:case-mix-list' %}">Case mixy</a>
         </div>
       {% else %}
         <span class="eyebrow">Katalog + kolekcja + szukane</span>
@@ -145,6 +146,7 @@
         <p class="meta">Zacznij od kolekcji, nie od listy modeli.</p>
         <div class="hero-actions">
           <a class="button" href="{% url 'catalog:model-list' %}">Przeglądaj katalog</a>
+          <a class="button secondary" href="{% url 'catalog:case-mix-list' %}">Przeglądaj case mixy</a>
           <a class="button secondary" href="{% url 'accounts:register' %}">Załóż konto</a>
           <a class="button secondary" href="{% url 'collections:community' %}">Zobacz społeczność</a>
         </div>

@@ -879,6 +879,93 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertNotContains(response, 'Case B Car')
 
+    def test_case_mix_list_view(self):
+        self.model_obj.year = 2026
+        self.model_obj.case_codes = 'A,B'
+        self.model_obj.special_tag = 'Treasure Hunt'
+        self.model_obj.save(update_fields=['year', 'case_codes', 'special_tag'])
+        HotWheelsModel.objects.create(
+            app_id='case-list-2',
+            brand='Hot Wheels',
+            toy='HCT10',
+            number='002',
+            model_name='Second Case Car',
+            year=2026,
+            category='Mainline',
+            series='HW Dream Garage',
+            case_codes='C',
+            special_tag='Super Treasure Hunt',
+            series_number='2/5',
+            photo_url='https://example.com/second.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:case-mix-list'))
+
+        self.assertContains(response, 'Roczniki i rozpiska case’ów')
+        self.assertContains(response, '2026')
+        self.assertContains(response, 'Case A')
+        self.assertContains(response, 'Case B')
+        self.assertContains(response, 'Case C')
+        self.assertContains(response, reverse('catalog:case-mix-year', args=[2026]))
+
+    def test_case_mix_year_view(self):
+        self.model_obj.year = 2026
+        self.model_obj.case_codes = 'A'
+        self.model_obj.special_tag = 'Treasure Hunt'
+        self.model_obj.save(update_fields=['year', 'case_codes', 'special_tag'])
+        HotWheelsModel.objects.create(
+            app_id='case-year-2',
+            brand='Hot Wheels',
+            toy='HCT11',
+            number='002',
+            model_name='Second Case Car',
+            year=2026,
+            category='Mainline',
+            series='HW Dream Garage',
+            case_codes='A',
+            special_tag='Super Treasure Hunt',
+            series_number='2/5',
+            photo_url='https://example.com/second.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:case-mix-year', args=[2026]))
+
+        self.assertContains(response, 'Mainline 2026: rozpiska case’ów')
+        self.assertContains(response, 'Case A')
+        self.assertContains(response, 'TH')
+        self.assertContains(response, 'STH')
+        self.assertContains(response, reverse('catalog:case-mix-detail', args=[2026, 'a']))
+
+    def test_case_mix_detail_view(self):
+        self.model_obj.year = 2026
+        self.model_obj.case_codes = 'A'
+        self.model_obj.special_tag = 'Treasure Hunt'
+        self.model_obj.save(update_fields=['year', 'case_codes', 'special_tag'])
+        HotWheelsModel.objects.create(
+            app_id='case-detail-2',
+            brand='Hot Wheels',
+            toy='HCT12',
+            number='002',
+            model_name='Second Case Car',
+            year=2026,
+            category='Mainline',
+            series='HW Dream Garage',
+            case_codes='A',
+            special_tag='Super Treasure Hunt',
+            series_number='2/5',
+            photo_url='https://example.com/second.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:case-mix-detail', args=[2026, 'a']))
+
+        self.assertContains(response, 'Mainline 2026 Case A')
+        self.assertContains(response, 'Modele w case A')
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertContains(response, 'Second Case Car')
+        self.assertContains(response, 'Treasure Hunt')
+        self.assertContains(response, 'Super Treasure Hunt')
+        self.assertContains(response, 'Otwórz ten case w katalogu')
+
     def test_catalog_can_filter_by_brand(self):
         HotWheelsModel.objects.create(
             app_id='def456',

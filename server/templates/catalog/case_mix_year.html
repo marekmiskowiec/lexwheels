@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Case Mixy {{ year }} | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .case-grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  .case-card {
+    display: grid;
+    gap: 14px;
+    min-height: 100%;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<section class="panel hero">
+  <div class="hero-copy">
+    <span class="eyebrow">Case mixy {{ year }}</span>
+    <h1>Mainline {{ year }}: rozpiska case’ów</h1>
+    {% if headline %}<p>{{ headline }}</p>{% endif %}
+    {% if intro %}<p class="meta">{{ intro }}</p>{% endif %}
+    <div class="actions-row">
+      <a class="button secondary" href="{% url 'catalog:case-mix-list' %}">Wszystkie roczniki</a>
+    </div>
+  </div>
+</section>
+
+<section class="case-grid">
+  {% for item in case_cards %}
+    <article class="card case-card">
+      <div>
+        <p class="eyebrow" style="margin-bottom:10px;">Case {{ item.code }}</p>
+        <h2 style="margin-bottom:8px;"><a href="{{ item.url }}">Mix {{ item.code }}</a></h2>
+        {% if item.teaser %}<p>{{ item.teaser }}</p>{% endif %}
+        {% if item.description %}<p class="meta">{{ item.description }}</p>{% endif %}
+      </div>
+      <div class="stats-strip">
+        <div class="stat-card"><span class="stat-label">Modele</span><strong class="stat-value">{{ item.model_count }}</strong></div>
+        <div class="stat-card"><span class="stat-label">TH</span><strong class="stat-value">{{ item.th_count }}</strong></div>
+        <div class="stat-card"><span class="stat-label">STH</span><strong class="stat-value">{{ item.sth_count }}</strong></div>
+      </div>
+      <div class="actions-row" style="margin-top:0;">
+        <a class="button" href="{{ item.url }}">Otwórz case {{ item.code }}</a>
+      </div>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

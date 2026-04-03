@@ -1,10 +1,15 @@
+import json
+import shlex
+from pathlib import Path
+from urllib.parse import urlencode
+
+from django.conf import settings
 from django.contrib import messages
 from django.db.models import Q
+from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import DetailView, ListView, TemplateView
-import shlex
-from urllib.parse import urlencode
 
 from collections_app.forms import CatalogQuickAddForm, CollectionBatchAddForm
 
@@ -14,6 +19,7 @@ from .models import HotWheelsModel
 CATALOG_FILTER_SESSION_KEY = 'catalog_filters'
 CATALOG_SCOPE_PROFILE = 'profile'
 CATALOG_SCOPE_ALL = 'all'
+CASE_METADATA_ROOT = settings.PROJECT_ROOT / 'data' / 'case-highlights' / 'hot-wheels' / 'mainline'
 
 
 class CatalogScopeMixin:
@@ -382,4 +388,169 @@ class CatalogCoverageView(CatalogScopeMixin, TemplateView):
         context['scope_summary'] = self.request.user.catalog_scope_summary if (
             self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
         ) else []
+        return context
+
+
+def load_case_year_metadata(year: int) -> dict:
+    path = CASE_METADATA_ROOT / f'{year}.json'
+    if not path.exists():
+        return {}
+
+    try:
+        payload = json.loads(path.read_text(encoding='utf-8'))
+    except json.JSONDecodeError:
+        return {}
+
+    return payload if isinstance(payload, dict) else {}
+
+
+class CaseMixListView(CatalogScopeMixin, TemplateView):
+    template_name = 'catalog/case_mix_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        queryset = self.apply_profile_scope(HotWheelsModel.objects.all()).exclude(case_codes='')
+
+        year_map: dict[int, dict] = {}
+        for model in queryset.only('year', 'case_codes', 'special_tag'):
+            if model.year is None:
+                continue
+            year_bucket = year_map.setdefault(
+                model.year,
+                {
+                    'year': model.year,
+                    'case_codes': set(),
+                    'model_count': 0,
+                    'th_count': 0,
+                    'sth_count': 0,
+                },
+            )
+            year_bucket['model_count'] += 1
+            for case_code in model.case_code_list:
+                year_bucket['case_codes'].add(case_code)
+            if model.special_tag == 'Treasure Hunt':
+                year_bucket['th_count'] += 1
+            elif model.special_tag == 'Super Treasure Hunt':
+                year_bucket['sth_count'] += 1
+
+        case_years = []
+        for year, row in sorted(year_map.items(), reverse=True):
+            metadata = load_case_year_metadata(year)
+            case_years.append(
+                {
+                    'year': year,
+                    'case_codes': sorted(row['case_codes']),
+                    'case_count': len(row['case_codes']),
+                    'model_count': row['model_count'],
+                    'th_count': row['th_count'],
+                    'sth_count': row['sth_count'],
+                    'headline': str(metadata.get('headline', '')).strip(),
+                    'intro': str(metadata.get('intro', '')).strip(),
+                    'url': reverse('catalog:case-mix-year', args=[year]),
+                }
+            )
+
+        context['case_years'] = case_years
+        context['selected_scope'] = self.get_scope_mode()
+        return context
+
+
+class CaseMixYearView(CatalogScopeMixin, TemplateView):
+    template_name = 'catalog/case_mix_year.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        year = int(self.kwargs['year'])
+        queryset = self.apply_profile_scope(
+            HotWheelsModel.objects.filter(year=year, category='Mainline')
+        ).exclude(case_codes='')
+
+        metadata = load_case_year_metadata(year)
+        case_meta_map = metadata.get('cases', {}) if isinstance(metadata.get('cases', {}), dict) else {}
+
+        case_map: dict[str, dict] = {}
+        for model in queryset:
+            for case_code in model.case_code_list:
+                bucket = case_map.setdefault(
+                    case_code,
+                    {
+                        'models': [],
+                        'th_models': [],
+                        'sth_models': [],
+                    },
+                )
+                bucket['models'].append(model)
+                if model.special_tag == 'Treasure Hunt':
+                    bucket['th_models'].append(model)
+                elif model.special_tag == 'Super Treasure Hunt':
+                    bucket['sth_models'].append(model)
+
+        if not case_map:
+            raise Http404('No case mixes found for this year.')
+
+        case_cards = []
+        for case_code in sorted(case_map):
+            bucket = case_map[case_code]
+            case_meta = case_meta_map.get(case_code, {}) if isinstance(case_meta_map.get(case_code, {}), dict) else {}
+            case_cards.append(
+                {
+                    'code': case_code,
+                    'model_count': len(bucket['models']),
+                    'th_count': len(bucket['th_models']),
+                    'sth_count': len(bucket['sth_models']),
+                    'teaser': str(case_meta.get('teaser', '')).strip(),
+                    'description': str(case_meta.get('description', '')).strip(),
+                    'url': reverse('catalog:case-mix-detail', args=[year, case_code.lower()]),
+                }
+            )
+
+        context['year'] = year
+        context['headline'] = str(metadata.get('headline', '')).strip()
+        context['intro'] = str(metadata.get('intro', '')).strip()
+        context['case_cards'] = case_cards
+        context['selected_scope'] = self.get_scope_mode()
+        return context
+
+
+class CaseMixDetailView(CatalogScopeMixin, TemplateView):
+    template_name = 'catalog/case_mix_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        year = int(self.kwargs['year'])
+        case_code = ModelListView.normalize_case_code(self.kwargs['case_code'])
+        queryset = self.apply_profile_scope(
+            HotWheelsModel.objects.filter(year=year, category='Mainline')
+        ).filter(ModelListView.build_case_filter(case_code)).order_by('number', 'model_name')
+
+        if not queryset.exists():
+            raise Http404('Case mix not found.')
+
+        metadata = load_case_year_metadata(year)
+        case_meta_map = metadata.get('cases', {}) if isinstance(metadata.get('cases', {}), dict) else {}
+        case_meta = case_meta_map.get(case_code, {}) if isinstance(case_meta_map.get(case_code, {}), dict) else {}
+
+        th_models = [model for model in queryset if model.special_tag == 'Treasure Hunt']
+        sth_models = [model for model in queryset if model.special_tag == 'Super Treasure Hunt']
+
+        context['year'] = year
+        context['case_code'] = case_code
+        context['models'] = queryset
+        context['case_stats'] = {
+            'model_count': queryset.count(),
+            'th_count': len(th_models),
+            'sth_count': len(sth_models),
+        }
+        context['th_models'] = th_models
+        context['sth_models'] = sth_models
+        context['case_meta'] = {
+            'title': str(case_meta.get('title', '')).strip(),
+            'description': str(case_meta.get('description', '')).strip(),
+            'notes': str(case_meta.get('notes', '')).strip(),
+            'th_notes': str(case_meta.get('th_notes', '')).strip(),
+            'sth_notes': str(case_meta.get('sth_notes', '')).strip(),
+        }
+        context['back_to_year_url'] = reverse('catalog:case-mix-year', args=[year])
+        context['catalog_url'] = f"{reverse('catalog:model-list')}?year={year}&category=Mainline&case_code={case_code}"
+        context['selected_scope'] = self.get_scope_mode()
         return context
