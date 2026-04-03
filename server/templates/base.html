@@ -433,6 +433,16 @@
     .card-surface p:last-child {
       margin-bottom: 0;
     }
+    .empty-panel {
+      display: grid;
+      gap: 8px;
+      justify-items: start;
+      min-height: 100%;
+    }
+    .empty-panel h3,
+    .empty-panel p {
+      margin-bottom: 0;
+    }
     .info-cluster {
       display: grid;
       gap: 12px;
@@ -579,6 +589,9 @@
       .form-actions { flex-direction: column; align-items: stretch; }
       .form-grid { grid-template-columns: 1fr; }
       .avatar-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .empty-panel {
+        justify-items: stretch;
+      }
       .collector-row {
         flex-direction: column;
         align-items: flex-start;

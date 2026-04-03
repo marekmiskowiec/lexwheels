@@ -109,7 +109,11 @@
       </div>
     </div>
   {% empty %}
-    <p>Nie masz jeszcze żadnej kolekcji.</p>
+    <div class="card-surface empty-panel dashboard-card">
+      <h3>Nie masz jeszcze żadnej kolekcji</h3>
+      <p class="meta">Zacznij od własnej listy modeli. Kolekcje są Twoją główną przestrzenią do porządkowania posiadanych autek.</p>
+      <a class="button secondary" href="{% url 'collections:collection-create' %}">Nowa kolekcja</a>
+    </div>
   {% endfor %}
   </section>
 </section>
@@ -138,7 +142,11 @@
       </div>
     </div>
   {% empty %}
-    <p>Nie masz jeszcze żadnych aktywnych szukanych.</p>
+    <div class="card-surface empty-panel dashboard-card">
+      <h3>Nie masz jeszcze żadnych aktywnych szukanych</h3>
+      <p class="meta">Dodawaj modele z katalogu wraz z budżetem i warunkami, żeby inni kolekcjonerzy widzieli, czego aktualnie szukasz.</p>
+      <a class="button secondary" href="{% url 'catalog:model-list' %}">Przejdź do katalogu</a>
+    </div>
   {% endfor %}
   </section>
 </section>

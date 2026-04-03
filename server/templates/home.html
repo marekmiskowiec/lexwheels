@@ -217,8 +217,11 @@
             {% if collection.description %}<p>{{ collection.description }}</p>{% endif %}
           </div>
         {% empty %}
-          <p>Nie masz jeszcze kolekcji. Zacznij od własnej listy modeli i dodawaj osobno to, czego szukasz.</p>
-          <p><a class="button" href="{% url 'collections:collection-create' %}">Nowa kolekcja</a></p>
+          <div class="launch-card empty-panel">
+            <h3>Nie masz jeszcze kolekcji</h3>
+            <p class="meta">Zacznij od własnej listy modeli i dopiero osobno dodawaj to, czego szukasz.</p>
+            <a class="button secondary" href="{% url 'collections:collection-create' %}">Nowa kolekcja</a>
+          </div>
         {% endfor %}
       </div>
     </section>
@@ -241,7 +244,11 @@
             <div class="progress-bar"><span style="width: {{ row.percent }}%;"></span></div>
           </div>
         {% empty %}
-          <p class="meta">Dodaj modele do kolekcji, żeby zobaczyć postęp serii.</p>
+          <div class="launch-card empty-panel">
+            <h3>Jeszcze nie ma postępu do pokazania</h3>
+            <p class="meta">Dodaj pierwsze modele do kolekcji, żeby zobaczyć serie najbliżej ukończenia.</p>
+            <a class="button secondary" href="{% url 'catalog:model-list' %}">Przejdź do katalogu</a>
+          </div>
         {% endfor %}
       </div>
     </section>
@@ -357,7 +364,10 @@
         </div>
       </article>
     {% empty %}
-      <p>Brak modeli w katalogu.</p>
+      <article class="launch-card empty-panel">
+        <h3>Brak modeli w katalogu</h3>
+        <p class="meta">Baza jest jeszcze pusta. Po imporcie modele pojawią się tutaj automatycznie.</p>
+      </article>
     {% endfor %}
   </div>
 </section>

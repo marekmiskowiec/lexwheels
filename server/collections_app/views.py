@@ -85,6 +85,8 @@ IMPORT_CATEGORY_MAP = {
     'rlc': 'RLC',
     'collectors': 'Collectors',
     'xl': 'XL',
+    '5-pack': '5 Pack',
+    '5 pack': '5 Pack',
 }
 
 

@@ -31,6 +31,10 @@
     gap: 10px;
     margin-top: 8px;
   }
+  .profile-contact-card {
+    display: grid;
+    gap: 12px;
+  }
   .profile-list {
     display: grid;
     gap: 14px;
@@ -40,6 +44,9 @@
     min-height: 100%;
     display: grid;
     gap: 10px;
+  }
+  .profile-empty {
+    text-align: left;
   }
   @media (max-width: 860px) {
     .profile-summary { grid-template-columns: 1fr; }
@@ -73,9 +80,22 @@
         <h3>{% if is_own_profile %}Jak widzą Cię inni{% else %}Kontakt i aktywność{% endif %}</h3>
         <p class="meta">Na profilu widać kolekcje, aktywne szukane i linki społecznościowe, jeśli zostały uzupełnione.</p>
       </div>
-      <div class="card-surface">
-        <span class="meta">Najważniejsze liczby</span>
-        <p class="meta">Szybki podgląd aktywności kolekcjonera bez przeklikiwania całego profilu.</p>
+      <div class="card-surface profile-contact-card">
+        <span class="meta">{% if is_own_profile %}Uzupełnij profil{% else %}Kontakt{% endif %}</span>
+        <h3>{% if is_own_profile %}Dodaj miejsca kontaktu{% else %}Jak skontaktować się z kolekcjonerem{% endif %}</h3>
+        {% if profile_user.youtube_url or profile_user.tiktok_url or profile_user.instagram_url %}
+          <p class="meta">{% if is_own_profile %}Te linki będą widoczne przy Twoim profilu i wpisach szukanych.{% else %}Najprostsza ścieżka kontaktu prowadzi przez linki społecznościowe z profilu.{% endif %}</p>
+          <div class="profile-socials">
+            {% if profile_user.youtube_url %}<a class="button secondary" href="{{ profile_user.youtube_url }}" target="_blank" rel="noopener noreferrer">YouTube</a>{% endif %}
+            {% if profile_user.tiktok_url %}<a class="button secondary" href="{{ profile_user.tiktok_url }}" target="_blank" rel="noopener noreferrer">TikTok</a>{% endif %}
+            {% if profile_user.instagram_url %}<a class="button secondary" href="{{ profile_user.instagram_url }}" target="_blank" rel="noopener noreferrer">Instagram</a>{% endif %}
+          </div>
+        {% elif is_own_profile %}
+          <p class="meta">Na razie nie masz dodanych linków społecznościowych. Uzupełnij je, żeby osoby zainteresowane Twoimi szukanymi wiedziały, gdzie pisać.</p>
+          <a class="button secondary" href="{% url 'accounts:profile-edit' %}">Uzupełnij profil</a>
+        {% else %}
+          <p class="meta">Ten kolekcjoner nie dodał jeszcze linków społecznościowych. Na razie profil pokazuje tylko jego kolekcje i aktywne szukane.</p>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -103,9 +123,16 @@
         <p class="meta">{{ wanted.model.year|default:"-" }} | {{ wanted.model.category|default:"-" }} | {{ wanted.get_packaging_state_display }}</p>
         <p class="meta">Stan min.: {{ wanted.get_condition_min_display }}{% if wanted.budget_max %} | budżet do {{ wanted.budget_max }} PLN{% endif %}</p>
         {% if wanted.notes %}<p>{{ wanted.notes }}</p>{% endif %}
+        <div class="danger-zone">
+          <a class="button secondary" href="{{ wanted.model.get_absolute_url }}">Zobacz model</a>
+        </div>
       </div>
     {% empty %}
-      <p>Brak aktywnych szukanych do wyświetlenia.</p>
+      <div class="card-surface empty-panel profile-empty">
+        <h3>{% if is_own_profile %}Nie masz jeszcze aktywnych szukanych{% else %}Brak aktywnych szukanych{% endif %}</h3>
+        <p class="meta">{% if is_own_profile %}Dodaj pierwszy model z katalogu i określ warunki zakupu oraz budżet.{% else %}Ten kolekcjoner nie opublikował obecnie żadnych aktywnych poszukiwań.{% endif %}</p>
+        {% if is_own_profile %}<a class="button secondary" href="{% url 'catalog:model-list' %}">Przejdź do katalogu</a>{% endif %}
+      </div>
     {% endfor %}
   </section>
 </section>
@@ -123,9 +150,16 @@
         <h3><a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a></h3>
         <p class="meta">{{ collection.get_kind_display }} | {{ collection.get_visibility_display }} | {{ collection.items.count }} modeli</p>
         {% if collection.description %}<p>{{ collection.description }}</p>{% endif %}
+        <div class="danger-zone">
+          <a class="button secondary" href="{{ collection.get_absolute_url }}">Otwórz kolekcję</a>
+        </div>
       </div>
     {% empty %}
-      <p>Brak kolekcji do wyświetlenia.</p>
+      <div class="card-surface empty-panel profile-empty">
+        <h3>{% if is_own_profile %}Nie masz jeszcze kolekcji{% else %}Brak kolekcji do wyświetlenia{% endif %}</h3>
+        <p class="meta">{% if is_own_profile %}Utwórz pierwszą kolekcję, żeby zacząć układać własny zestaw modeli i pokazać go na profilu.{% else %}Ten kolekcjoner nie ma jeszcze publicznych kolekcji widocznych na profilu.{% endif %}</p>
+        {% if is_own_profile %}<a class="button secondary" href="{% url 'collections:collection-create' %}">Nowa kolekcja</a>{% endif %}
+      </div>
     {% endfor %}
   </section>
 </section>
