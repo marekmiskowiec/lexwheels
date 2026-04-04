@@ -73,6 +73,9 @@
       box-shadow: var(--shadow);
     }
     .nav-links, .nav-auth { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .nav-header {
+      display: contents;
+    }
     .nav-toggle {
       display: none;
       align-items: center;
@@ -590,9 +593,15 @@
     @media (max-width: 720px) {
       .shell { padding: 14px 10px 28px; }
       .nav { position: static; padding: 12px; gap: 8px; border-radius: 20px; }
+      .nav-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: center;
+        width: 100%;
+      }
       .nav-toggle {
         display: inline-flex;
-        margin-left: auto;
       }
       .nav-menu {
         display: none;
@@ -737,10 +746,12 @@
   <div class="shell">
     {% with current_namespace=request.resolver_match.namespace|default:'' current_url_name=request.resolver_match.url_name|default:'' current_path=request.path %}
     <nav class="nav">
-      <a class="brand" href="{% url 'home' %}">LexWheels</a>
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav-menu">
-        <span class="nav-toggle-lines"></span>
-      </button>
+      <div class="nav-header">
+        <a class="brand" href="{% url 'home' %}">LexWheels</a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav-menu">
+          <span class="nav-toggle-lines"></span>
+        </button>
+      </div>
       <div class="nav-menu" id="site-nav-menu">
         <div class="nav-links">
           <div class="nav-primary">
