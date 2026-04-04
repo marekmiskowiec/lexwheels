@@ -712,6 +712,28 @@ class CatalogViewTests(TestCase):
         response = self.client.get(reverse('catalog:model-list'), {'q': 'Firebird'})
         self.assertContains(response, '1970 Pontiac Firebird')
 
+    def test_catalog_search_suggestions_returns_matching_models(self):
+        HotWheelsModel.objects.create(
+            app_id='def455',
+            brand='Hot Wheels',
+            toy='HCT04',
+            number='000',
+            model_name='Toyota Supra',
+            year=2024,
+            category='Mainline',
+            series='HW Turbo',
+            series_number='1/5',
+            photo_url='https://example.com/supra.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:model-search-suggestions'), {'q': 'toyota'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['suggestions'][0]['value'],
+            'Toyota Supra',
+        )
+
     def test_catalog_search_can_parse_year_shortcut(self):
         HotWheelsModel.objects.create(
             app_id='def456',

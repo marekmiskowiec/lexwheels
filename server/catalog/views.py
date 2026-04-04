@@ -7,8 +7,10 @@ from django.conf import settings
 from django.contrib import messages
 from django.db.models import Q
 from django.http import Http404
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 
 from collections_app.forms import CollectionBatchAddForm
@@ -184,6 +186,32 @@ class ModelListView(CatalogScopeMixin, ListView):
         parsed['text'] = ' '.join(free_text_tokens).strip()
         return parsed
 
+    @staticmethod
+    def normalize_case_code(value: str) -> str:
+        return ''.join(char for char in value.strip().upper() if char.isalnum())
+
+    @classmethod
+    def build_case_filter(cls, case_code: str) -> Q:
+        normalized = cls.normalize_case_code(case_code)
+        if not normalized:
+            return Q()
+        return (
+            Q(case_codes=normalized)
+            | Q(case_codes__startswith=f'{normalized},')
+            | Q(case_codes__endswith=f',{normalized}')
+            | Q(case_codes__contains=f',{normalized},')
+        )
+
+    @staticmethod
+    def extract_case_code_options(queryset) -> list[str]:
+        case_codes = set()
+        for raw_value in queryset.exclude(case_codes='').values_list('case_codes', flat=True):
+            for code in str(raw_value).split(','):
+                normalized = code.strip().upper()
+                if normalized:
+                    case_codes.add(normalized)
+        return sorted(case_codes)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         filtered_count = context['page_obj'].paginator.count if context.get('page_obj') else len(context['models'])
@@ -259,34 +287,41 @@ class ModelListView(CatalogScopeMixin, ListView):
         ) else []
         if self.request.user.is_authenticated:
             context['batch_add_form'] = CollectionBatchAddForm(owner=self.request.user, initial={'next': self.request.get_full_path()})
+        context['search_suggestions_url'] = reverse('catalog:model-search-suggestions')
         context['saved_filters'] = self.request.session.get(CATALOG_FILTER_SESSION_KEY, {})
         return context
 
-    @staticmethod
-    def normalize_case_code(value: str) -> str:
-        return ''.join(char for char in value.strip().upper() if char.isalnum())
 
-    @classmethod
-    def build_case_filter(cls, case_code: str) -> Q:
-        normalized = cls.normalize_case_code(case_code)
-        if not normalized:
-            return Q()
-        return (
-            Q(case_codes=normalized)
-            | Q(case_codes__startswith=f'{normalized},')
-            | Q(case_codes__endswith=f',{normalized}')
-            | Q(case_codes__contains=f',{normalized},')
-        )
+class ModelSearchSuggestionsView(CatalogScopeMixin, View):
+    def get(self, request, *args, **kwargs):
+        raw_query = request.GET.get('q', '').strip()
+        query = ModelListView.parse_search_query(raw_query)['text']
+        if len(query) < 2:
+            return JsonResponse({'suggestions': []})
 
-    @staticmethod
-    def extract_case_code_options(queryset) -> list[str]:
-        case_codes = set()
-        for raw_value in queryset.exclude(case_codes='').values_list('case_codes', flat=True):
-            for code in str(raw_value).split(','):
-                normalized = code.strip().upper()
-                if normalized:
-                    case_codes.add(normalized)
-        return sorted(case_codes)
+        queryset = self.apply_profile_scope(HotWheelsModel.objects.all()).filter(
+            Q(model_name__icontains=query)
+            | Q(brand__icontains=query)
+            | Q(series__icontains=query)
+            | Q(toy__icontains=query)
+            | Q(number__icontains=query)
+        ).order_by('model_name', 'year', 'number')
+
+        suggestions = []
+        seen = set()
+        for model in queryset.only('model_name', 'toy', 'year')[:12]:
+            model_name = model.model_name.strip()
+            if not model_name or model_name in seen:
+                continue
+            seen.add(model_name)
+            suggestions.append(
+                {
+                    'value': model_name,
+                    'label': f'{model_name} | {model.toy}{f" | {model.year}" if model.year else ""}',
+                }
+            )
+
+        return JsonResponse({'suggestions': suggestions})
 
 
 class ModelDetailView(DetailView):

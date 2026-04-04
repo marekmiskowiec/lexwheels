@@ -197,7 +197,8 @@
     <input type="hidden" name="scope" value="{{ selected_scope }}">
     <div style="flex: 2 1 300px;">
       <label for="q">Szukaj</label>
-      <input id="q" type="search" name="q" value="{{ query }}" placeholder='Np. honda civic custom y:2022 c:mainline x:"Walmart Exclusive"'>
+      <input id="q" type="search" name="q" value="{{ query }}" list="catalog-search-suggestions" autocomplete="off" placeholder='Np. honda civic custom y:2022 c:mainline x:"Walmart Exclusive"'>
+      <datalist id="catalog-search-suggestions"></datalist>
       <p class="meta" style="margin:6px 0 0;">Skróty: `y:` rok, `c:` kategoria, `b:` marka, `s:` seria, `x:` exclusive, `t:` tag, `case:` mix.</p>
     </div>
     <div class="catalog-filter-grid" style="width:100%;">
@@ -296,6 +297,51 @@
     </div>
   {% endfor %}
 </section>
+<script>
+  const catalogSearchInput = document.getElementById('q');
+  const catalogSuggestionsList = document.getElementById('catalog-search-suggestions');
+  const catalogSuggestionsUrl = '{{ search_suggestions_url|escapejs }}';
+
+  if (catalogSearchInput && catalogSuggestionsList && catalogSuggestionsUrl) {
+    let searchSuggestionsTimeout;
+
+    const renderSuggestions = (items) => {
+      catalogSuggestionsList.innerHTML = '';
+      items.forEach((item) => {
+        const option = document.createElement('option');
+        option.value = item.value;
+        option.label = item.label;
+        catalogSuggestionsList.appendChild(option);
+      });
+    };
+
+    catalogSearchInput.addEventListener('input', () => {
+      const query = catalogSearchInput.value.trim();
+      window.clearTimeout(searchSuggestionsTimeout);
+
+      if (query.length < 2) {
+        renderSuggestions([]);
+        return;
+      }
+
+      searchSuggestionsTimeout = window.setTimeout(async () => {
+        try {
+          const response = await fetch(`${catalogSuggestionsUrl}?q=${encodeURIComponent(query)}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          });
+          if (!response.ok) {
+            renderSuggestions([]);
+            return;
+          }
+          const payload = await response.json();
+          renderSuggestions(Array.isArray(payload.suggestions) ? payload.suggestions : []);
+        } catch (error) {
+          renderSuggestions([]);
+        }
+      }, 140);
+    });
+  }
+</script>
 {% if user.is_authenticated and batch_add_form.fields.collection.queryset %}
   <script>
     const modelCheckboxes = document.querySelectorAll('input[name="model_ids"]');
