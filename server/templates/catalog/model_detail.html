@@ -36,6 +36,11 @@
     flex-wrap: wrap;
     gap: 10px;
   }
+  .case-entry-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
   .collection-link-grid {
     display: flex;
     flex-wrap: wrap;
@@ -104,6 +109,23 @@
           </div>
         {% endif %}
       </div>
+      {% if case_entries %}
+        <div class="card-surface">
+          <div class="section-copy">
+            <h3>Case'y modelu</h3>
+            <p class="meta">Ten model pojawiał się w poniższych case mixach.</p>
+          </div>
+          <div class="case-entry-list" style="margin-top:12px;">
+            {% for entry in case_entries %}
+              {% if entry.url %}
+                <a class="button secondary" href="{{ entry.url }}">{{ entry.label }}</a>
+              {% else %}
+                <span class="badge">{{ entry.label }}</span>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
       {% if user.is_authenticated %}
         <div class="card-surface">
           <div class="section-copy">

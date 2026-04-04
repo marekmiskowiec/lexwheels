@@ -1080,6 +1080,8 @@ class CatalogViewTests(TestCase):
         self.assertNotContains(response, 'Hot Wheels Boulevard')
 
     def test_model_detail(self):
+        self.model_obj.case_codes = 'A,Q'
+        self.model_obj.save(update_fields=['case_codes'])
         response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
         self.assertContains(response, 'HCT05')
         self.assertContains(response, 'Hot Wheels')
@@ -1088,6 +1090,9 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Krótka karta')
         self.assertContains(response, 'Długa karta')
         self.assertContains(response, 'Luzak')
+        self.assertContains(response, "Case'y modelu")
+        self.assertContains(response, reverse('catalog:case-mix-detail', args=[2022, 'a']))
+        self.assertContains(response, reverse('catalog:case-mix-detail', args=[2022, 'q']))
 
     def test_semi_premium_model_detail_hides_short_card(self):
         self.model_obj.category = 'Semi Premium'

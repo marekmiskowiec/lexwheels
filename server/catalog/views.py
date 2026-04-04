@@ -281,6 +281,19 @@ class ModelDetailView(DetailView):
     template_name = 'catalog/model_detail.html'
     context_object_name = 'model_obj'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        model_obj = context['model_obj']
+        context['case_entries'] = [
+            {
+                'code': case_code,
+                'label': f'Case {case_code}',
+                'url': reverse('catalog:case-mix-detail', args=[model_obj.year, case_code.lower()]) if model_obj.year else '',
+            }
+            for case_code in model_obj.case_code_list
+        ]
+        return context
+
 
 class CatalogCoverageView(CatalogScopeMixin, TemplateView):
     template_name = 'catalog/coverage.html'
