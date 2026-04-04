@@ -856,6 +856,29 @@ class CatalogViewTests(TestCase):
         self.assertNotContains(response, 'Other Car')
         self.assertContains(response, '<option value="A" selected>', html=False)
 
+    def test_catalog_filter_options_follow_other_selected_filters(self):
+        self.model_obj.case_codes = 'A,C'
+        self.model_obj.save(update_fields=['case_codes'])
+        HotWheelsModel.objects.create(
+            app_id='def460',
+            brand='Hot Wheels',
+            toy='HCT10',
+            number='005',
+            model_name='Premium Car',
+            year=2024,
+            category='Premium',
+            series='Car Culture',
+            case_codes='ZAMAC',
+            series_number='1/5',
+            photo_url='https://example.com/premium.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:model-list'), {'category': 'Premium'})
+
+        self.assertContains(response, '<option value="Premium" selected>', html=False)
+        self.assertContains(response, '<option value="ZAMAC">', html=False)
+        self.assertNotContains(response, '<option value="A">', html=False)
+
     def test_catalog_search_can_parse_case_shortcut(self):
         self.model_obj.case_codes = 'A,C'
         self.model_obj.save(update_fields=['case_codes'])

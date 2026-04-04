@@ -76,43 +76,8 @@ class ModelListView(CatalogScopeMixin, ListView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = HotWheelsModel.objects.all()
-        queryset = self.apply_profile_scope(queryset)
-        raw_query = self.request.GET.get('q', '').strip()
-        parsed_query = self.parse_search_query(raw_query)
-        query = parsed_query['text']
-        series = self.request.GET.get('series', '').strip() or parsed_query['series']
-        brand = self.request.GET.get('brand', '').strip() or parsed_query['brand']
-        year = self.request.GET.get('year', '').strip() or parsed_query['year']
-        category = self.request.GET.get('category', '').strip() or parsed_query['category']
-        exclusive_store = self.request.GET.get('exclusive_store', '').strip() or parsed_query['exclusive_store']
-        special_tag = self.request.GET.get('special_tag', '').strip() or parsed_query['special_tag']
-        case_code = self.normalize_case_code(self.request.GET.get('case_code', '').strip() or parsed_query['case_code'])
-        sort = self.request.GET.get('sort', 'number').strip()
-
-        if query:
-            queryset = queryset.filter(
-                Q(toy__icontains=query)
-                | Q(number__icontains=query)
-                | Q(model_name__icontains=query)
-                | Q(brand__icontains=query)
-                | Q(series__icontains=query)
-            )
-        if brand:
-            queryset = queryset.filter(brand=brand)
-        if series:
-            queryset = queryset.filter(series=series)
-        if year.isdigit():
-            queryset = queryset.filter(year=int(year))
-        if category:
-            queryset = queryset.filter(category=category)
-        if exclusive_store:
-            queryset = queryset.filter(exclusive_store=exclusive_store)
-        if special_tag:
-            queryset = queryset.filter(special_tag=special_tag)
-        if case_code:
-            queryset = queryset.filter(self.build_case_filter(case_code))
-
+        queryset = self.build_catalog_queryset()
+        sort = self.get_selected_filters()['sort']
         sort_options = {
             'number': ('number', 'model_name'),
             'year': ('year', 'number', 'model_name'),
@@ -121,6 +86,52 @@ class ModelListView(CatalogScopeMixin, ListView):
             'name': ('model_name',),
         }
         return queryset.order_by(*sort_options.get(sort, sort_options['number']))
+
+    def get_selected_filters(self) -> dict[str, str]:
+        raw_query = self.request.GET.get('q', '').strip()
+        parsed_query = self.parse_search_query(raw_query)
+        return {
+            'raw_query': raw_query,
+            'query': parsed_query['text'],
+            'series': self.request.GET.get('series', '').strip() or parsed_query['series'],
+            'brand': self.request.GET.get('brand', '').strip() or parsed_query['brand'],
+            'year': self.request.GET.get('year', '').strip() or parsed_query['year'],
+            'category': self.request.GET.get('category', '').strip() or parsed_query['category'],
+            'exclusive_store': self.request.GET.get('exclusive_store', '').strip() or parsed_query['exclusive_store'],
+            'special_tag': self.request.GET.get('special_tag', '').strip() or parsed_query['special_tag'],
+            'case_code': self.normalize_case_code(self.request.GET.get('case_code', '').strip() or parsed_query['case_code']),
+            'sort': self.request.GET.get('sort', 'number').strip() or 'number',
+        }
+
+    def build_catalog_queryset(self, *, exclude_filters: set[str] | None = None):
+        queryset = self.apply_profile_scope(HotWheelsModel.objects.all())
+        filters = self.get_selected_filters()
+        exclude_filters = exclude_filters or set()
+
+        if filters['query'] and 'query' not in exclude_filters:
+            queryset = queryset.filter(
+                Q(toy__icontains=filters['query'])
+                | Q(number__icontains=filters['query'])
+                | Q(model_name__icontains=filters['query'])
+                | Q(brand__icontains=filters['query'])
+                | Q(series__icontains=filters['query'])
+            )
+        if filters['brand'] and 'brand' not in exclude_filters:
+            queryset = queryset.filter(brand=filters['brand'])
+        if filters['series'] and 'series' not in exclude_filters:
+            queryset = queryset.filter(series=filters['series'])
+        if filters['year'].isdigit() and 'year' not in exclude_filters:
+            queryset = queryset.filter(year=int(filters['year']))
+        if filters['category'] and 'category' not in exclude_filters:
+            queryset = queryset.filter(category=filters['category'])
+        if filters['exclusive_store'] and 'exclusive_store' not in exclude_filters:
+            queryset = queryset.filter(exclusive_store=filters['exclusive_store'])
+        if filters['special_tag'] and 'special_tag' not in exclude_filters:
+            queryset = queryset.filter(special_tag=filters['special_tag'])
+        if filters['case_code'] and 'case_code' not in exclude_filters:
+            queryset = queryset.filter(self.build_case_filter(filters['case_code']))
+
+        return queryset
 
     @staticmethod
     def parse_search_query(raw_query: str) -> dict[str, str]:
@@ -179,59 +190,62 @@ class ModelListView(CatalogScopeMixin, ListView):
         total_queryset = HotWheelsModel.objects.all()
         scope_mode = self.get_scope_mode()
         scoped_total_queryset = self.apply_profile_scope(HotWheelsModel.objects.all())
-        filter_options_queryset = scoped_total_queryset if scope_mode == CATALOG_SCOPE_PROFILE else total_queryset
-        raw_query = self.request.GET.get('q', '').strip()
-        parsed_query = self.parse_search_query(raw_query)
-        context['query'] = raw_query
+        selected_filters = self.get_selected_filters()
+        context['query'] = selected_filters['raw_query']
         context['selected_scope'] = scope_mode
-        context['selected_brand'] = self.request.GET.get('brand', '').strip() or parsed_query['brand']
-        context['selected_series'] = self.request.GET.get('series', '').strip() or parsed_query['series']
-        context['selected_year'] = self.request.GET.get('year', '').strip() or parsed_query['year']
-        context['selected_category'] = self.request.GET.get('category', '').strip() or parsed_query['category']
-        context['selected_exclusive_store'] = self.request.GET.get('exclusive_store', '').strip() or parsed_query['exclusive_store']
-        context['selected_special_tag'] = self.request.GET.get('special_tag', '').strip() or parsed_query['special_tag']
-        context['selected_case_code'] = self.normalize_case_code(
-            self.request.GET.get('case_code', '').strip() or parsed_query['case_code']
-        )
-        context['selected_sort'] = self.request.GET.get('sort', 'number').strip() or 'number'
+        context['selected_brand'] = selected_filters['brand']
+        context['selected_series'] = selected_filters['series']
+        context['selected_year'] = selected_filters['year']
+        context['selected_category'] = selected_filters['category']
+        context['selected_exclusive_store'] = selected_filters['exclusive_store']
+        context['selected_special_tag'] = selected_filters['special_tag']
+        context['selected_case_code'] = selected_filters['case_code']
+        context['selected_sort'] = selected_filters['sort']
         context['current_path'] = self.request.get_full_path()
+        series_options_queryset = self.build_catalog_queryset(exclude_filters={'series'})
+        brand_options_queryset = self.build_catalog_queryset(exclude_filters={'brand'})
+        year_options_queryset = self.build_catalog_queryset(exclude_filters={'year'})
+        category_options_queryset = self.build_catalog_queryset(exclude_filters={'category'})
+        exclusive_options_queryset = self.build_catalog_queryset(exclude_filters={'exclusive_store'})
+        special_tag_options_queryset = self.build_catalog_queryset(exclude_filters={'special_tag'})
+        case_code_options_queryset = self.build_catalog_queryset(exclude_filters={'case_code'})
         context['series_options'] = (
-            filter_options_queryset.exclude(series='')
+            series_options_queryset.exclude(series='')
             .values_list('series', flat=True)
             .distinct()
             .order_by('series')
         )
         context['brand_options'] = (
-            filter_options_queryset.exclude(brand='')
+            brand_options_queryset.exclude(brand='')
             .values_list('brand', flat=True)
             .distinct()
             .order_by('brand')
         )
         context['year_options'] = (
-            filter_options_queryset.exclude(year__isnull=True)
+            year_options_queryset.exclude(year__isnull=True)
             .values_list('year', flat=True)
             .distinct()
             .order_by('year')
         )
         context['category_options'] = (
-            filter_options_queryset.exclude(category='')
+            category_options_queryset.exclude(category='')
             .values_list('category', flat=True)
             .distinct()
             .order_by('category')
         )
         context['exclusive_store_options'] = (
-            filter_options_queryset.exclude(exclusive_store='')
+            exclusive_options_queryset.exclude(exclusive_store='')
             .values_list('exclusive_store', flat=True)
             .distinct()
             .order_by('exclusive_store')
         )
         context['special_tag_options'] = (
-            filter_options_queryset.exclude(special_tag='')
+            special_tag_options_queryset.exclude(special_tag='')
             .values_list('special_tag', flat=True)
             .distinct()
             .order_by('special_tag')
         )
-        context['case_code_options'] = self.extract_case_code_options(filter_options_queryset)
+        context['case_code_options'] = self.extract_case_code_options(case_code_options_queryset)
         stats_queryset = scoped_total_queryset if scope_mode == CATALOG_SCOPE_PROFILE else total_queryset
         context['catalog_stats'] = {
             'total_models': stats_queryset.count(),
