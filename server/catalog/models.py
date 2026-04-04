@@ -176,9 +176,16 @@ class HotWheelsModel(models.Model):
     @property
     def catalog_primary_image_src(self) -> str:
         variants = self.catalog_image_variants
-        if variants:
-            return variants[0]['src']
-        return ''
+        if not variants:
+            return ''
+
+        preferred_variant_order = ('long_card', 'short_card', 'loose', 'default')
+        variant_src_by_key = {variant['key']: variant['src'] for variant in variants}
+        for key in preferred_variant_order:
+            if variant_src_by_key.get(key):
+                return variant_src_by_key[key]
+
+        return variants[0]['src']
 
     @property
     def packaging_image_panels(self) -> list[dict]:

@@ -635,8 +635,7 @@ class CatalogViewTests(TestCase):
         response = self.client.get(reverse('catalog:model-list'))
 
         self.assertContains(response, 'https://example.com/long.jpg')
-        self.assertContains(response, 'data-image-label="Długa"')
-        self.assertContains(response, 'data-image-label="Luzak"')
+        self.assertNotContains(response, 'data-image-label=')
 
     def test_catalog_model_exposes_packaging_variants(self):
         self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
@@ -647,7 +646,7 @@ class CatalogViewTests(TestCase):
         variants = self.model_obj.catalog_image_variants
 
         self.assertEqual([variant['key'] for variant in variants], ['short_card', 'long_card'])
-        self.assertEqual(self.model_obj.catalog_primary_image_src, 'https://example.com/short.jpg')
+        self.assertEqual(self.model_obj.catalog_primary_image_src, 'https://example.com/long.jpg')
 
     def test_semi_premium_model_hides_short_card_variant(self):
         self.model_obj.category = 'Semi Premium'

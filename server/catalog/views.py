@@ -11,7 +11,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import DetailView, ListView, TemplateView
 
-from collections_app.forms import CatalogQuickAddForm, CollectionBatchAddForm
+from collections_app.forms import CollectionBatchAddForm
 
 from .models import HotWheelsModel
 
@@ -245,7 +245,6 @@ class ModelListView(CatalogScopeMixin, ListView):
         ) else []
         if self.request.user.is_authenticated:
             context['batch_add_form'] = CollectionBatchAddForm(owner=self.request.user, initial={'next': self.request.get_full_path()})
-            context['quick_add_form'] = CatalogQuickAddForm(owner=self.request.user, initial={'next': self.request.get_full_path()})
         context['saved_filters'] = self.request.session.get(CATALOG_FILTER_SESSION_KEY, {})
         return context
 

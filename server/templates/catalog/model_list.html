@@ -241,23 +241,8 @@
             class="thumb catalog-card-image"
             src="{{ item.catalog_primary_image_src }}"
             alt="{{ item.model_name }}"
-            data-default-src="{{ item.catalog_primary_image_src }}"
           >
         </a>
-      {% endif %}
-      {% if item.catalog_image_variants|length > 1 %}
-        <div class="catalog-image-switcher" data-image-switcher>
-          {% for variant in item.catalog_image_variants %}
-            <button
-              type="button"
-              class="catalog-image-tab{% if forloop.first %} is-active{% endif %}"
-              data-image-src="{{ variant.src }}"
-              data-image-label="{{ variant.label }}"
-            >
-              {{ variant.label }}
-            </button>
-          {% endfor %}
-        </div>
       {% endif %}
       <h3><a href="{{ item.get_absolute_url }}">{{ item.model_name }}</a></h3>
       <div class="catalog-meta">
@@ -275,59 +260,6 @@
           <p class="meta">{% if item.exclusive_store %}Ekskluzywny: {{ item.exclusive_store }}{% endif %}{% if item.exclusive_store and item.special_tag %} | {% endif %}{% if item.special_tag %}Tag: {{ item.special_tag }}{% endif %}</p>
         {% endif %}
       </div>
-      <div class="actions-row" style="margin-top:0;">
-        <a class="button secondary" href="{{ item.get_absolute_url }}">Szczegóły</a>
-        {% if user.is_authenticated %}
-          <a class="button secondary" href="{% url 'collections:wanted-create' %}?model={{ item.pk }}">Szukam</a>
-        {% endif %}
-      </div>
-      {% if user.is_authenticated and quick_add_form.fields.collection.queryset %}
-        <details class="quick-add-box">
-          <summary>Szybko dodaj warianty</summary>
-          <form method="post" action="{% url 'collections:quick-add' %}" class="list" style="margin-top:12px;">
-            {% csrf_token %}
-            <input type="hidden" name="model" value="{{ item.pk }}">
-            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            <div>
-              {{ quick_add_form.collection.label_tag }}
-              {{ quick_add_form.collection }}
-            </div>
-            {% for packaging_value, packaging_label in item.available_packaging_choices %}
-              <div class="card compact-card">
-                <label style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                  <input type="checkbox" name="enabled_{{ packaging_value }}" style="width:auto;">
-                  <strong>{{ packaging_label }}</strong>
-                </label>
-                <div class="filters">
-                  <div style="flex:1 1 110px;">
-                    <label for="quantity_{{ packaging_value }}_{{ item.pk }}">Ilość</label>
-                    <input id="quantity_{{ packaging_value }}_{{ item.pk }}" type="number" name="quantity_{{ packaging_value }}" min="1" value="1">
-                  </div>
-                  <div style="flex:1 1 180px;">
-                    <label for="condition_{{ packaging_value }}_{{ item.pk }}">Stan</label>
-                    <select id="condition_{{ packaging_value }}_{{ item.pk }}" name="condition_{{ packaging_value }}">
-                      {% for value, label in quick_add_form.condition_choices %}
-                        <option value="{{ value }}" {% if value == 'good' %}selected{% endif %}>{{ label }}</option>
-                      {% endfor %}
-                    </select>
-                  </div>
-                </div>
-                {% if packaging_value != 'loose' %}
-                  <div class="filters" style="margin-top:10px;">
-                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="is_sealed_{{ packaging_value }}" style="width:auto;">Zafoliowany</label>
-                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_soft_corners_{{ packaging_value }}" style="width:auto;">Miękkie rogi</label>
-                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_protector_{{ packaging_value }}" style="width:auto;">Protektor</label>
-                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="is_signed_{{ packaging_value }}" style="width:auto;">Podpisany</label>
-                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_bent_hook_{{ packaging_value }}" style="width:auto;">Zagięty haczyk</label>
-                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="has_cracked_blister_{{ packaging_value }}" style="width:auto;">Pęknięty blister</label>
-                  </div>
-                {% endif %}
-              </div>
-            {% endfor %}
-            <button type="submit">Dodaj warianty</button>
-          </form>
-        </details>
-      {% endif %}
       </div>
     </article>
   {% empty %}
@@ -360,25 +292,6 @@
     }
   </script>
 {% endif %}
-<script>
-  document.querySelectorAll('[data-image-switcher]').forEach((switcher) => {
-    const card = switcher.closest('.card');
-    const image = card ? card.querySelector('.catalog-card-image') : null;
-    if (!image) {
-      return;
-    }
-
-    switcher.querySelectorAll('.catalog-image-tab').forEach((button) => {
-      button.addEventListener('click', () => {
-        image.src = button.dataset.imageSrc;
-        switcher.querySelectorAll('.catalog-image-tab').forEach((tab) => {
-          tab.classList.remove('is-active');
-        });
-        button.classList.add('is-active');
-      });
-    });
-  });
-</script>
 {% if is_paginated %}
   <div class="pagination">
     {% if page_obj.has_previous %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
