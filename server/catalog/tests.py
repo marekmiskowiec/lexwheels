@@ -923,40 +923,14 @@ class CatalogViewTests(TestCase):
 
         response = self.client.get(reverse('catalog:case-mix-list'))
 
-        self.assertContains(response, 'Roczniki i rozpiska case’ów')
+        self.assertContains(response, 'Lista case’ów według roczników')
         self.assertContains(response, '2026')
         self.assertContains(response, 'Case A')
         self.assertContains(response, 'Case B')
         self.assertContains(response, 'Case C')
-        self.assertContains(response, reverse('catalog:case-mix-year', args=[2026]))
-
-    def test_case_mix_year_view(self):
-        self.model_obj.year = 2026
-        self.model_obj.case_codes = 'A'
-        self.model_obj.special_tag = 'Treasure Hunt'
-        self.model_obj.save(update_fields=['year', 'case_codes', 'special_tag'])
-        HotWheelsModel.objects.create(
-            app_id='case-year-2',
-            brand='Hot Wheels',
-            toy='HCT11',
-            number='002',
-            model_name='Second Case Car',
-            year=2026,
-            category='Mainline',
-            series='HW Dream Garage',
-            case_codes='A',
-            special_tag='Super Treasure Hunt',
-            series_number='2/5',
-            photo_url='https://example.com/second.jpg',
-        )
-
-        response = self.client.get(reverse('catalog:case-mix-year', args=[2026]))
-
-        self.assertContains(response, 'Mainline 2026: rozpiska case’ów')
-        self.assertContains(response, 'Case A')
-        self.assertContains(response, 'TH')
-        self.assertContains(response, 'STH')
         self.assertContains(response, reverse('catalog:case-mix-detail', args=[2026, 'a']))
+        self.assertContains(response, reverse('catalog:case-mix-detail', args=[2026, 'b']))
+        self.assertContains(response, reverse('catalog:case-mix-detail', args=[2026, 'c']))
 
     def test_case_mix_detail_view(self):
         self.model_obj.year = 2026
@@ -987,19 +961,15 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Treasure Hunt')
         self.assertContains(response, 'Super Treasure Hunt')
         self.assertContains(response, 'Otwórz ten case w katalogu')
+        self.assertContains(response, reverse('catalog:case-mix-list'))
 
     def test_case_mix_views_can_render_from_metadata_without_models(self):
         response = self.client.get(reverse('catalog:case-mix-list'))
         self.assertContains(response, '2025')
-        self.assertContains(response, reverse('catalog:case-mix-year', args=[2025]))
-
-        year_response = self.client.get(reverse('catalog:case-mix-year', args=[2025]))
-        self.assertContains(year_response, 'Case Q')
-        self.assertContains(year_response, reverse('catalog:case-mix-detail', args=[2025, 'q']))
+        self.assertContains(response, reverse('catalog:case-mix-detail', args=[2025, 'q']))
 
         detail_response = self.client.get(reverse('catalog:case-mix-detail', args=[2025, 'q']))
         self.assertContains(detail_response, 'Mainline 2025 Case Q')
-        self.assertContains(detail_response, 'Źródło 164custom')
 
     def test_catalog_can_filter_by_brand(self):
         HotWheelsModel.objects.create(

@@ -73,6 +73,47 @@
       box-shadow: var(--shadow);
     }
     .nav-links, .nav-auth { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .nav-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.04);
+      color: var(--ink);
+    }
+    .nav-toggle-lines,
+    .nav-toggle-lines::before,
+    .nav-toggle-lines::after {
+      display: block;
+      width: 18px;
+      height: 2px;
+      border-radius: 999px;
+      background: currentColor;
+      transition: transform .18s ease, opacity .18s ease;
+      content: "";
+    }
+    .nav-toggle-lines::before {
+      transform: translateY(-6px);
+    }
+    .nav-toggle-lines::after {
+      transform: translateY(4px);
+    }
+    .nav.is-open .nav-toggle-lines {
+      background: transparent;
+    }
+    .nav.is-open .nav-toggle-lines::before {
+      transform: translateY(0) rotate(45deg);
+    }
+    .nav.is-open .nav-toggle-lines::after {
+      transform: translateY(-2px) rotate(-45deg);
+    }
+    .nav-menu {
+      display: contents;
+    }
     .nav-links {
       flex: 1 1 720px;
       justify-content: space-between;
@@ -548,25 +589,68 @@
 
     @media (max-width: 720px) {
       .shell { padding: 14px 10px 28px; }
-      .nav { position: static; padding: 14px; gap: 10px; border-radius: 20px; }
-      .nav-links, .nav-auth { gap: 10px; }
-      .nav-links {
-        flex-direction: column;
-        align-items: stretch;
+      .nav { position: static; padding: 12px; gap: 8px; border-radius: 20px; }
+      .nav-toggle {
+        display: inline-flex;
+        margin-left: auto;
       }
-      .nav-primary,
-      .nav-utility {
+      .nav-menu {
+        display: none;
         width: 100%;
       }
-      .nav-links a, .nav-auth a { width: 100%; justify-content: flex-start; }
+      .nav.is-open .nav-menu {
+        display: block;
+      }
+      .nav-links,
+      .nav-auth {
+        width: 100%;
+        gap: 8px;
+      }
+      .nav-links {
+        display: block;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+      }
+      .nav-primary,
+      .nav-utility,
+      .nav-auth {
+        width: 100%;
+        display: block;
+      }
+      .nav-primary > *,
+      .nav-utility > *,
+      .nav-auth > * {
+        display: block;
+        width: 100%;
+      }
+      .nav-primary > * + *,
+      .nav-utility > * + *,
+      .nav-auth > * + * {
+        margin-top: 8px;
+      }
+      .nav-user-menu {
+        display: block;
+        width: 100%;
+      }
+      .nav-links a,
+      .nav-auth a,
+      .nav-user-summary {
+        width: 100%;
+        justify-content: flex-start;
+        box-sizing: border-box;
+      }
       .brand { width: 100%; justify-content: center; margin-right: 0; }
       .nav-user-menu,
       .nav-user-summary,
       .nav-user-panel { width: 100%; }
+      .nav-user-summary {
+        justify-content: space-between;
+      }
       .nav-user-panel {
         position: static;
         min-width: 0;
-        margin-top: 8px;
+        margin-top: 6px;
       }
       .panel { padding: 16px; border-radius: 20px; }
       .hero { margin-bottom: 18px; }
@@ -653,42 +737,47 @@
   <div class="shell">
     {% with current_namespace=request.resolver_match.namespace|default:'' current_url_name=request.resolver_match.url_name|default:'' current_path=request.path %}
     <nav class="nav">
-      <div class="nav-links">
-        <div class="nav-primary">
-          <a class="brand" href="{% url 'home' %}">LexWheels</a>
-          <a class="{% if current_namespace == 'catalog' and current_url_name != 'coverage' and current_url_name != 'case-mix-list' and current_url_name != 'case-mix-year' and current_url_name != 'case-mix-detail' %}is-active{% endif %}" href="{% url 'catalog:model-list' %}">Katalog</a>
-          <a class="{% if current_namespace == 'collections' and current_url_name == 'community' %}is-active{% endif %}" href="{% url 'collections:community' %}">Społeczność</a>
+      <a class="brand" href="{% url 'home' %}">LexWheels</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav-menu">
+        <span class="nav-toggle-lines"></span>
+      </button>
+      <div class="nav-menu" id="site-nav-menu">
+        <div class="nav-links">
+          <div class="nav-primary">
+            <a class="{% if current_namespace == 'catalog' and current_url_name != 'coverage' and current_url_name != 'case-mix-list' and current_url_name != 'case-mix-detail' %}is-active{% endif %}" href="{% url 'catalog:model-list' %}">Katalog</a>
+            <a class="{% if current_namespace == 'collections' and current_url_name == 'community' %}is-active{% endif %}" href="{% url 'collections:community' %}">Społeczność</a>
+          </div>
+          <div class="nav-utility">
+            <details class="nav-user-menu">
+              <summary class="nav-user-summary is-quiet{% if current_namespace == 'catalog' and current_url_name == 'coverage' or current_namespace == 'catalog' and current_url_name == 'case-mix-list' or current_namespace == 'catalog' and current_url_name == 'case-mix-detail' %} is-active{% endif %}">Zakres bazy</summary>
+              <div class="nav-user-panel">
+                <a class="nav-user-action{% if current_namespace == 'catalog' and current_url_name == 'coverage' %} is-active{% endif %}" href="{% url 'catalog:coverage' %}">Zakres bazy</a>
+                <a class="nav-user-action{% if current_namespace == 'catalog' and current_url_name == 'case-mix-list' or current_namespace == 'catalog' and current_url_name == 'case-mix-detail' %} is-active{% endif %}" href="{% url 'catalog:case-mix-list' %}">Case mixy</a>
+              </div>
+            </details>
+          </div>
         </div>
-        <div class="nav-utility">
-          <details class="nav-user-menu">
-            <summary class="nav-user-summary is-quiet{% if current_namespace == 'catalog' and current_url_name == 'coverage' or current_namespace == 'catalog' and current_url_name == 'case-mix-list' or current_namespace == 'catalog' and current_url_name == 'case-mix-year' or current_namespace == 'catalog' and current_url_name == 'case-mix-detail' %} is-active{% endif %}">Zakres bazy</summary>
-            <div class="nav-user-panel">
-              <a class="nav-user-action{% if current_namespace == 'catalog' and current_url_name == 'coverage' %} is-active{% endif %}" href="{% url 'catalog:coverage' %}">Zakres bazy</a>
-              <a class="nav-user-action{% if current_namespace == 'catalog' and current_url_name == 'case-mix-list' or current_namespace == 'catalog' and current_url_name == 'case-mix-year' or current_namespace == 'catalog' and current_url_name == 'case-mix-detail' %} is-active{% endif %}" href="{% url 'catalog:case-mix-list' %}">Case mixy</a>
-            </div>
-          </details>
+        <div class="nav-auth">
+          {% if user.is_authenticated %}
+            <details class="nav-user-menu">
+              <summary class="nav-user-summary{% if current_namespace == 'accounts' or current_namespace == 'collections' and current_url_name in 'dashboard collection-detail collection-create collection-update collection-delete item-create item-update item-delete batch-add batch-edit batch-delete import collection-import collection-import-confirm import-backlog quick-add wanted-list' %} is-active{% endif %}">{{ user.login }}</summary>
+              <div class="nav-user-panel">
+                <a class="nav-user-action{% if current_namespace == 'collections' and current_url_name in 'dashboard collection-detail collection-create collection-update collection-delete item-create item-update item-delete batch-add batch-edit batch-delete import collection-import collection-import-confirm import-backlog quick-add' %} is-active{% endif %}" href="{% url 'collections:dashboard' %}">Moje kolekcje</a>
+                <a class="nav-user-action{% if current_namespace == 'accounts' and current_url_name in 'profile profile-edit public-profile' %} is-active{% endif %}" href="{% url 'accounts:profile' %}">Profil</a>
+                <a class="nav-user-action{% if current_namespace == 'collections' and current_url_name == 'wanted-list' %} is-active{% endif %}" href="{% url 'collections:wanted-list' %}">Szukane</a>
+                <a class="nav-user-action{% if current_namespace == 'accounts' and current_url_name == 'catalog-scope' %} is-active{% endif %}" href="{% url 'accounts:catalog-scope' %}">Zakres katalogu</a>
+                <a class="nav-user-action{% if current_namespace == 'collections' and current_url_name == 'stats' %} is-active{% endif %}" href="{% url 'collections:stats' %}">Statystyki</a>
+                <form method="post" action="{% url 'logout' %}">
+                  {% csrf_token %}
+                  <button class="nav-user-action" type="submit">Wyloguj</button>
+                </form>
+              </div>
+            </details>
+          {% else %}
+            <a href="{% url 'login' %}">Logowanie</a>
+            <a href="{% url 'accounts:register' %}">Rejestracja</a>
+          {% endif %}
         </div>
-      </div>
-      <div class="nav-auth">
-        {% if user.is_authenticated %}
-          <details class="nav-user-menu">
-            <summary class="nav-user-summary{% if current_namespace == 'accounts' or current_namespace == 'collections' and current_url_name in 'dashboard collection-detail collection-create collection-update collection-delete item-create item-update item-delete batch-add batch-edit batch-delete import collection-import collection-import-confirm import-backlog quick-add wanted-list' %} is-active{% endif %}">{{ user.login }}</summary>
-            <div class="nav-user-panel">
-              <a class="nav-user-action{% if current_namespace == 'collections' and current_url_name in 'dashboard collection-detail collection-create collection-update collection-delete item-create item-update item-delete batch-add batch-edit batch-delete import collection-import collection-import-confirm import-backlog quick-add' %} is-active{% endif %}" href="{% url 'collections:dashboard' %}">Moje kolekcje</a>
-              <a class="nav-user-action{% if current_namespace == 'accounts' and current_url_name in 'profile profile-edit public-profile' %} is-active{% endif %}" href="{% url 'accounts:profile' %}">Profil</a>
-              <a class="nav-user-action{% if current_namespace == 'collections' and current_url_name == 'wanted-list' %} is-active{% endif %}" href="{% url 'collections:wanted-list' %}">Szukane</a>
-              <a class="nav-user-action{% if current_namespace == 'accounts' and current_url_name == 'catalog-scope' %} is-active{% endif %}" href="{% url 'accounts:catalog-scope' %}">Zakres katalogu</a>
-              <a class="nav-user-action{% if current_namespace == 'collections' and current_url_name == 'stats' %} is-active{% endif %}" href="{% url 'collections:stats' %}">Statystyki</a>
-              <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button class="nav-user-action" type="submit">Wyloguj</button>
-              </form>
-            </div>
-          </details>
-        {% else %}
-          <a href="{% url 'login' %}">Logowanie</a>
-          <a href="{% url 'accounts:register' %}">Rejestracja</a>
-        {% endif %}
       </div>
     </nav>
     {% endwith %}
@@ -703,5 +792,16 @@
       {% block content %}{% endblock %}
     </main>
   </div>
+  <script>
+    const nav = document.querySelector('.nav');
+    const navToggle = document.querySelector('.nav-toggle');
+
+    if (nav && navToggle) {
+      navToggle.addEventListener('click', () => {
+        const isOpen = nav.classList.toggle('is-open');
+        navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+    }
+  </script>
 </body>
 </html>

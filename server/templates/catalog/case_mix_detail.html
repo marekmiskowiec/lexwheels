@@ -56,10 +56,7 @@
     {% if case_meta.description %}<p>{{ case_meta.description }}</p>{% else %}<p>Osobny widok jednego case mixu z listą modeli oraz miejscem na własny opis, TH, STH i notatki do zakupów.</p>{% endif %}
     <div class="actions-row">
       <a class="button" href="{{ catalog_url }}">Otwórz ten case w katalogu</a>
-      <a class="button secondary" href="{{ back_to_year_url }}">Wróć do rocznika {{ year }}</a>
-      {% if case_meta.source_url %}
-        <a class="button secondary" href="{{ case_meta.source_url }}" target="_blank" rel="noopener noreferrer">Źródło 164custom</a>
-      {% endif %}
+      <a class="button secondary" href="{{ back_to_list_url }}">Wróć do listy case mixów</a>
     </div>
   </div>
 </section>
