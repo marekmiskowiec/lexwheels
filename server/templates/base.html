@@ -123,6 +123,14 @@
     .nav-links a.is-quiet.is-active {
       color: var(--ink);
     }
+    .nav-user-summary.is-quiet {
+      color: var(--muted);
+    }
+    .nav-user-summary.is-quiet:hover,
+    .nav-user-summary.is-quiet.is-active,
+    .nav-user-menu[open] .nav-user-summary.is-quiet {
+      color: var(--ink);
+    }
     .brand {
       margin-right: 8px;
       padding: 12px 16px;
@@ -649,13 +657,16 @@
         <div class="nav-primary">
           <a class="brand" href="{% url 'home' %}">LexWheels</a>
           <a class="{% if current_namespace == 'catalog' and current_url_name != 'coverage' and current_url_name != 'case-mix-list' and current_url_name != 'case-mix-year' and current_url_name != 'case-mix-detail' %}is-active{% endif %}" href="{% url 'catalog:model-list' %}">Katalog</a>
-          <a class="{% if current_namespace == 'catalog' and current_url_name == 'case-mix-list' or current_namespace == 'catalog' and current_url_name == 'case-mix-year' or current_namespace == 'catalog' and current_url_name == 'case-mix-detail' %}is-active{% endif %}" href="{% url 'catalog:case-mix-list' %}">Case mixy</a>
           <a class="{% if current_namespace == 'collections' and current_url_name == 'community' %}is-active{% endif %}" href="{% url 'collections:community' %}">Społeczność</a>
         </div>
         <div class="nav-utility">
-          <a class="is-quiet {% if current_namespace == 'catalog' and current_url_name == 'coverage' %}is-active{% endif %}" href="{% url 'catalog:coverage' %}">Zakres bazy</a>
-          {% if user.is_authenticated %}<a class="is-quiet {% if current_namespace == 'collections' and current_url_name == 'stats' %}is-active{% endif %}" href="{% url 'collections:stats' %}">Statystyki</a>{% endif %}
-          <a class="is-quiet {% if current_path|slice:':7' == '/admin/' %}is-active{% endif %}" href="/admin/">Admin</a>
+          <details class="nav-user-menu">
+            <summary class="nav-user-summary is-quiet{% if current_namespace == 'catalog' and current_url_name == 'coverage' or current_namespace == 'catalog' and current_url_name == 'case-mix-list' or current_namespace == 'catalog' and current_url_name == 'case-mix-year' or current_namespace == 'catalog' and current_url_name == 'case-mix-detail' %} is-active{% endif %}">Zakres bazy</summary>
+            <div class="nav-user-panel">
+              <a class="nav-user-action{% if current_namespace == 'catalog' and current_url_name == 'coverage' %} is-active{% endif %}" href="{% url 'catalog:coverage' %}">Zakres bazy</a>
+              <a class="nav-user-action{% if current_namespace == 'catalog' and current_url_name == 'case-mix-list' or current_namespace == 'catalog' and current_url_name == 'case-mix-year' or current_namespace == 'catalog' and current_url_name == 'case-mix-detail' %} is-active{% endif %}" href="{% url 'catalog:case-mix-list' %}">Case mixy</a>
+            </div>
+          </details>
         </div>
       </div>
       <div class="nav-auth">
@@ -667,6 +678,7 @@
               <a class="nav-user-action{% if current_namespace == 'accounts' and current_url_name in 'profile profile-edit public-profile' %} is-active{% endif %}" href="{% url 'accounts:profile' %}">Profil</a>
               <a class="nav-user-action{% if current_namespace == 'collections' and current_url_name == 'wanted-list' %} is-active{% endif %}" href="{% url 'collections:wanted-list' %}">Szukane</a>
               <a class="nav-user-action{% if current_namespace == 'accounts' and current_url_name == 'catalog-scope' %} is-active{% endif %}" href="{% url 'accounts:catalog-scope' %}">Zakres katalogu</a>
+              <a class="nav-user-action{% if current_namespace == 'collections' and current_url_name == 'stats' %} is-active{% endif %}" href="{% url 'collections:stats' %}">Statystyki</a>
               <form method="post" action="{% url 'logout' %}">
                 {% csrf_token %}
                 <button class="nav-user-action" type="submit">Wyloguj</button>
