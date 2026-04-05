@@ -734,6 +734,13 @@ class CatalogViewTests(TestCase):
             'Toyota Supra',
         )
 
+    def test_catalog_can_render_table_view(self):
+        response = self.client.get(reverse('catalog:model-list'), {'view': 'table'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<table class="catalog-table">', html=False)
+        self.assertEqual(response.context['selected_view'], 'table')
+
     def test_catalog_search_can_parse_year_shortcut(self):
         HotWheelsModel.objects.create(
             app_id='def456',

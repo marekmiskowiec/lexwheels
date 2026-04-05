@@ -45,6 +45,51 @@
     gap: 8px;
     margin-top: 12px;
   }
+  .catalog-view-switcher {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .catalog-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.03);
+  }
+  .catalog-table {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: collapse;
+  }
+  .catalog-table th,
+  .catalog-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .catalog-table th {
+    color: var(--muted);
+    font-size: .88rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+  }
+  .catalog-table tbody tr:hover {
+    background: rgba(255,255,255,0.03);
+  }
+  .catalog-table-thumb {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line);
+    padding: 6px;
+  }
+  .catalog-table td.is-numeric {
+    white-space: nowrap;
+  }
   .catalog-empty {
     display: grid;
     gap: 8px;
@@ -144,6 +189,7 @@
   </div>
   <form method="get" class="filters toolbar">
     <input type="hidden" name="scope" value="{{ selected_scope }}">
+    <input type="hidden" name="view" value="{{ selected_view }}">
     <div style="flex: 2 1 300px;">
       <label for="q">Szukaj</label>
       <input id="q" type="search" name="q" value="{{ query }}" list="catalog-search-suggestions" autocomplete="off" placeholder='Np. honda civic custom y:2022 c:mainline x:"Walmart Exclusive"'>
@@ -171,6 +217,13 @@
     <div class="catalog-filter-actions">
       <div style="min-width: 220px; flex: 0 1 260px;">
         <label for="sort">Sortowanie</label><select id="sort" name="sort"><option value="number" {% if selected_sort == 'number' %}selected{% endif %}>Po numerze</option><option value="year" {% if selected_sort == 'year' %}selected{% endif %}>Po roku</option><option value="category" {% if selected_sort == 'category' %}selected{% endif %}>Po kategorii</option><option value="exclusive" {% if selected_sort == 'exclusive' %}selected{% endif %}>Po exclusive</option><option value="name" {% if selected_sort == 'name' %}selected{% endif %}>Po nazwie</option></select>
+      </div>
+      <div>
+        <span class="meta" style="display:block; margin-bottom:6px;">Widok</span>
+        <div class="catalog-view-switcher">
+          <a class="button{% if selected_view != 'table' %} secondary{% endif %}" href="?scope={{ selected_scope }}&view=grid&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}">Kafelki</a>
+          <a class="button{% if selected_view == 'table' %}{% else %} secondary{% endif %}" href="?scope={{ selected_scope }}&view=table&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}">Tabela</a>
+        </div>
       </div>
       <button type="submit" name="save_filters" value="1" class="secondary">Zapisz filtry</button>
       {% if saved_filters %}<a class="button secondary" href="{% url 'catalog:model-list' %}?apply_saved_filters=1">Przywróć zapisane</a><a class="button secondary" href="{% url 'catalog:model-list' %}?clear_saved_filters=1">Usuń zapisane</a>{% endif %}
@@ -202,50 +255,104 @@
     {% endif %}
   {% endif %}
 </section>
-<section class="grid catalog-grid">
-  {% for item in models %}
-    <article class="card catalog-card">
-      <div class="card-body">
-      {% if user.is_authenticated and batch_add_form.fields.collection.queryset %}
-        <label class="meta" style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-          <input type="checkbox" name="model_ids" value="{{ item.pk }}" form="batch-add-form" style="width:auto;">
-          Mam ten model
-        </label>
-      {% endif %}
-      {% if item.catalog_primary_image_src %}
-        <a href="{{ item.get_absolute_url }}">
-          <img
-            class="thumb catalog-card-image"
-            src="{{ item.catalog_primary_image_src }}"
-            alt="{{ item.model_name }}"
-          >
-        </a>
-      {% endif %}
-      <h3><a href="{{ item.get_absolute_url }}">{{ item.model_name }}</a></h3>
-      <div class="catalog-meta">
-        <div class="catalog-inline-meta">
-          <p class="meta"><strong>{{ item.year|default:"-" }}</strong></p>
-          <p class="meta">{{ item.category|default:"-" }}</p>
+{% if selected_view == 'table' %}
+  <section class="catalog-table-wrap">
+    <table class="catalog-table">
+      <thead>
+        <tr>
+          {% if user.is_authenticated and batch_add_form.fields.collection.queryset %}<th>Moje</th>{% endif %}
+          <th>Zdjęcie</th>
+          <th>Nazwa</th>
+          <th>Rok</th>
+          <th>Kategoria</th>
+          <th>Seria</th>
+          <th>Toy</th>
+          <th>Nr</th>
+          <th>Case</th>
+          <th>Exclusive / Tag</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in models %}
+          <tr>
+            {% if user.is_authenticated and batch_add_form.fields.collection.queryset %}
+              <td class="is-numeric">
+                <input type="checkbox" name="model_ids" value="{{ item.pk }}" form="batch-add-form" style="width:auto;">
+              </td>
+            {% endif %}
+            <td>
+              {% if item.catalog_primary_image_src %}
+                <a href="{{ item.get_absolute_url }}"><img class="catalog-table-thumb" src="{{ item.catalog_primary_image_src }}" alt="{{ item.model_name }}"></a>
+              {% endif %}
+            </td>
+            <td><a href="{{ item.get_absolute_url }}"><strong>{{ item.model_name }}</strong></a></td>
+            <td class="is-numeric">{{ item.year|default:"-" }}</td>
+            <td>{{ item.category|default:"-" }}</td>
+            <td>{{ item.series|default:"Bez serii" }}{% if item.series_number %} | {{ item.series_number }}{% endif %}</td>
+            <td class="is-numeric">{{ item.toy }}</td>
+            <td class="is-numeric">{{ item.number }}</td>
+            <td>{% if item.case_code_list %}{{ item.case_code_list|join:", " }}{% else %}-{% endif %}</td>
+            <td>{% if item.exclusive_store %}{{ item.exclusive_store }}{% endif %}{% if item.exclusive_store and item.special_tag %} | {% endif %}{% if item.special_tag %}{{ item.special_tag }}{% endif %}{% if not item.exclusive_store and not item.special_tag %}-{% endif %}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="{% if user.is_authenticated and batch_add_form.fields.collection.queryset %}10{% else %}9{% endif %}">
+              <div class="catalog-empty">
+                <h3>Brak modeli dla tego zestawu filtrów</h3>
+                <p class="meta">Spróbuj wyczyścić część warunków albo przełączyć widok zakresu katalogu.</p>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% else %}
+  <section class="grid catalog-grid">
+    {% for item in models %}
+      <article class="card catalog-card">
+        <div class="card-body">
+        {% if user.is_authenticated and batch_add_form.fields.collection.queryset %}
+          <label class="meta" style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <input type="checkbox" name="model_ids" value="{{ item.pk }}" form="batch-add-form" style="width:auto;">
+            Mam ten model
+          </label>
+        {% endif %}
+        {% if item.catalog_primary_image_src %}
+          <a href="{{ item.get_absolute_url }}">
+            <img
+              class="thumb catalog-card-image"
+              src="{{ item.catalog_primary_image_src }}"
+              alt="{{ item.model_name }}"
+            >
+          </a>
+        {% endif %}
+        <h3><a href="{{ item.get_absolute_url }}">{{ item.model_name }}</a></h3>
+        <div class="catalog-meta">
+          <div class="catalog-inline-meta">
+            <p class="meta"><strong>{{ item.year|default:"-" }}</strong></p>
+            <p class="meta">{{ item.category|default:"-" }}</p>
+          </div>
+          <p class="meta">{{ item.brand|default:"-" }}</p>
+          <p class="meta">Toy: {{ item.toy }} | Nr: {{ item.number }}</p>
+          <p class="meta">{{ item.series|default:"Bez serii" }}{% if item.series_number %} | {{ item.series_number }}{% endif %}</p>
+          {% if item.case_code_list %}
+            <p class="meta">Case: {{ item.case_code_list|join:", " }}</p>
+          {% endif %}
+          {% if item.exclusive_store or item.special_tag %}
+            <p class="meta">{% if item.exclusive_store %}Ekskluzywny: {{ item.exclusive_store }}{% endif %}{% if item.exclusive_store and item.special_tag %} | {% endif %}{% if item.special_tag %}Tag: {{ item.special_tag }}{% endif %}</p>
+          {% endif %}
         </div>
-        <p class="meta">{{ item.brand|default:"-" }}</p>
-        <p class="meta">Toy: {{ item.toy }} | Nr: {{ item.number }}</p>
-        <p class="meta">{{ item.series|default:"Bez serii" }}{% if item.series_number %} | {{ item.series_number }}{% endif %}</p>
-        {% if item.case_code_list %}
-          <p class="meta">Case: {{ item.case_code_list|join:", " }}</p>
-        {% endif %}
-        {% if item.exclusive_store or item.special_tag %}
-          <p class="meta">{% if item.exclusive_store %}Ekskluzywny: {{ item.exclusive_store }}{% endif %}{% if item.exclusive_store and item.special_tag %} | {% endif %}{% if item.special_tag %}Tag: {{ item.special_tag }}{% endif %}</p>
-        {% endif %}
+        </div>
+      </article>
+    {% empty %}
+      <div class="panel catalog-empty">
+        <h3>Brak modeli dla tego zestawu filtrów</h3>
+        <p class="meta">Spróbuj wyczyścić część warunków albo przełączyć widok zakresu katalogu.</p>
       </div>
-      </div>
-    </article>
-  {% empty %}
-    <div class="panel catalog-empty">
-      <h3>Brak modeli dla tego zestawu filtrów</h3>
-      <p class="meta">Spróbuj wyczyścić część warunków albo przełączyć widok zakresu katalogu.</p>
-    </div>
-  {% endfor %}
-</section>
+    {% endfor %}
+  </section>
+{% endif %}
 <script>
   const catalogSearchInput = document.getElementById('q');
   const catalogSuggestionsList = document.getElementById('catalog-search-suggestions');

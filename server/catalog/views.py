@@ -92,6 +92,9 @@ class ModelListView(CatalogScopeMixin, ListView):
     def get_selected_filters(self) -> dict[str, str]:
         raw_query = self.request.GET.get('q', '').strip()
         parsed_query = self.parse_search_query(raw_query)
+        selected_view = self.request.GET.get('view', 'grid').strip().lower() or 'grid'
+        if selected_view not in {'grid', 'table'}:
+            selected_view = 'grid'
         return {
             'raw_query': raw_query,
             'query': parsed_query['text'],
@@ -103,6 +106,7 @@ class ModelListView(CatalogScopeMixin, ListView):
             'special_tag': self.request.GET.get('special_tag', '').strip() or parsed_query['special_tag'],
             'case_code': self.normalize_case_code(self.request.GET.get('case_code', '').strip() or parsed_query['case_code']),
             'sort': self.request.GET.get('sort', 'number').strip() or 'number',
+            'view': selected_view,
         }
 
     def build_catalog_queryset(self, *, exclude_filters: set[str] | None = None):
@@ -229,6 +233,7 @@ class ModelListView(CatalogScopeMixin, ListView):
         context['selected_special_tag'] = selected_filters['special_tag']
         context['selected_case_code'] = selected_filters['case_code']
         context['selected_sort'] = selected_filters['sort']
+        context['selected_view'] = selected_filters['view']
         context['current_path'] = self.request.get_full_path()
         series_options_queryset = self.build_catalog_queryset(exclude_filters={'series'})
         brand_options_queryset = self.build_catalog_queryset(exclude_filters={'brand'})
