@@ -90,6 +90,9 @@
   .catalog-table td.is-numeric {
     white-space: nowrap;
   }
+  .catalog-table-mobile-fallback {
+    display: none;
+  }
   .catalog-empty {
     display: grid;
     gap: 8px;
@@ -131,6 +134,17 @@
     }
     .catalog-results-toolbar > * {
       width: 100%;
+    }
+    .catalog-view-switcher {
+      display: none;
+    }
+  }
+  @media (max-width: 900px) {
+    .catalog-table-desktop {
+      display: none;
+    }
+    .catalog-table-mobile-fallback {
+      display: grid;
     }
   }
   @media (max-width: 560px) {
@@ -277,7 +291,7 @@
     <p class="meta" style="margin:0 0 10px;">
       Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ paginator.count }} entries
     </p>
-    <section class="catalog-table-wrap">
+    <section class="catalog-table-wrap catalog-table-desktop">
       <table class="catalog-table">
         <thead>
           <tr>
@@ -327,6 +341,50 @@
           {% endfor %}
         </tbody>
       </table>
+    </section>
+    <section class="grid catalog-grid catalog-table-mobile-fallback">
+      {% for item in models %}
+        <article class="card catalog-card">
+          <div class="card-body">
+          {% if user.is_authenticated and batch_add_form.fields.collection.queryset %}
+            <label class="meta" style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+              <input type="checkbox" name="model_ids" value="{{ item.pk }}" form="batch-add-form" style="width:auto;">
+              Mam ten model
+            </label>
+          {% endif %}
+          {% if item.catalog_primary_image_src %}
+            <a href="{{ item.get_absolute_url }}">
+              <img
+                class="thumb catalog-card-image"
+                src="{{ item.catalog_primary_image_src }}"
+                alt="{{ item.model_name }}"
+              >
+            </a>
+          {% endif %}
+          <h3><a href="{{ item.get_absolute_url }}">{{ item.model_name }}</a></h3>
+          <div class="catalog-meta">
+            <div class="catalog-inline-meta">
+              <p class="meta"><strong>{{ item.year|default:"-" }}</strong></p>
+              <p class="meta">{{ item.category|default:"-" }}</p>
+            </div>
+            <p class="meta">{{ item.brand|default:"-" }}</p>
+            <p class="meta">Toy: {{ item.toy }} | Nr: {{ item.number }}</p>
+            <p class="meta">{{ item.series|default:"Bez serii" }}{% if item.series_number %} | {{ item.series_number }}{% endif %}</p>
+            {% if item.case_code_list %}
+              <p class="meta">Case: {{ item.case_code_list|join:", " }}</p>
+            {% endif %}
+            {% if item.exclusive_store or item.special_tag %}
+              <p class="meta">{% if item.exclusive_store %}Ekskluzywny: {{ item.exclusive_store }}{% endif %}{% if item.exclusive_store and item.special_tag %} | {% endif %}{% if item.special_tag %}Tag: {{ item.special_tag }}{% endif %}</p>
+            {% endif %}
+          </div>
+          </div>
+        </article>
+      {% empty %}
+        <div class="panel catalog-empty">
+          <h3>Brak modeli dla tego zestawu filtrów</h3>
+          <p class="meta">Spróbuj wyczyścić część warunków albo przełączyć widok zakresu katalogu.</p>
+        </div>
+      {% endfor %}
     </section>
     {% if is_paginated %}
       <div class="pagination">
