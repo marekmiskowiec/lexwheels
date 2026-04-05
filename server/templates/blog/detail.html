@@ -124,18 +124,7 @@
       </div>
     </header>
     <div class="blog-article-copy">
-      {% for section in post.sections %}
-        <section>
-          {% if section.heading %}<h2>{{ section.heading }}</h2>{% endif %}
-          {% for paragraph in section.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
-          {% if section.list %}
-            <ul>
-              {% for item in section.list %}<li>{{ item }}</li>{% endfor %}
-            </ul>
-          {% endif %}
-          {% if section.quote %}<blockquote>{{ section.quote }}</blockquote>{% endif %}
-        </section>
-      {% endfor %}
+      {{ post.body_html }}
     </div>
   </article>
 
