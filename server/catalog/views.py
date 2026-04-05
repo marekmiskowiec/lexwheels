@@ -47,6 +47,24 @@ class ModelListView(CatalogScopeMixin, ListView):
     context_object_name = 'models'
     paginate_by = 36
     table_page_size_options = (25, 50, 100)
+    sort_options = {
+        'number': ('number', 'model_name'),
+        '-number': ('-number', '-model_name'),
+        'year': ('year', 'number', 'model_name'),
+        '-year': ('-year', '-number', 'model_name'),
+        'category': ('category', 'year', 'number', 'model_name'),
+        '-category': ('-category', '-year', 'number', 'model_name'),
+        'exclusive': ('exclusive_store', 'special_tag', 'year', 'number', 'model_name'),
+        '-exclusive': ('-exclusive_store', '-special_tag', '-year', 'number', 'model_name'),
+        'name': ('model_name',),
+        '-name': ('-model_name',),
+        'series': ('series', 'series_number', 'year', 'number', 'model_name'),
+        '-series': ('-series', '-series_number', '-year', 'number', 'model_name'),
+        'toy': ('toy', 'number', 'model_name'),
+        '-toy': ('-toy', 'number', 'model_name'),
+        'case': ('case_codes', 'year', 'number', 'model_name'),
+        '-case': ('-case_codes', '-year', 'number', 'model_name'),
+    }
 
     def get(self, request, *args, **kwargs):
         base_url = request.path
@@ -81,14 +99,7 @@ class ModelListView(CatalogScopeMixin, ListView):
     def get_queryset(self):
         queryset = self.build_catalog_queryset()
         sort = self.get_selected_filters()['sort']
-        sort_options = {
-            'number': ('number', 'model_name'),
-            'year': ('year', 'number', 'model_name'),
-            'category': ('category', 'year', 'number', 'model_name'),
-            'exclusive': ('exclusive_store', 'special_tag', 'year', 'number', 'model_name'),
-            'name': ('model_name',),
-        }
-        return queryset.order_by(*sort_options.get(sort, sort_options['number']))
+        return queryset.order_by(*self.sort_options.get(sort, self.sort_options['number']))
 
     def get_paginate_by(self, queryset):
         selected_filters = self.get_selected_filters()
@@ -109,6 +120,9 @@ class ModelListView(CatalogScopeMixin, ListView):
         per_page = self.request.GET.get('per_page', '').strip()
         if not (per_page.isdigit() and int(per_page) in self.table_page_size_options):
             per_page = str(self.table_page_size_options[0])
+        selected_sort = self.request.GET.get('sort', 'number').strip() or 'number'
+        if selected_sort not in self.sort_options:
+            selected_sort = 'number'
         return {
             'raw_query': raw_query,
             'query': parsed_query['text'],
@@ -119,7 +133,7 @@ class ModelListView(CatalogScopeMixin, ListView):
             'exclusive_store': self.request.GET.get('exclusive_store', '').strip() or parsed_query['exclusive_store'],
             'special_tag': self.request.GET.get('special_tag', '').strip() or parsed_query['special_tag'],
             'case_code': self.normalize_case_code(self.request.GET.get('case_code', '').strip() or parsed_query['case_code']),
-            'sort': self.request.GET.get('sort', 'number').strip() or 'number',
+            'sort': selected_sort,
             'view': selected_view,
             'per_page': per_page,
         }
@@ -248,6 +262,7 @@ class ModelListView(CatalogScopeMixin, ListView):
         context['selected_special_tag'] = selected_filters['special_tag']
         context['selected_case_code'] = selected_filters['case_code']
         context['selected_sort'] = selected_filters['sort']
+        context['selected_sort_base'] = selected_filters['sort'].lstrip('-')
         context['selected_view'] = selected_filters['view']
         context['selected_per_page'] = selected_filters['per_page']
         context['table_page_size_options'] = self.table_page_size_options

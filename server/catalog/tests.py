@@ -753,6 +753,32 @@ class CatalogViewTests(TestCase):
         self.assertEqual(response.context['paginator'].per_page, 50)
         self.assertContains(response, 'per_page=50', html=False)
 
+    def test_catalog_table_view_can_sort_by_column_descending(self):
+        HotWheelsModel.objects.create(
+            app_id='def458',
+            brand='Hot Wheels',
+            toy='HCT08',
+            number='099',
+            model_name='Aston Martin Vantage',
+            year=2024,
+            category='Mainline',
+            series='HW Exotics',
+            series_number='4/5',
+            photo_url='https://example.com/aston.jpg',
+        )
+
+        response = self.client.get(
+            reverse('catalog:model-list'),
+            {'view': 'table', 'sort': '-name'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['selected_sort'], '-name')
+        self.assertEqual(
+            [item.model_name for item in response.context['models']],
+            ['1970 Pontiac Firebird', 'Aston Martin Vantage'],
+        )
+
     def test_catalog_search_can_parse_year_shortcut(self):
         HotWheelsModel.objects.create(
             app_id='def456',

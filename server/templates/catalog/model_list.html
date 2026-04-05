@@ -75,6 +75,26 @@
     letter-spacing: .02em;
     text-transform: uppercase;
   }
+  .catalog-sort-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: inherit;
+    text-decoration: none;
+  }
+  .catalog-sort-link:hover {
+    color: var(--ink);
+  }
+  .catalog-sort-indicator {
+    font-size: .8rem;
+    color: var(--muted);
+  }
+  .catalog-sort-link.is-active {
+    color: var(--ink);
+  }
+  .catalog-sort-link.is-active .catalog-sort-indicator {
+    color: var(--accent);
+  }
   .catalog-table tbody tr:hover {
     background: rgba(255,255,255,0.03);
   }
@@ -231,7 +251,7 @@
     </div>
     <div class="catalog-filter-actions">
       <div style="min-width: 220px; flex: 0 1 260px;">
-        <label for="sort">Sortowanie</label><select id="sort" name="sort"><option value="number" {% if selected_sort == 'number' %}selected{% endif %}>Po numerze</option><option value="year" {% if selected_sort == 'year' %}selected{% endif %}>Po roku</option><option value="category" {% if selected_sort == 'category' %}selected{% endif %}>Po kategorii</option><option value="exclusive" {% if selected_sort == 'exclusive' %}selected{% endif %}>Po exclusive</option><option value="name" {% if selected_sort == 'name' %}selected{% endif %}>Po nazwie</option></select>
+        <label for="sort">Sortowanie</label><select id="sort" name="sort"><option value="number" {% if selected_sort == 'number' %}selected{% endif %}>Nr rosnąco</option><option value="-number" {% if selected_sort == '-number' %}selected{% endif %}>Nr malejąco</option><option value="name" {% if selected_sort == 'name' %}selected{% endif %}>Nazwa A-Z</option><option value="-name" {% if selected_sort == '-name' %}selected{% endif %}>Nazwa Z-A</option><option value="year" {% if selected_sort == 'year' %}selected{% endif %}>Rok rosnąco</option><option value="-year" {% if selected_sort == '-year' %}selected{% endif %}>Rok malejąco</option><option value="category" {% if selected_sort == 'category' %}selected{% endif %}>Kategoria A-Z</option><option value="-category" {% if selected_sort == '-category' %}selected{% endif %}>Kategoria Z-A</option><option value="series" {% if selected_sort == 'series' %}selected{% endif %}>Seria A-Z</option><option value="-series" {% if selected_sort == '-series' %}selected{% endif %}>Seria Z-A</option><option value="toy" {% if selected_sort == 'toy' %}selected{% endif %}>Toy rosnąco</option><option value="-toy" {% if selected_sort == '-toy' %}selected{% endif %}>Toy malejąco</option><option value="case" {% if selected_sort == 'case' %}selected{% endif %}>Case A-Z</option><option value="-case" {% if selected_sort == '-case' %}selected{% endif %}>Case Z-A</option><option value="exclusive" {% if selected_sort == 'exclusive' %}selected{% endif %}>Exclusive A-Z</option><option value="-exclusive" {% if selected_sort == '-exclusive' %}selected{% endif %}>Exclusive Z-A</option></select>
       </div>
       <div>
         <span class="meta" style="display:block; margin-bottom:6px;">Widok</span>
@@ -324,14 +344,14 @@
           <tr>
             {% if user.is_authenticated and batch_add_form.fields.collection.queryset %}<th>Moje</th>{% endif %}
             <th>Zdjęcie</th>
-            <th>Nazwa</th>
-            <th>Rok</th>
-            <th>Kategoria</th>
-            <th>Seria</th>
-            <th>Toy</th>
-            <th>Nr</th>
-            <th>Case</th>
-            <th>Exclusive / Tag</th>
+            <th><a class="catalog-sort-link{% if selected_sort_base == 'name' %} is-active{% endif %}" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={% if selected_sort == 'name' %}-name{% else %}name{% endif %}&page=1">Nazwa <span class="catalog-sort-indicator">{% if selected_sort == 'name' %}↑{% elif selected_sort == '-name' %}↓{% elif selected_sort_base == 'name' %}↓{% else %}↕{% endif %}</span></a></th>
+            <th><a class="catalog-sort-link{% if selected_sort_base == 'year' %} is-active{% endif %}" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={% if selected_sort == 'year' %}-year{% else %}year{% endif %}&page=1">Rok <span class="catalog-sort-indicator">{% if selected_sort == 'year' %}↑{% elif selected_sort == '-year' %}↓{% elif selected_sort_base == 'year' %}↓{% else %}↕{% endif %}</span></a></th>
+            <th><a class="catalog-sort-link{% if selected_sort_base == 'category' %} is-active{% endif %}" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={% if selected_sort == 'category' %}-category{% else %}category{% endif %}&page=1">Kategoria <span class="catalog-sort-indicator">{% if selected_sort == 'category' %}↑{% elif selected_sort == '-category' %}↓{% elif selected_sort_base == 'category' %}↓{% else %}↕{% endif %}</span></a></th>
+            <th><a class="catalog-sort-link{% if selected_sort_base == 'series' %} is-active{% endif %}" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={% if selected_sort == 'series' %}-series{% else %}series{% endif %}&page=1">Seria <span class="catalog-sort-indicator">{% if selected_sort == 'series' %}↑{% elif selected_sort == '-series' %}↓{% elif selected_sort_base == 'series' %}↓{% else %}↕{% endif %}</span></a></th>
+            <th><a class="catalog-sort-link{% if selected_sort_base == 'toy' %} is-active{% endif %}" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={% if selected_sort == 'toy' %}-toy{% else %}toy{% endif %}&page=1">Toy <span class="catalog-sort-indicator">{% if selected_sort == 'toy' %}↑{% elif selected_sort == '-toy' %}↓{% elif selected_sort_base == 'toy' %}↓{% else %}↕{% endif %}</span></a></th>
+            <th><a class="catalog-sort-link{% if selected_sort_base == 'number' %} is-active{% endif %}" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={% if selected_sort == 'number' %}-number{% else %}number{% endif %}&page=1">Nr <span class="catalog-sort-indicator">{% if selected_sort == 'number' %}↑{% elif selected_sort == '-number' %}↓{% elif selected_sort_base == 'number' %}↓{% else %}↕{% endif %}</span></a></th>
+            <th><a class="catalog-sort-link{% if selected_sort_base == 'case' %} is-active{% endif %}" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={% if selected_sort == 'case' %}-case{% else %}case{% endif %}&page=1">Case <span class="catalog-sort-indicator">{% if selected_sort == 'case' %}↑{% elif selected_sort == '-case' %}↓{% elif selected_sort_base == 'case' %}↓{% else %}↕{% endif %}</span></a></th>
+            <th><a class="catalog-sort-link{% if selected_sort_base == 'exclusive' %} is-active{% endif %}" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={% if selected_sort == 'exclusive' %}-exclusive{% else %}exclusive{% endif %}&page=1">Exclusive / Tag <span class="catalog-sort-indicator">{% if selected_sort == 'exclusive' %}↑{% elif selected_sort == '-exclusive' %}↓{% elif selected_sort_base == 'exclusive' %}↓{% else %}↕{% endif %}</span></a></th>
           </tr>
         </thead>
         <tbody>
@@ -561,7 +581,7 @@
     };
 
     document.addEventListener('click', (event) => {
-      const link = event.target.closest('#catalog-table-region .pagination a');
+      const link = event.target.closest('#catalog-table-region .pagination a, #catalog-table-region .catalog-sort-link');
       if (!link) {
         return;
       }
