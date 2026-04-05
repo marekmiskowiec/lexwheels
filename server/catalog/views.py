@@ -65,6 +65,7 @@ class ModelListView(CatalogScopeMixin, ListView):
         'case': ('case_codes', 'year', 'number', 'model_name'),
         '-case': ('-case_codes', '-year', 'number', 'model_name'),
     }
+    case_mix_disabled_categories = frozenset({'premium', 'semi premium', 'rlc', 'xl', '5 pack'})
 
     def get(self, request, *args, **kwargs):
         base_url = request.path
@@ -123,16 +124,22 @@ class ModelListView(CatalogScopeMixin, ListView):
         selected_sort = self.request.GET.get('sort', 'number').strip() or 'number'
         if selected_sort not in self.sort_options:
             selected_sort = 'number'
+        selected_category = self.request.GET.get('category', '').strip() or parsed_query['category']
+        selected_case_code = self.normalize_case_code(
+            self.request.GET.get('case_code', '').strip() or parsed_query['case_code']
+        )
+        if not self.category_supports_case_mix(selected_category):
+            selected_case_code = ''
         return {
             'raw_query': raw_query,
             'query': parsed_query['text'],
             'series': self.request.GET.get('series', '').strip() or parsed_query['series'],
             'brand': self.request.GET.get('brand', '').strip() or parsed_query['brand'],
             'year': self.request.GET.get('year', '').strip() or parsed_query['year'],
-            'category': self.request.GET.get('category', '').strip() or parsed_query['category'],
+            'category': selected_category,
             'exclusive_store': self.request.GET.get('exclusive_store', '').strip() or parsed_query['exclusive_store'],
             'special_tag': self.request.GET.get('special_tag', '').strip() or parsed_query['special_tag'],
-            'case_code': self.normalize_case_code(self.request.GET.get('case_code', '').strip() or parsed_query['case_code']),
+            'case_code': selected_case_code,
             'sort': selected_sort,
             'view': selected_view,
             'per_page': per_page,
@@ -224,6 +231,13 @@ class ModelListView(CatalogScopeMixin, ListView):
         return ''.join(char for char in value.strip().upper() if char.isalnum())
 
     @classmethod
+    def category_supports_case_mix(cls, category: str) -> bool:
+        normalized = (category or '').strip().lower()
+        if not normalized:
+            return True
+        return normalized not in cls.case_mix_disabled_categories
+
+    @classmethod
     def build_case_filter(cls, case_code: str) -> Q:
         normalized = cls.normalize_case_code(case_code)
         if not normalized:
@@ -261,6 +275,7 @@ class ModelListView(CatalogScopeMixin, ListView):
         context['selected_exclusive_store'] = selected_filters['exclusive_store']
         context['selected_special_tag'] = selected_filters['special_tag']
         context['selected_case_code'] = selected_filters['case_code']
+        context['category_supports_case_mix'] = self.category_supports_case_mix(selected_filters['category'])
         context['selected_sort'] = selected_filters['sort']
         context['selected_sort_base'] = selected_filters['sort'].lstrip('-')
         context['selected_view'] = selected_filters['view']
@@ -310,7 +325,11 @@ class ModelListView(CatalogScopeMixin, ListView):
             .distinct()
             .order_by('special_tag')
         )
-        context['case_code_options'] = self.extract_case_code_options(case_code_options_queryset)
+        context['case_code_options'] = (
+            self.extract_case_code_options(case_code_options_queryset)
+            if context['category_supports_case_mix']
+            else []
+        )
         stats_queryset = scoped_total_queryset if scope_mode == CATALOG_SCOPE_PROFILE else total_queryset
         context['catalog_stats'] = {
             'total_models': stats_queryset.count(),

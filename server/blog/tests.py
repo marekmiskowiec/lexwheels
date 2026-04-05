@@ -1,7 +1,7 @@
 from django.test import SimpleTestCase
 from django.urls import reverse
 
-from .services import _render_markdown
+from .services import _render_markdown, get_featured_post, load_blog_posts
 
 
 class BlogViewTests(SimpleTestCase):
@@ -31,6 +31,20 @@ class BlogViewTests(SimpleTestCase):
 
         self.assertEqual(response.status_code, 404)
 
+    def test_blog_index_uses_featured_post_from_frontmatter(self):
+        response = self.client.get(reverse('blog:index'))
+
+        self.assertContains(response, 'Aktualizacja 05.04.2026')
+        self.assertContains(response, 'images.unsplash.com')
+
+    def test_blog_detail_exposes_previous_and_next_posts(self):
+        response = self.client.get(reverse('blog:detail', args=['dlaczego-katalog-powinien-byc-szybszy-niz-instagram']))
+
+        self.assertContains(response, 'Poprzedni wpis')
+        self.assertContains(response, 'Następny wpis')
+        self.assertContains(response, 'Jak czytać case mixy bez chaosu')
+        self.assertContains(response, 'Jak budować kolekcję, żeby się w niej nie zgubić')
+
 
 class BlogMarkdownTests(SimpleTestCase):
     def test_markdown_renderer_supports_links_formatting_and_lists(self):
@@ -51,3 +65,9 @@ class BlogMarkdownTests(SimpleTestCase):
         self.assertIn('<pre><code class="language-python">print(&quot;hi&quot;)</code></pre>', html)
         self.assertIn('<img src="https://example.com/test.jpg" alt="Alt text" loading="lazy">', html)
         self.assertIn('<code>inline</code>', html)
+
+    def test_featured_post_prefers_frontmatter_flag(self):
+        featured_post = get_featured_post(load_blog_posts())
+
+        self.assertIsNotNone(featured_post)
+        self.assertEqual(featured_post.slug, 'jak-czytac-case-mixy-bez-chaosu')

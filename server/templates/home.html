@@ -100,9 +100,36 @@
   .quick-grid .launch-card {
     min-height: 100%;
   }
+  .home-blog-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: 1.1fr .9fr;
+  }
+  .home-blog-side {
+    display: grid;
+    gap: 14px;
+  }
+  .home-blog-card {
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.04);
+  }
+  .home-blog-cover {
+    margin-bottom: 14px;
+    overflow: hidden;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+  }
+  .home-blog-cover img {
+    width: 100%;
+    aspect-ratio: 16 / 8;
+    object-fit: cover;
+  }
 
   @media (max-width: 860px) {
-    .hero-grid, .spotlight-grid, .home-info-grid { grid-template-columns: 1fr; }
+    .hero-grid, .spotlight-grid, .home-info-grid, .home-blog-grid { grid-template-columns: 1fr; }
     .home-hero { padding: 22px; }
     .home-kpis { grid-template-columns: 1fr 1fr; }
     .hero-actions { margin-top: 18px; }
@@ -192,6 +219,41 @@
     </div>
   </div>
 </section>
+
+{% if home_blog_featured %}
+  <section class="panel" style="margin-bottom: 18px;">
+    <div class="section-head">
+      <div>
+        <h2>Na blogu</h2>
+        <p class="home-section-copy">Krótki editorial o case mixach, katalogu i samym kolekcjonowaniu.</p>
+      </div>
+      <a href="{% url 'blog:index' %}">Zobacz wszystkie wpisy</a>
+    </div>
+    <div class="home-blog-grid">
+      <article class="home-blog-card">
+        {% if home_blog_featured.cover_image %}
+          <a class="home-blog-cover" href="{% url 'blog:detail' home_blog_featured.slug %}">
+            <img src="{{ home_blog_featured.cover_image }}" alt="{{ home_blog_featured.title }}" loading="lazy">
+          </a>
+        {% endif %}
+        <span class="eyebrow">{{ home_blog_featured.cover_eyebrow }}</span>
+        <h3 style="margin-bottom:10px;"><a href="{% url 'blog:detail' home_blog_featured.slug %}">{{ home_blog_featured.title }}</a></h3>
+        <p class="meta" style="margin-bottom:10px;">{{ home_blog_featured.category }} | {{ home_blog_featured.published_label }}{% if home_blog_featured.updated_at %} | Aktualizacja {{ home_blog_featured.updated_label }}{% endif %}</p>
+        <p>{{ home_blog_featured.excerpt }}</p>
+        <a class="button secondary" href="{% url 'blog:detail' home_blog_featured.slug %}">Czytaj wpis</a>
+      </article>
+      <div class="home-blog-side">
+        {% for post in home_blog_posts %}
+          <article class="home-blog-card">
+            <h3 style="margin-bottom:8px;"><a href="{% url 'blog:detail' post.slug %}">{{ post.title }}</a></h3>
+            <p class="meta" style="margin-bottom:10px;">{{ post.category }} | {{ post.published_label }}</p>
+            <p>{{ post.excerpt }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endif %}
 
 {% if user.is_authenticated %}
   <section class="spotlight-grid" style="margin-bottom: 18px;">

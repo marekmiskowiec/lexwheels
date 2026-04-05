@@ -22,6 +22,18 @@
     background: rgba(9, 18, 32, 0.8);
     box-shadow: var(--shadow);
   }
+  .blog-cover {
+    margin: 0 0 18px;
+    overflow: hidden;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+  }
+  .blog-cover img {
+    width: 100%;
+    aspect-ratio: 16 / 8;
+    object-fit: cover;
+  }
   .blog-sidebar-card {
     padding: 20px;
   }
@@ -180,11 +192,20 @@
   <section class="blog-feed">
     {% if featured_post %}
       <article class="blog-featured">
+        {% if featured_post.cover_image %}
+          <a class="blog-cover" href="{% url 'blog:detail' featured_post.slug %}">
+            <img src="{{ featured_post.cover_image }}" alt="{{ featured_post.title }}" loading="lazy">
+          </a>
+        {% endif %}
         <div class="blog-meta-row">
           <span class="badge">{{ featured_post.cover_eyebrow }}</span>
           <span class="meta">{{ featured_post.category }}</span>
           <span class="blog-dot"></span>
           <span class="meta">{{ featured_post.published_label }}</span>
+          {% if featured_post.updated_at %}
+            <span class="blog-dot"></span>
+            <span class="meta">Aktualizacja {{ featured_post.updated_label }}</span>
+          {% endif %}
           <span class="blog-dot"></span>
           <span class="meta">{{ featured_post.read_time }}</span>
         </div>
@@ -206,10 +227,19 @@
       <div class="blog-post-list">
         {% for post in remaining_posts %}
           <article class="blog-post-card">
+            {% if post.cover_image %}
+              <a class="blog-cover" href="{% url 'blog:detail' post.slug %}">
+                <img src="{{ post.cover_image }}" alt="{{ post.title }}" loading="lazy">
+              </a>
+            {% endif %}
             <div class="blog-meta-row">
               <span class="meta">{{ post.category }}</span>
               <span class="blog-dot"></span>
               <span class="meta">{{ post.published_label }}</span>
+              {% if post.updated_at %}
+                <span class="blog-dot"></span>
+                <span class="meta">Aktualizacja {{ post.updated_label }}</span>
+              {% endif %}
               <span class="blog-dot"></span>
               <span class="meta">{{ post.read_time }}</span>
             </div>

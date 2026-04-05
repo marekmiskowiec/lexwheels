@@ -23,6 +23,12 @@ def _normalize_link_target(raw_url: str) -> str:
     return '#'
 
 
+def _parse_bool(value: object, default: bool = False) -> bool:
+    if value is None:
+        return default
+    return str(value).strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
 def _render_inline_markdown(text: str) -> str:
     rendered = escape(text)
     code_tokens: list[str] = []
@@ -61,15 +67,25 @@ class BlogPost:
     excerpt: str
     category: str
     published_at: date
+    updated_at: date | None
     read_time: str
     tags: tuple[str, ...]
     cover_eyebrow: str
+    cover_image: str
+    is_featured: bool
+    is_draft: bool
     body_markdown: str
     body_html: str
 
     @property
     def published_label(self) -> str:
         return self.published_at.strftime('%d.%m.%Y')
+
+    @property
+    def updated_label(self) -> str:
+        if not self.updated_at:
+            return ''
+        return self.updated_at.strftime('%d.%m.%Y')
 
 
 def _parse_frontmatter(text: str) -> tuple[dict, str]:
@@ -241,15 +257,20 @@ def _render_markdown(markdown_text: str) -> str:
 
 def _build_post(path) -> BlogPost:
     metadata, body_markdown = _parse_frontmatter(path.read_text(encoding='utf-8'))
+    updated_at = str(metadata.get('updated_at', '')).strip()
     return BlogPost(
         slug=path.stem,
         title=str(metadata['title']),
         excerpt=str(metadata['excerpt']),
         category=str(metadata['category']),
         published_at=date.fromisoformat(str(metadata['published_at'])),
+        updated_at=date.fromisoformat(updated_at) if updated_at else None,
         read_time=str(metadata['read_time']),
         tags=tuple(metadata.get('tags', [])),
         cover_eyebrow=str(metadata.get('cover_eyebrow', 'LexWheels Blog')),
+        cover_image=str(metadata.get('cover_image', '')).strip(),
+        is_featured=_parse_bool(metadata.get('featured')),
+        is_draft=_parse_bool(metadata.get('draft')),
         body_markdown=body_markdown,
         body_html=_render_markdown(body_markdown),
     )
@@ -258,7 +279,8 @@ def _build_post(path) -> BlogPost:
 @lru_cache(maxsize=1)
 def load_blog_posts() -> tuple[BlogPost, ...]:
     posts = [_build_post(path) for path in BLOG_POSTS_DIR.glob('*.md')]
-    return tuple(sorted(posts, key=lambda item: item.published_at, reverse=True))
+    published_posts = [post for post in posts if not post.is_draft]
+    return tuple(sorted(published_posts, key=lambda item: item.published_at, reverse=True))
 
 
 def list_categories(posts: tuple[BlogPost, ...]) -> list[dict]:
@@ -297,3 +319,10 @@ def get_post_by_slug(slug: str) -> BlogPost | None:
         if post.slug == slug:
             return post
     return None
+
+
+def get_featured_post(posts: tuple[BlogPost, ...] | list[BlogPost]) -> BlogPost | None:
+    for post in posts:
+        if post.is_featured:
+            return post
+    return posts[0] if posts else None

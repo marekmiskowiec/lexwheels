@@ -28,6 +28,8 @@ class HomeViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'home.html')
         self.assertContains(response, 'Zacznij od kolekcji, nie od listy modeli.')
+        self.assertContains(response, 'Na blogu')
+        self.assertContains(response, 'Jak czytać case mixy bez chaosu')
         self.assertContains(response, reverse('catalog:model-list'))
 
     def test_home_page_shows_authenticated_dashboard_summary(self):

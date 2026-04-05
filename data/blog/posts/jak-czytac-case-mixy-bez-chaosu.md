@@ -3,7 +3,10 @@ title: Jak czytać case mixy bez chaosu
 excerpt: Prosty sposób na rozumienie liter, roczników i różnic między case'ami, bez przeklikiwania połowy internetu.
 category: Poradniki
 published_at: 2026-04-01
+updated_at: 2026-04-05
 read_time: 5 min czytania
+featured: true
+cover_image: https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80
 tags:
   - Case mixy
   - Mainline

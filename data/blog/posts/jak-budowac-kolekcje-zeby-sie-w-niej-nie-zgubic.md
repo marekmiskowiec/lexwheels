@@ -3,6 +3,7 @@ title: Jak budować kolekcję, żeby się w niej nie zgubić
 excerpt: Trzy proste zasady, które pomagają utrzymać porządek: osobne kolekcje, jasne nazewnictwo i regularny przegląd braków.
 category: Poradniki
 published_at: 2026-03-18
+cover_image: https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80
 read_time: 6 min czytania
 tags:
   - Kolekcja

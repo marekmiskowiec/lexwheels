@@ -23,6 +23,18 @@
     margin-bottom: 22px;
     border-bottom: 1px solid var(--line);
   }
+  .blog-detail-cover {
+    margin: 0 0 18px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: rgba(255,255,255,0.04);
+  }
+  .blog-detail-cover img {
+    width: 100%;
+    aspect-ratio: 16 / 8;
+    object-fit: cover;
+  }
   .blog-meta-row {
     display: flex;
     flex-wrap: wrap;
@@ -148,6 +160,20 @@
   .blog-related a:hover {
     background: rgba(255,255,255,0.06);
   }
+  .blog-post-nav {
+    display: grid;
+    gap: 12px;
+  }
+  .blog-post-nav a {
+    display: block;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.03);
+    color: var(--ink);
+  }
+  .blog-post-nav a:hover {
+    background: rgba(255,255,255,0.06);
+  }
   @media (max-width: 960px) {
     .blog-detail-shell {
       grid-template-columns: 1fr;
@@ -162,11 +188,20 @@
 <section class="blog-detail-shell">
   <article class="blog-article">
     <header class="blog-article-header">
+      {% if post.cover_image %}
+        <div class="blog-detail-cover">
+          <img src="{{ post.cover_image }}" alt="{{ post.title }}" loading="lazy">
+        </div>
+      {% endif %}
       <p class="meta" style="margin:0 0 10px;">{{ post.cover_eyebrow }}</p>
       <h1>{{ post.title }}</h1>
       <div class="blog-meta-row">
         <span class="badge">{{ post.category }}</span>
         <span class="meta">{{ post.published_label }}</span>
+        {% if post.updated_at %}
+          <span class="blog-dot"></span>
+          <span class="meta">Aktualizacja {{ post.updated_label }}</span>
+        {% endif %}
         <span class="blog-dot"></span>
         <span class="meta">{{ post.read_time }}</span>
       </div>
@@ -187,6 +222,27 @@
       </div>
       <a class="button secondary" href="{% url 'blog:index' %}">Wróć do bloga</a>
     </section>
+    {% if previous_post or next_post %}
+      <section class="blog-aside-card">
+        <div class="section-head" style="margin-bottom:10px;">
+          <h2 style="margin:0;">Czytaj dalej</h2>
+        </div>
+        <div class="blog-post-nav">
+          {% if previous_post %}
+            <a href="{% url 'blog:detail' previous_post.slug %}">
+              <div class="meta" style="margin-bottom:6px;">Poprzedni wpis</div>
+              <strong>{{ previous_post.title }}</strong>
+            </a>
+          {% endif %}
+          {% if next_post %}
+            <a href="{% url 'blog:detail' next_post.slug %}">
+              <div class="meta" style="margin-bottom:6px;">Następny wpis</div>
+              <strong>{{ next_post.title }}</strong>
+            </a>
+          {% endif %}
+        </div>
+      </section>
+    {% endif %}
     {% if related_posts %}
       <section class="blog-aside-card">
         <div class="section-head" style="margin-bottom:10px;">

@@ -1,7 +1,7 @@
 from django.http import Http404
 from django.views.generic import TemplateView
 
-from .services import filter_posts, get_post_by_slug, list_categories, load_blog_posts
+from .services import filter_posts, get_featured_post, get_post_by_slug, list_categories, load_blog_posts
 
 
 class BlogListView(TemplateView):
@@ -13,8 +13,8 @@ class BlogListView(TemplateView):
         query = self.request.GET.get('q', '').strip()
         category = self.request.GET.get('category', '').strip()
         filtered_posts = filter_posts(all_posts, query=query, category=category)
-        featured_post = filtered_posts[0] if filtered_posts else None
-        remaining_posts = filtered_posts[1:] if len(filtered_posts) > 1 else []
+        featured_post = get_featured_post(filtered_posts)
+        remaining_posts = [post for post in filtered_posts if featured_post and post.slug != featured_post.slug]
 
         context.update({
             'posts': filtered_posts,
@@ -37,14 +37,16 @@ class BlogDetailView(TemplateView):
         if not post:
             raise Http404('Nie znaleziono wpisu.')
 
-        related_posts = [
-            item for item in load_blog_posts()
-            if item.slug != post.slug and item.category == post.category
-        ][:3]
+        all_posts = list(load_blog_posts())
+        related_posts = [item for item in all_posts if item.slug != post.slug and item.category == post.category][:3]
+        post_index = next((index for index, item in enumerate(all_posts) if item.slug == post.slug), -1)
+        previous_post = all_posts[post_index - 1] if post_index > 0 else None
+        next_post = all_posts[post_index + 1] if 0 <= post_index < len(all_posts) - 1 else None
 
         context.update({
             'post': post,
             'related_posts': related_posts,
+            'previous_post': previous_post,
+            'next_post': next_post,
         })
         return context
-

@@ -776,7 +776,7 @@ class CatalogViewTests(TestCase):
         self.assertEqual(response.context['selected_sort'], '-name')
         self.assertEqual(
             [item.model_name for item in response.context['models']],
-            ['1970 Pontiac Firebird', 'Aston Martin Vantage'],
+            ['Aston Martin Vantage', '1970 Pontiac Firebird'],
         )
 
     def test_catalog_search_can_parse_year_shortcut(self):
@@ -846,13 +846,10 @@ class CatalogViewTests(TestCase):
 
         response = self.client.get(reverse('catalog:model-list'), {'brand': 'Hot Wheels'})
 
-        self.assertContains(response, 'Modele w bazie')
-        self.assertContains(response, 'Wyniki po filtrach')
-        self.assertContains(response, 'Marki')
-        self.assertContains(response, 'Roczniki')
-        self.assertContains(response, 'Kategorie')
-        self.assertContains(response, '<strong class="stat-value">2</strong>', html=True)
-        self.assertContains(response, '<strong class="stat-value">1</strong>', html=True)
+        self.assertContains(response, 'Wyniki: 1')
+        self.assertContains(response, 'Hot Wheels')
+        self.assertNotContains(response, 'Custom Mustang')
+        self.assertContains(response, '1970 Pontiac Firebird')
 
     def test_catalog_can_filter_by_year_and_category(self):
         HotWheelsModel.objects.create(
@@ -943,8 +940,34 @@ class CatalogViewTests(TestCase):
         response = self.client.get(reverse('catalog:model-list'), {'category': 'Premium'})
 
         self.assertContains(response, '<option value="Premium" selected>', html=False)
-        self.assertContains(response, '<option value="ZAMAC">', html=False)
+        self.assertContains(response, 'data-filter-field="case-mix"', html=False)
+        self.assertContains(response, 'id="case_code" name="case_code" disabled', html=False)
+        self.assertNotContains(response, '<option value="ZAMAC">', html=False)
         self.assertNotContains(response, '<option value="A">', html=False)
+
+    def test_catalog_ignores_case_code_for_premium_category(self):
+        self.model_obj.category = 'Premium'
+        self.model_obj.case_codes = 'A'
+        self.model_obj.save(update_fields=['category', 'case_codes'])
+        HotWheelsModel.objects.create(
+            app_id='def461',
+            brand='Hot Wheels',
+            toy='HCT11',
+            number='006',
+            model_name='Second Premium Car',
+            year=2024,
+            category='Premium',
+            series='Car Culture',
+            case_codes='B',
+            series_number='2/5',
+            photo_url='https://example.com/premium-second.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:model-list'), {'category': 'Premium', 'case_code': 'A'})
+
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertContains(response, 'Second Premium Car')
+        self.assertNotContains(response, '<option value="A" selected>', html=False)
 
     def test_catalog_search_can_parse_case_shortcut(self):
         self.model_obj.case_codes = 'A,C'

@@ -175,9 +175,12 @@
       display: grid;
       grid-template-columns: 1fr;
     }
-    .catalog-summary .badge {
+  .catalog-summary .badge {
       justify-content: center;
     }
+  }
+  .catalog-filter-field[hidden] {
+    display: none !important;
   }
 </style>
 {% endblock %}
@@ -232,17 +235,17 @@
       <p class="meta" style="margin:6px 0 0;">Skróty: `y:` rok, `c:` kategoria, `b:` marka, `s:` seria, `x:` exclusive, `t:` tag, `case:` mix.</p>
     </div>
     <div class="catalog-filter-grid" style="width:100%;">
-      <div><label for="series">Seria</label><select id="series" name="series"><option value="">Wszystkie serie</option>{% for series in series_options %}<option value="{{ series }}" {% if selected_series == series %}selected{% endif %}>{{ series }}</option>{% endfor %}</select></div>
-      <div><label for="year">Rok</label><select id="year" name="year"><option value="">Wszystkie lata</option>{% for year in year_options %}<option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>{% endfor %}</select></div>
-      <div><label for="category">Kategoria</label><select id="category" name="category"><option value="">Wszystkie kategorie</option>{% for category in category_options %}<option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>{% endfor %}</select></div>
-      <div><label for="case_code">Case mix</label><select id="case_code" name="case_code"><option value="">Wszystkie case'y</option>{% for case_code in case_code_options %}<option value="{{ case_code }}" {% if selected_case_code == case_code %}selected{% endif %}>{{ case_code }}</option>{% endfor %}</select></div>
+      <div><label for="series">Seria</label><select id="series" name="series"><option value="">Wszystkie serie</option>{% for series in series_options %}<option value="{{ series }}"{% if selected_series == series %} selected{% endif %}>{{ series }}</option>{% endfor %}</select></div>
+      <div><label for="year">Rok</label><select id="year" name="year"><option value="">Wszystkie lata</option>{% for year in year_options %}<option value="{{ year }}"{% if selected_year == year|stringformat:"s" %} selected{% endif %}>{{ year }}</option>{% endfor %}</select></div>
+      <div><label for="category">Kategoria</label><select id="category" name="category"><option value="">Wszystkie kategorie</option>{% for category in category_options %}<option value="{{ category }}"{% if selected_category == category %} selected{% endif %}>{{ category }}</option>{% endfor %}</select></div>
+      <div class="catalog-filter-field" data-filter-field="case-mix"{% if not category_supports_case_mix %} hidden{% endif %}><label for="case_code">Case mix</label><select id="case_code" name="case_code"{% if not category_supports_case_mix %} disabled{% endif %}><option value="">Wszystkie case'y</option>{% for case_code in case_code_options %}<option value="{{ case_code }}"{% if selected_case_code == case_code %} selected{% endif %}>{{ case_code }}</option>{% endfor %}</select></div>
     </div>
     <details class="catalog-filter-details"{% if selected_brand or selected_exclusive_store or selected_special_tag %} open{% endif %}>
       <summary>Więcej filtrów</summary>
       <div class="catalog-filter-grid" style="width:100%; margin-top:12px;">
-        <div><label for="brand">Marka</label><select id="brand" name="brand"><option value="">Wszystkie marki</option>{% for brand in brand_options %}<option value="{{ brand }}" {% if selected_brand == brand %}selected{% endif %}>{{ brand }}</option>{% endfor %}</select></div>
-        <div><label for="exclusive_store">Exclusive</label><select id="exclusive_store" name="exclusive_store"><option value="">Wszystkie exclusivy</option>{% for exclusive_store in exclusive_store_options %}<option value="{{ exclusive_store }}" {% if selected_exclusive_store == exclusive_store %}selected{% endif %}>{{ exclusive_store }}</option>{% endfor %}</select></div>
-        <div><label for="special_tag">Tag specjalny</label><select id="special_tag" name="special_tag"><option value="">Wszystkie tagi</option>{% for special_tag in special_tag_options %}<option value="{{ special_tag }}" {% if selected_special_tag == special_tag %}selected{% endif %}>{{ special_tag }}</option>{% endfor %}</select></div>
+        <div><label for="brand">Marka</label><select id="brand" name="brand"><option value="">Wszystkie marki</option>{% for brand in brand_options %}<option value="{{ brand }}"{% if selected_brand == brand %} selected{% endif %}>{{ brand }}</option>{% endfor %}</select></div>
+        <div><label for="exclusive_store">Exclusive</label><select id="exclusive_store" name="exclusive_store"><option value="">Wszystkie exclusivy</option>{% for exclusive_store in exclusive_store_options %}<option value="{{ exclusive_store }}"{% if selected_exclusive_store == exclusive_store %} selected{% endif %}>{{ exclusive_store }}</option>{% endfor %}</select></div>
+        <div><label for="special_tag">Tag specjalny</label><select id="special_tag" name="special_tag"><option value="">Wszystkie tagi</option>{% for special_tag in special_tag_options %}<option value="{{ special_tag }}"{% if selected_special_tag == special_tag %} selected{% endif %}>{{ special_tag }}</option>{% endfor %}</select></div>
       </div>
     </details>
     <div class="catalog-results-toolbar">
@@ -540,6 +543,27 @@
         }
       }, 140);
     });
+  }
+</script>
+<script>
+  const categorySelect = document.getElementById('category');
+  const caseMixField = document.querySelector('[data-filter-field="case-mix"]');
+  const caseMixSelect = document.getElementById('case_code');
+  const caseMixDisabledCategories = new Set(['premium', 'semi premium', 'rlc', 'xl', '5 pack']);
+
+  if (categorySelect && caseMixField && caseMixSelect) {
+    const syncCaseMixVisibility = () => {
+      const selectedCategory = categorySelect.value.trim().toLowerCase();
+      const shouldShowCaseMix = !selectedCategory || !caseMixDisabledCategories.has(selectedCategory);
+      caseMixField.hidden = !shouldShowCaseMix;
+      caseMixSelect.disabled = !shouldShowCaseMix;
+      if (!shouldShowCaseMix) {
+        caseMixSelect.value = '';
+      }
+    };
+
+    syncCaseMixVisibility();
+    categorySelect.addEventListener('change', syncCaseMixVisibility);
   }
 </script>
 <script>

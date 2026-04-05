@@ -2,6 +2,7 @@ from django.db.models import Count
 from django.http import JsonResponse
 from django.views.generic import TemplateView
 
+from blog.services import get_featured_post, load_blog_posts
 from catalog.models import HotWheelsModel
 from collections_app.models import Collection, CollectionItem, WantedItem
 from collections_app.views import build_collection_stats_context, build_completion_context
@@ -46,6 +47,10 @@ class HomeView(TemplateView):
             .annotate(total=Count('id'))
             .order_by('-total', 'series')[:6]
         )
+        blog_posts = load_blog_posts()
+        home_blog_featured = get_featured_post(blog_posts)
+        context['home_blog_featured'] = home_blog_featured
+        context['home_blog_posts'] = [post for post in blog_posts if not home_blog_featured or post.slug != home_blog_featured.slug][:2]
 
         if self.request.user.is_authenticated:
             collections = Collection.objects.filter(owner=self.request.user, kind=Collection.KIND_OWNED).prefetch_related('items')
