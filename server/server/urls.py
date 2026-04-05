@@ -11,6 +11,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('healthz/', healthcheck, name='healthcheck'),
     path('', HomeView.as_view(), name='home'),
+    path('blog/', include('blog.urls')),
     path('catalog/', include('catalog.urls')),
     path('collections/', include('collections_app.urls')),
     path('accounts/', include('accounts.urls')),

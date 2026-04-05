@@ -1,0 +1,119 @@
+{
+  "posts": [
+    {
+      "slug": "jak-czytac-case-mixy-bez-chaosu",
+      "title": "Jak czytać case mixy bez chaosu",
+      "excerpt": "Prosty sposób na rozumienie liter, roczników i różnic między case'ami, bez przeklikiwania połowy internetu.",
+      "category": "Poradniki",
+      "published_at": "2026-04-01",
+      "read_time": "5 min czytania",
+      "tags": ["Case mixy", "Mainline", "Poradnik"],
+      "cover_eyebrow": "Case mixy",
+      "sections": [
+        {
+          "heading": "Najpierw patrz na strukturę rocznika",
+          "paragraphs": [
+            "Najwięcej zamieszania bierze się z mieszania dwóch rzeczy: rocznika i litery case'a. Najpierw ustal rok, a dopiero potem patrz, czy mówimy o A, B czy C.",
+            "To ważne, bo Case A z 2025 i Case A z 2026 to zupełnie inne zestawy modeli. Sama litera bez rocznika mówi za mało."
+          ],
+          "list": [
+            "rok mówi, do którego cyklu wydawniczego należy case",
+            "litera mówi, który to etap w danym roku",
+            "na końcu patrzysz dopiero na zawartość konkretnego mixu"
+          ]
+        },
+        {
+          "heading": "Nie traktuj case'a jak listy zakupowej 1:1",
+          "paragraphs": [
+            "Case pokazuje skład miksu, ale nie mówi nic o tym, co realnie trafi do Twojego sklepu. W praktyce część modeli zobaczysz szybciej, a część dużo później.",
+            "Dlatego case mix warto traktować jako mapę orientacyjną, a nie obietnicę dostępności."
+          ],
+          "quote": "Najlepszy użytek z case mixu to szybkie sprawdzenie, czy warto już polować na konkretny model."
+        }
+      ]
+    },
+    {
+      "slug": "dlaczego-katalog-powinien-byc-szybszy-niz-instagram",
+      "title": "Dlaczego katalog powinien być szybszy niż Instagram",
+      "excerpt": "W kolekcjonowaniu nie chodzi o oglądanie ozdobników. Katalog ma dawać szybkie decyzje: mam, szukam, wracam do przeglądania.",
+      "category": "Produkt",
+      "published_at": "2026-03-24",
+      "read_time": "4 min czytania",
+      "tags": ["UX", "Katalog", "Produkt"],
+      "cover_eyebrow": "Produkt",
+      "sections": [
+        {
+          "heading": "Lista modeli to narzędzie, nie landing page",
+          "paragraphs": [
+            "Jeśli użytkownik przegląda setki modeli, każda zbędna akcja i każdy ozdobny blok zaczynają przeszkadzać. W katalogu liczy się rytm: skanowanie, filtrowanie, decyzja.",
+            "Dlatego dobry katalog jest lekki wizualnie i nie próbuje sprzedawać każdej karty jak osobnej historii."
+          ]
+        },
+        {
+          "heading": "Najpierw szybkość, potem personalizacja",
+          "paragraphs": [
+            "Najczęstszy scenariusz powinien działać w jednym kliknięciu. Rzadsze scenariusze, takie jak zmiana wariantu albo ręczna korekta wpisu, można spokojnie zostawić dla strony modelu.",
+            "To obniża tarcie i nie zamienia listy w panel sterowania."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "jak-budowac-kolekcje-zeby-sie-w-niej-nie-zgubic",
+      "title": "Jak budować kolekcję, żeby się w niej nie zgubić",
+      "excerpt": "Trzy proste zasady, które pomagają utrzymać porządek: osobne kolekcje, jasne nazewnictwo i regularny przegląd braków.",
+      "category": "Poradniki",
+      "published_at": "2026-03-18",
+      "read_time": "6 min czytania",
+      "tags": ["Kolekcja", "Porządek", "Workflow"],
+      "cover_eyebrow": "Kolekcja",
+      "sections": [
+        {
+          "heading": "Nie wrzucaj wszystkiego do jednego worka",
+          "paragraphs": [
+            "Najprościej zgubić się wtedy, gdy jedna kolekcja próbuje udawać magazyn, wishlistę i checklistę rocznika jednocześnie.",
+            "Dużo lepiej działa podział na kilka list o jasnym celu."
+          ],
+          "list": [
+            "osobno kolekcja właściwa",
+            "osobno lista szukanych",
+            "osobno projekt specjalny, np. tylko J-Imports albo Treasure Hunts"
+          ]
+        },
+        {
+          "heading": "Rób małe porządki, nie wielkie sprzątanie raz na pół roku",
+          "paragraphs": [
+            "System działa najlepiej wtedy, gdy po każdej większej aktualizacji wracasz do braków i patrzysz, co się naprawdę zmieniło.",
+            "To zajmuje kilka minut i pozwala utrzymać kontrolę nad tym, co już jest zamknięte, a co nadal ma sens śledzić."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "po-co-w-ogole-publiczna-spolecznosc-kolekcjonerow",
+      "title": "Po co w ogóle publiczna społeczność kolekcjonerów",
+      "excerpt": "Publiczne profile i listy szukanych mają sens tylko wtedy, gdy skracają drogę między osobą szukającą modelu a osobą, która może pomóc.",
+      "category": "Społeczność",
+      "published_at": "2026-03-10",
+      "read_time": "4 min czytania",
+      "tags": ["Społeczność", "Szukane", "Publiczne profile"],
+      "cover_eyebrow": "Społeczność",
+      "sections": [
+        {
+          "heading": "Widoczność ma sens tylko wtedy, gdy jest konkretna",
+          "paragraphs": [
+            "Sama obecność profilu nic nie daje. Wartość pojawia się dopiero wtedy, gdy inni widzą, czego dokładnie szukasz i jak się z Tobą skontaktować.",
+            "Dlatego publiczna warstwa serwisu powinna być prosta, czytelna i oparta o konkretne dane, a nie o puste aktywności."
+          ]
+        },
+        {
+          "heading": "Najpierw zaufanie, potem zasięg",
+          "paragraphs": [
+            "W małych społecznościach kolekcjonerskich ważniejsza od skali jest przewidywalność. Lepiej mieć prosty, spokojny profil z aktualnym wanted niż hałaśliwy feed bez użytecznych informacji."
+          ],
+          "quote": "Dobra społeczność kolekcjonerów działa bardziej jak tablica kontaktów niż jak social media."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }} | Blog LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .blog-detail-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, .34fr);
+    gap: 24px;
+    align-items: start;
+  }
+  .blog-article,
+  .blog-aside-card {
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    background: rgba(9, 18, 32, 0.82);
+    box-shadow: var(--shadow);
+  }
+  .blog-article {
+    padding: 30px;
+  }
+  .blog-article-header {
+    padding-bottom: 22px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid var(--line);
+  }
+  .blog-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .blog-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.32);
+  }
+  .blog-tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .blog-tag {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    color: var(--muted);
+    font-size: .82rem;
+  }
+  .blog-article-copy {
+    display: grid;
+    gap: 18px;
+  }
+  .blog-article-copy h2 {
+    margin-bottom: 0;
+  }
+  .blog-article-copy p,
+  .blog-article-copy li {
+    color: #d3dced;
+    line-height: 1.75;
+  }
+  .blog-article-copy ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+  .blog-article-copy blockquote {
+    margin: 0;
+    padding: 14px 16px;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 16px 16px 0;
+    background: rgba(255,255,255,0.035);
+    color: #eff4fb;
+  }
+  .blog-aside {
+    display: grid;
+    gap: 16px;
+    position: sticky;
+    top: 92px;
+  }
+  .blog-aside-card {
+    padding: 20px;
+  }
+  .blog-related {
+    display: grid;
+    gap: 12px;
+  }
+  .blog-related a {
+    display: block;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.03);
+    color: var(--ink);
+  }
+  .blog-related a:hover {
+    background: rgba(255,255,255,0.06);
+  }
+  @media (max-width: 960px) {
+    .blog-detail-shell {
+      grid-template-columns: 1fr;
+    }
+    .blog-aside {
+      position: static;
+    }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<section class="blog-detail-shell">
+  <article class="blog-article">
+    <header class="blog-article-header">
+      <p class="meta" style="margin:0 0 10px;">{{ post.cover_eyebrow }}</p>
+      <h1>{{ post.title }}</h1>
+      <div class="blog-meta-row">
+        <span class="badge">{{ post.category }}</span>
+        <span class="meta">{{ post.published_label }}</span>
+        <span class="blog-dot"></span>
+        <span class="meta">{{ post.read_time }}</span>
+      </div>
+      <p style="max-width:68ch;">{{ post.excerpt }}</p>
+      <div class="blog-tag-row">
+        {% for tag in post.tags %}<span class="blog-tag">{{ tag }}</span>{% endfor %}
+      </div>
+    </header>
+    <div class="blog-article-copy">
+      {% for section in post.sections %}
+        <section>
+          {% if section.heading %}<h2>{{ section.heading }}</h2>{% endif %}
+          {% for paragraph in section.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
+          {% if section.list %}
+            <ul>
+              {% for item in section.list %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+          {% if section.quote %}<blockquote>{{ section.quote }}</blockquote>{% endif %}
+        </section>
+      {% endfor %}
+    </div>
+  </article>
+
+  <aside class="blog-aside">
+    <section class="blog-aside-card">
+      <div class="section-head" style="margin-bottom:10px;">
+        <h2 style="margin:0;">Nawigacja</h2>
+      </div>
+      <a class="button secondary" href="{% url 'blog:index' %}">Wróć do bloga</a>
+    </section>
+    {% if related_posts %}
+      <section class="blog-aside-card">
+        <div class="section-head" style="margin-bottom:10px;">
+          <h2 style="margin:0;">Powiązane wpisy</h2>
+        </div>
+        <div class="blog-related">
+          {% for related in related_posts %}
+            <a href="{% url 'blog:detail' related.slug %}">
+              <strong>{{ related.title }}</strong>
+              <div class="meta" style="margin-top:6px;">{{ related.published_label }} · {{ related.category }}</div>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  </aside>
+</section>
+{% endblock %}
