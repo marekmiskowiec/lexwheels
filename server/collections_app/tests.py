@@ -482,14 +482,20 @@ class CollectionTests(TestCase):
         response = self.client.get(reverse('collections:collection-update', args=[self.private_collection.pk]))
         self.assertEqual(response.status_code, 403)
 
-    def test_dashboard_shows_stats(self):
+    def test_dashboard_focuses_on_collection_list(self):
         CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=3, is_favorite=True)
         self.client.force_login(self.owner)
         response = self.client.get(reverse('collections:dashboard'))
-        self.assertContains(response, '3')
-        self.assertContains(response, 'Otwórz statystyki')
+
+        self.assertContains(response, 'Moje kolekcje')
+        self.assertContains(response, self.private_collection.name)
         self.assertContains(response, 'Importuj CSV')
         self.assertContains(response, 'Braki z importów')
+        self.assertNotContains(response, 'Otwórz statystyki')
+        self.assertNotContains(response, 'Otwórz szukane')
+        self.assertNotContains(response, 'Aktywne szukane')
+        self.assertNotContains(response, 'Pozycje')
+        self.assertNotContains(response, '<h2>Szukane</h2>', html=False)
         self.assertNotContains(response, 'Statystyki i wykresy')
 
     def test_collection_import_preview_matches_rows_from_csv(self):

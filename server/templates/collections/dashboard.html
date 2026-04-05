@@ -4,19 +4,7 @@
 <style>
   .dashboard-hero {
     display: grid;
-    gap: 22px;
-    grid-template-columns: minmax(0, 1.35fr) minmax(260px, .85fr);
-    align-items: start;
-  }
-  .dashboard-actions {
-    display: grid;
-    gap: 12px;
-  }
-  .dashboard-action-card {
-    padding: 18px;
-    border-radius: 20px;
-    border: 1px solid var(--line);
-    background: rgba(255,255,255,0.04);
+    gap: 18px;
   }
   .dashboard-list {
     display: grid;
@@ -40,9 +28,6 @@
   .dashboard-card .danger-zone {
     margin-top: auto;
   }
-  .dashboard-kpis .stat-card {
-    min-height: 100%;
-  }
   @media (max-width: 860px) {
     .dashboard-hero { grid-template-columns: 1fr; }
   }
@@ -54,36 +39,13 @@
     <div class="hero-copy">
       <span class="eyebrow">Panel kolekcji</span>
       <h1>Moje kolekcje</h1>
-      <p>To Twoje centrum zarządzania. Stąd wejdziesz do kolekcji, aktywnych szukanych i najważniejszych narzędzi porządkowania danych.</p>
+      <p>Tu masz swoje kolekcje i najważniejsze akcje związane z ich prowadzeniem.</p>
       <div class="actions-row">
         <a class="button" href="{% url 'collections:collection-create' %}">Nowa kolekcja</a>
-        <a class="button secondary" href="{% url 'collections:wanted-list' %}">Moje szukane</a>
         <a class="button secondary" href="{% url 'collections:collection-import' %}">Importuj CSV</a>
         <a class="button secondary" href="{% url 'collections:import-backlog' %}">Braki z importów</a>
       </div>
     </div>
-    <div class="dashboard-actions">
-      <div class="dashboard-action-card card-surface">
-        <span class="meta">Szybki skrót</span>
-        <h3>Statystyki kolekcji</h3>
-        <p class="meta">Zobacz postęp, podział po seriach i łączną liczbę wariantów.</p>
-        <a class="button secondary" href="{% url 'collections:stats' %}">Otwórz statystyki</a>
-      </div>
-      <div class="dashboard-action-card card-surface">
-        <span class="meta">Porządkowanie danych</span>
-        <h3>Braki z importu</h3>
-        <p class="meta">Sprawdź niepowiązane wpisy po imporcie i domknij brakujące modele.</p>
-        <a class="button secondary" href="{% url 'collections:import-backlog' %}">Zobacz listę</a>
-      </div>
-    </div>
-  </div>
-  <div class="stats-strip dashboard-kpis" style="margin-top: 18px;">
-    <div class="stat-card"><span class="stat-label">Kolekcje</span><strong class="stat-value">{{ stats.collection_count }}</strong></div>
-    <div class="stat-card"><span class="stat-label">Aktywne szukane</span><strong class="stat-value">{{ stats.wanted_count }}</strong></div>
-    <div class="stat-card"><span class="stat-label">Pozycje</span><strong class="stat-value">{{ stats.item_count }}</strong></div>
-    <div class="stat-card"><span class="stat-label">Warianty</span><strong class="stat-value">{{ stats.variant_count }}</strong></div>
-    <div class="stat-card"><span class="stat-label">Sztuk łącznie</span><strong class="stat-value">{{ stats.total_quantity }}</strong></div>
-    <div class="stat-card"><span class="stat-label">Ulubione</span><strong class="stat-value">{{ stats.favorite_count }}</strong></div>
   </div>
 </section>
 
@@ -113,39 +75,6 @@
       <h3>Nie masz jeszcze żadnej kolekcji</h3>
       <p class="meta">Zacznij od własnej listy modeli. Kolekcje są Twoją główną przestrzenią do porządkowania posiadanych autek.</p>
       <a class="button secondary" href="{% url 'collections:collection-create' %}">Nowa kolekcja</a>
-    </div>
-  {% endfor %}
-  </section>
-</section>
-
-<section class="panel">
-  <div class="section-head">
-    <div class="section-copy">
-      <h2>Szukane</h2>
-      <p class="meta">Aktywne modele, których szukasz wraz z warunkami i budżetem.</p>
-    </div>
-    <a href="{% url 'collections:wanted-list' %}">Zarządzaj</a>
-  </div>
-  <section class="dashboard-list">
-  {% for wanted in wanted_items %}
-    <div class="list-item collection-card dashboard-card">
-      <div class="collection-card-top">
-        <h3><a href="{% url 'collections:wanted-update' wanted.pk %}">{{ wanted.model.model_name }}</a></h3>
-        <span class="badge">{% if wanted.is_active %}Aktywne{% else %}Nieaktywne{% endif %}</span>
-      </div>
-      <p class="meta">{{ wanted.model.year|default:"-" }} | {{ wanted.model.category|default:"-" }} | {{ wanted.get_packaging_state_display }}</p>
-      <p class="meta">Stan min.: {{ wanted.get_condition_min_display }}{% if wanted.budget_max %} | budżet do {{ wanted.budget_max }} PLN{% endif %}</p>
-      {% if wanted.notes %}<p>{{ wanted.notes }}</p>{% endif %}
-      <div class="danger-zone">
-        <a class="button secondary" href="{% url 'collections:wanted-update' wanted.pk %}">Edytuj</a>
-        <a class="button secondary" href="{% url 'collections:wanted-delete' wanted.pk %}">Usuń</a>
-      </div>
-    </div>
-  {% empty %}
-    <div class="card-surface empty-panel dashboard-card">
-      <h3>Nie masz jeszcze żadnych aktywnych szukanych</h3>
-      <p class="meta">Dodawaj modele z katalogu wraz z budżetem i warunkami, żeby inni kolekcjonerzy widzieli, czego aktualnie szukasz.</p>
-      <a class="button secondary" href="{% url 'catalog:model-list' %}">Przejdź do katalogu</a>
     </div>
   {% endfor %}
   </section>

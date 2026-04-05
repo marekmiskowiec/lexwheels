@@ -406,20 +406,7 @@ class DashboardView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        owner_items = CollectionItem.objects.filter(collection__owner=self.request.user, collection__kind=Collection.KIND_OWNED)
-        wanted_items = WantedItem.objects.filter(owner=self.request.user).select_related('model')
-
         context['owned_collections'] = list(context['collections'])
-        context['wanted_items'] = wanted_items
-        stats_context = build_collection_stats_context(owner_items)
-        context['stats'] = {
-            'collection_count': context['collections'].count(),
-            'wanted_count': wanted_items.filter(is_active=True).count(),
-            'item_count': stats_context['stats']['item_count'],
-            'variant_count': stats_context['stats']['variant_count'],
-            'total_quantity': stats_context['stats']['total_quantity'],
-            'favorite_count': stats_context['stats']['favorite_count'],
-        }
         return context
 
 
