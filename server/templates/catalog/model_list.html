@@ -204,6 +204,7 @@
   <form method="get" class="filters toolbar">
     <input type="hidden" name="scope" value="{{ selected_scope }}">
     <input type="hidden" name="view" value="{{ selected_view }}">
+    <input type="hidden" name="per_page" value="{{ selected_per_page }}">
     <div style="flex: 2 1 300px;">
       <label for="q">Szukaj</label>
       <input id="q" type="search" name="q" value="{{ query }}" list="catalog-search-suggestions" autocomplete="off" placeholder='Np. honda civic custom y:2022 c:mainline x:"Walmart Exclusive"'>
@@ -226,7 +227,7 @@
     </details>
     <div class="catalog-results-toolbar">
       <button type="submit">Filtruj</button>
-      {% if query or selected_brand or selected_series or selected_year or selected_category or selected_case_code or selected_exclusive_store or selected_special_tag or selected_sort != 'number' %}<a class="button secondary" href="{% url 'catalog:model-list' %}?scope={{ selected_scope }}">Usuń wszystkie filtry</a>{% endif %}
+      {% if query or selected_brand or selected_series or selected_year or selected_category or selected_case_code or selected_exclusive_store or selected_special_tag or selected_sort != 'number' %}<a class="button secondary" href="{% url 'catalog:model-list' %}?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}">Usuń wszystkie filtry</a>{% endif %}
     </div>
     <div class="catalog-filter-actions">
       <div style="min-width: 220px; flex: 0 1 260px;">
@@ -235,8 +236,8 @@
       <div>
         <span class="meta" style="display:block; margin-bottom:6px;">Widok</span>
         <div class="catalog-view-switcher">
-          <a class="button{% if selected_view != 'table' %} secondary{% endif %}" href="?scope={{ selected_scope }}&view=grid&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}">Kafelki</a>
-          <a class="button{% if selected_view == 'table' %}{% else %} secondary{% endif %}" href="?scope={{ selected_scope }}&view=table&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}">Tabela</a>
+          <a class="button{% if selected_view != 'table' %} secondary{% endif %}" href="?scope={{ selected_scope }}&view=grid&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}">Kafelki</a>
+          <a class="button{% if selected_view == 'table' %}{% else %} secondary{% endif %}" href="?scope={{ selected_scope }}&view=table&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}">Tabela</a>
         </div>
       </div>
       <button type="submit" name="save_filters" value="1" class="secondary">Zapisz filtry</button>
@@ -271,26 +272,52 @@
 </section>
 {% if selected_view == 'table' %}
   <div id="catalog-table-region">
-    {% if is_paginated %}
-      <div class="pagination" id="catalog-table-pagination-top">
-        {% if page_obj.has_previous %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
-        {% for page_number in paginator.page_range %}
-          {% if page_number == 1 or page_number == paginator.num_pages or page_number >= page_obj.number|add:'-2' and page_number <= page_obj.number|add:'2' %}
-            {% if page_number == page_obj.number %}
-              <span class="button page-number is-current">{{ page_number }}</span>
-            {% else %}
-              <a class="button secondary page-number" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_number }}">{{ page_number }}</a>
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:0 0 10px;">
+      {% if is_paginated %}
+        <div class="pagination" id="catalog-table-pagination-top" style="margin:0; flex:1 1 460px;">
+          {% if page_obj.has_previous %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+          {% for page_number in paginator.page_range %}
+            {% if page_number == 1 or page_number == paginator.num_pages or page_number >= page_obj.number|add:'-2' and page_number <= page_obj.number|add:'2' %}
+              {% if page_number == page_obj.number %}
+                <span class="button page-number is-current">{{ page_number }}</span>
+              {% else %}
+                <a class="button secondary page-number" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_number }}">{{ page_number }}</a>
+              {% endif %}
+            {% elif page_number == page_obj.number|add:'-3' or page_number == page_obj.number|add:'3' %}
+              <span class="meta">…</span>
             {% endif %}
-          {% elif page_number == page_obj.number|add:'-3' or page_number == page_obj.number|add:'3' %}
-            <span class="meta">…</span>
-          {% endif %}
-        {% endfor %}
-        {% if page_obj.has_next %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
-      </div>
-    {% endif %}
-    <p class="meta" style="margin:0 0 10px;">
-      Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ paginator.count }} entries
-    </p>
+          {% endfor %}
+          {% if page_obj.has_next %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+        </div>
+      {% else %}
+        <div id="catalog-table-pagination-top"></div>
+      {% endif %}
+      <form method="get" action="{% url 'catalog:model-list' %}" class="catalog-page-size" style="display:flex; align-items:center; gap:8px; margin:0 0 0 auto; flex:0 0 auto;">
+        <input type="hidden" name="scope" value="{{ selected_scope }}">
+        <input type="hidden" name="view" value="{{ selected_view }}">
+        <input type="hidden" name="q" value="{{ query }}">
+        <input type="hidden" name="brand" value="{{ selected_brand }}">
+        <input type="hidden" name="series" value="{{ selected_series }}">
+        <input type="hidden" name="year" value="{{ selected_year }}">
+        <input type="hidden" name="category" value="{{ selected_category }}">
+        <input type="hidden" name="case_code" value="{{ selected_case_code }}">
+        <input type="hidden" name="exclusive_store" value="{{ selected_exclusive_store }}">
+        <input type="hidden" name="special_tag" value="{{ selected_special_tag }}">
+        <input type="hidden" name="sort" value="{{ selected_sort }}">
+        <input type="hidden" name="page" value="1">
+        <label for="catalog-table-per-page" class="meta" style="margin:0;">Pokaż:</label>
+        <select id="catalog-table-per-page" name="per_page" style="width:auto; min-width:88px;">
+          {% for page_size in table_page_size_options %}
+            <option value="{{ page_size }}" {% if selected_per_page == page_size|stringformat:"s" %}selected{% endif %}>{{ page_size }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:0 0 10px;">
+      <p class="meta" style="margin:0;">
+        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ paginator.count }} entries
+      </p>
+    </div>
     <section class="catalog-table-wrap catalog-table-desktop">
       <table class="catalog-table">
         <thead>
@@ -388,19 +415,19 @@
     </section>
     {% if is_paginated %}
       <div class="pagination">
-        {% if page_obj.has_previous %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+        {% if page_obj.has_previous %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
         {% for page_number in paginator.page_range %}
           {% if page_number == 1 or page_number == paginator.num_pages or page_number >= page_obj.number|add:'-2' and page_number <= page_obj.number|add:'2' %}
             {% if page_number == page_obj.number %}
               <span class="button page-number is-current">{{ page_number }}</span>
             {% else %}
-              <a class="button secondary page-number" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_number }}">{{ page_number }}</a>
+              <a class="button secondary page-number" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_number }}">{{ page_number }}</a>
             {% endif %}
           {% elif page_number == page_obj.number|add:'-3' or page_number == page_obj.number|add:'3' %}
             <span class="meta">…</span>
           {% endif %}
         {% endfor %}
-        {% if page_obj.has_next %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+        {% if page_obj.has_next %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
       </div>
     {% endif %}
   </div>
@@ -542,6 +569,19 @@
       replaceTableRegion(link.href);
     });
 
+    document.addEventListener('change', (event) => {
+      const select = event.target.closest('#catalog-table-region .catalog-page-size select');
+      if (!select) {
+        return;
+      }
+      const form = select.form;
+      if (!form) {
+        return;
+      }
+      const params = new URLSearchParams(new FormData(form));
+      replaceTableRegion(`${form.action}?${params.toString()}`);
+    });
+
     window.addEventListener('popstate', () => {
       if (window.location.search.includes('view=table')) {
         replaceTableRegion(window.location.href, false);
@@ -575,19 +615,19 @@
 {% endif %}
 {% if is_paginated and selected_view != 'table' %}
   <div class="pagination">
-    {% if page_obj.has_previous %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+    {% if page_obj.has_previous %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
     {% for page_number in paginator.page_range %}
       {% if page_number == 1 or page_number == paginator.num_pages or page_number >= page_obj.number|add:'-2' and page_number <= page_obj.number|add:'2' %}
         {% if page_number == page_obj.number %}
           <span class="button page-number is-current">{{ page_number }}</span>
         {% else %}
-          <a class="button secondary page-number" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_number }}">{{ page_number }}</a>
+          <a class="button secondary page-number" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_number }}">{{ page_number }}</a>
         {% endif %}
       {% elif page_number == page_obj.number|add:'-3' or page_number == page_obj.number|add:'3' %}
         <span class="meta">…</span>
       {% endif %}
     {% endfor %}
-    {% if page_obj.has_next %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+    {% if page_obj.has_next %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
   </div>
 {% endif %}
 {% endblock %}

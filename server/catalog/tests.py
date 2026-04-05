@@ -741,6 +741,18 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, '<table class="catalog-table">', html=False)
         self.assertEqual(response.context['selected_view'], 'table')
 
+    def test_catalog_table_view_can_change_page_size(self):
+        response = self.client.get(
+            reverse('catalog:model-list'),
+            {'view': 'table', 'per_page': '50'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['selected_view'], 'table')
+        self.assertEqual(response.context['selected_per_page'], '50')
+        self.assertEqual(response.context['paginator'].per_page, 50)
+        self.assertContains(response, 'per_page=50', html=False)
+
     def test_catalog_search_can_parse_year_shortcut(self):
         HotWheelsModel.objects.create(
             app_id='def456',

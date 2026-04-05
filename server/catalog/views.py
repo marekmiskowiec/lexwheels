@@ -46,6 +46,7 @@ class ModelListView(CatalogScopeMixin, ListView):
     template_name = 'catalog/model_list.html'
     context_object_name = 'models'
     paginate_by = 36
+    table_page_size_options = (25, 50, 100)
 
     def get(self, request, *args, **kwargs):
         base_url = request.path
@@ -89,12 +90,25 @@ class ModelListView(CatalogScopeMixin, ListView):
         }
         return queryset.order_by(*sort_options.get(sort, sort_options['number']))
 
+    def get_paginate_by(self, queryset):
+        selected_filters = self.get_selected_filters()
+        if selected_filters['view'] != 'table':
+            return self.paginate_by
+
+        per_page = self.request.GET.get('per_page', '').strip()
+        if per_page.isdigit() and int(per_page) in self.table_page_size_options:
+            return int(per_page)
+        return self.table_page_size_options[0]
+
     def get_selected_filters(self) -> dict[str, str]:
         raw_query = self.request.GET.get('q', '').strip()
         parsed_query = self.parse_search_query(raw_query)
         selected_view = self.request.GET.get('view', 'grid').strip().lower() or 'grid'
         if selected_view not in {'grid', 'table'}:
             selected_view = 'grid'
+        per_page = self.request.GET.get('per_page', '').strip()
+        if not (per_page.isdigit() and int(per_page) in self.table_page_size_options):
+            per_page = str(self.table_page_size_options[0])
         return {
             'raw_query': raw_query,
             'query': parsed_query['text'],
@@ -107,6 +121,7 @@ class ModelListView(CatalogScopeMixin, ListView):
             'case_code': self.normalize_case_code(self.request.GET.get('case_code', '').strip() or parsed_query['case_code']),
             'sort': self.request.GET.get('sort', 'number').strip() or 'number',
             'view': selected_view,
+            'per_page': per_page,
         }
 
     def build_catalog_queryset(self, *, exclude_filters: set[str] | None = None):
@@ -234,6 +249,8 @@ class ModelListView(CatalogScopeMixin, ListView):
         context['selected_case_code'] = selected_filters['case_code']
         context['selected_sort'] = selected_filters['sort']
         context['selected_view'] = selected_filters['view']
+        context['selected_per_page'] = selected_filters['per_page']
+        context['table_page_size_options'] = self.table_page_size_options
         context['current_path'] = self.request.get_full_path()
         series_options_queryset = self.build_catalog_queryset(exclude_filters={'series'})
         brand_options_queryset = self.build_catalog_queryset(exclude_filters={'brand'})
