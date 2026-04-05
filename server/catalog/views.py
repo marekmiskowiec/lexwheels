@@ -115,9 +115,9 @@ class ModelListView(CatalogScopeMixin, ListView):
     def get_selected_filters(self) -> dict[str, str]:
         raw_query = self.request.GET.get('q', '').strip()
         parsed_query = self.parse_search_query(raw_query)
-        selected_view = self.request.GET.get('view', 'grid').strip().lower() or 'grid'
+        selected_view = self.request.GET.get('view', 'table').strip().lower() or 'table'
         if selected_view not in {'grid', 'table'}:
-            selected_view = 'grid'
+            selected_view = 'table'
         per_page = self.request.GET.get('per_page', '').strip()
         if not (per_page.isdigit() and int(per_page) in self.table_page_size_options):
             per_page = str(self.table_page_size_options[0])
