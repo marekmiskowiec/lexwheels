@@ -1,6 +1,8 @@
 from django.test import SimpleTestCase
 from django.urls import reverse
 
+from .services import _render_markdown
+
 
 class BlogViewTests(SimpleTestCase):
     def test_blog_index_renders_posts(self):
@@ -28,3 +30,24 @@ class BlogViewTests(SimpleTestCase):
         response = self.client.get(reverse('blog:detail', args=['missing-post']))
 
         self.assertEqual(response.status_code, 404)
+
+
+class BlogMarkdownTests(SimpleTestCase):
+    def test_markdown_renderer_supports_links_formatting_and_lists(self):
+        html = _render_markdown(
+            'To jest **ważne** i ma [link](/blog/).\n\n- element jeden\n- element dwa\n\n> Cytat'
+        )
+
+        self.assertIn('<strong>ważne</strong>', html)
+        self.assertIn('<a href="/blog/">link</a>', html)
+        self.assertIn('<ul><li>element jeden</li><li>element dwa</li></ul>', html)
+        self.assertIn('<blockquote>Cytat</blockquote>', html)
+
+    def test_markdown_renderer_supports_code_blocks_and_images(self):
+        html = _render_markdown(
+            '```python\nprint("hi")\n```\n\n![Alt text](https://example.com/test.jpg)\n\nKod `inline`'
+        )
+
+        self.assertIn('<pre><code class="language-python">print(&quot;hi&quot;)</code></pre>', html)
+        self.assertIn('<img src="https://example.com/test.jpg" alt="Alt text" loading="lazy">', html)
+        self.assertIn('<code>inline</code>', html)

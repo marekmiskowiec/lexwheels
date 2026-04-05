@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 from functools import lru_cache
+import re
 
 from django.conf import settings
 from django.utils.html import escape
@@ -8,6 +9,49 @@ from django.utils.safestring import mark_safe
 
 
 BLOG_POSTS_DIR = settings.PROJECT_ROOT / 'data' / 'blog' / 'posts'
+INLINE_CODE_RE = re.compile(r'`([^`]+)`')
+IMAGE_RE = re.compile(r'!\[([^\]]*)\]\(([^)]+)\)')
+LINK_RE = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
+BOLD_RE = re.compile(r'\*\*([^*]+)\*\*')
+ITALIC_RE = re.compile(r'(?<!\*)\*([^*]+)\*(?!\*)')
+
+
+def _normalize_link_target(raw_url: str) -> str:
+    value = raw_url.strip()
+    if value.startswith(('http://', 'https://', '/')):
+        return value
+    return '#'
+
+
+def _render_inline_markdown(text: str) -> str:
+    rendered = escape(text)
+    code_tokens: list[str] = []
+
+    def replace_code(match) -> str:
+        code_tokens.append(f'<code>{escape(match.group(1))}</code>')
+        return f'__CODE_TOKEN_{len(code_tokens) - 1}__'
+
+    def replace_link(match) -> str:
+        href = _normalize_link_target(match.group(2))
+        attrs = ' target="_blank" rel="noreferrer"' if href.startswith(('http://', 'https://')) else ''
+        return f'<a href="{escape(href)}"{attrs}>{escape(match.group(1))}</a>'
+
+    rendered = INLINE_CODE_RE.sub(replace_code, rendered)
+    rendered = IMAGE_RE.sub(
+        lambda match: (
+            f'<figure class="blog-figure"><img src="{escape(_normalize_link_target(match.group(2)))}" '
+            f'alt="{escape(match.group(1))}" loading="lazy"></figure>'
+        ),
+        rendered,
+    )
+    rendered = LINK_RE.sub(replace_link, rendered)
+    rendered = BOLD_RE.sub(r'<strong>\1</strong>', rendered)
+    rendered = ITALIC_RE.sub(r'<em>\1</em>', rendered)
+
+    for index, token in enumerate(code_tokens):
+        rendered = rendered.replace(f'__CODE_TOKEN_{index}__', token)
+
+    return rendered
 
 
 @dataclass(frozen=True)
@@ -65,41 +109,88 @@ def _render_markdown(markdown_text: str) -> str:
     paragraph_lines: list[str] = []
     list_items: list[str] = []
     quote_lines: list[str] = []
+    ordered_list_items: list[str] = []
+    code_block_lines: list[str] = []
+    code_block_language = ''
+    in_code_block = False
 
     def flush_paragraph() -> None:
         nonlocal paragraph_lines
         if paragraph_lines:
             content = ' '.join(line.strip() for line in paragraph_lines)
-            blocks.append(f'<p>{escape(content)}</p>')
+            blocks.append(f'<p>{_render_inline_markdown(content)}</p>')
             paragraph_lines = []
 
     def flush_list() -> None:
         nonlocal list_items
         if list_items:
-            rendered_items = ''.join(f'<li>{escape(item)}</li>' for item in list_items)
+            rendered_items = ''.join(f'<li>{_render_inline_markdown(item)}</li>' for item in list_items)
             blocks.append(f'<ul>{rendered_items}</ul>')
             list_items = []
+
+    def flush_ordered_list() -> None:
+        nonlocal ordered_list_items
+        if ordered_list_items:
+            rendered_items = ''.join(f'<li>{_render_inline_markdown(item)}</li>' for item in ordered_list_items)
+            blocks.append(f'<ol>{rendered_items}</ol>')
+            ordered_list_items = []
 
     def flush_quote() -> None:
         nonlocal quote_lines
         if quote_lines:
             content = ' '.join(line.strip() for line in quote_lines)
-            blocks.append(f'<blockquote>{escape(content)}</blockquote>')
+            blocks.append(f'<blockquote>{_render_inline_markdown(content)}</blockquote>')
             quote_lines = []
+
+    def flush_code_block() -> None:
+        nonlocal code_block_lines, code_block_language
+        if code_block_lines:
+            class_attr = f' class="language-{escape(code_block_language)}"' if code_block_language else ''
+            code_html = escape('\n'.join(code_block_lines))
+            blocks.append(f'<pre><code{class_attr}>{code_html}</code></pre>')
+            code_block_lines = []
+            code_block_language = ''
 
     for raw_line in markdown_text.splitlines():
         line = raw_line.rstrip()
         stripped = line.strip()
 
+        if stripped.startswith('```'):
+            if in_code_block:
+                flush_code_block()
+                in_code_block = False
+            else:
+                flush_paragraph()
+                flush_list()
+                flush_ordered_list()
+                flush_quote()
+                code_block_language = stripped[3:].strip()
+                in_code_block = True
+            continue
+
+        if in_code_block:
+            code_block_lines.append(line)
+            continue
+
         if not stripped:
             flush_paragraph()
             flush_list()
+            flush_ordered_list()
             flush_quote()
+            continue
+
+        if stripped.startswith('### '):
+            flush_paragraph()
+            flush_list()
+            flush_ordered_list()
+            flush_quote()
+            blocks.append(f'<h3>{escape(stripped[4:])}</h3>')
             continue
 
         if stripped.startswith('## '):
             flush_paragraph()
             flush_list()
+            flush_ordered_list()
             flush_quote()
             blocks.append(f'<h2>{escape(stripped[3:])}</h2>')
             continue
@@ -107,6 +198,7 @@ def _render_markdown(markdown_text: str) -> str:
         if stripped.startswith('# '):
             flush_paragraph()
             flush_list()
+            flush_ordered_list()
             flush_quote()
             blocks.append(f'<h1>{escape(stripped[2:])}</h1>')
             continue
@@ -114,22 +206,35 @@ def _render_markdown(markdown_text: str) -> str:
         if stripped.startswith('- '):
             flush_paragraph()
             flush_quote()
+            flush_ordered_list()
             list_items.append(stripped[2:].strip())
             continue
 
         if stripped.startswith('> '):
             flush_paragraph()
             flush_list()
+            flush_ordered_list()
             quote_lines.append(stripped[2:].strip())
             continue
 
+        ordered_match = re.match(r'^\d+\.\s+(.*)$', stripped)
+        if ordered_match:
+            flush_paragraph()
+            flush_quote()
+            flush_list()
+            ordered_list_items.append(ordered_match.group(1).strip())
+            continue
+
         flush_list()
+        flush_ordered_list()
         flush_quote()
         paragraph_lines.append(stripped)
 
     flush_paragraph()
     flush_list()
+    flush_ordered_list()
     flush_quote()
+    flush_code_block()
 
     return mark_safe('\n'.join(blocks))
 
