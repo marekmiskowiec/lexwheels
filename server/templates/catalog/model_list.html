@@ -2,12 +2,6 @@
 {% block title %}Katalog modeli | LexWheels{% endblock %}
 {% block extra_styles %}
 <style>
-  .catalog-hero-grid {
-    display: grid;
-    gap: 22px;
-    grid-template-columns: minmax(0, 1.4fr) minmax(260px, .9fr);
-    align-items: start;
-  }
   .catalog-filter-card,
   .catalog-batch-card {
     margin-top: 18px;
@@ -21,17 +15,6 @@
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
-  }
-  .catalog-hero-stats {
-    display: grid;
-    gap: 12px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .catalog-hero-stats .stat-card:last-child {
-    grid-column: 1 / -1;
-  }
-  .catalog-hero-card {
-    min-height: 100%;
   }
   .catalog-filter-grid {
     display: grid;
@@ -91,10 +74,6 @@
   .catalog-card .meta strong {
     color: var(--ink);
   }
-  @media (max-width: 900px) {
-    .catalog-hero-grid { grid-template-columns: 1fr; }
-    .catalog-hero-stats { grid-template-columns: 1fr 1fr; }
-  }
   @media (max-width: 720px) {
     .catalog-filter-card,
     .catalog-batch-card {
@@ -110,9 +89,6 @@
     }
   }
   @media (max-width: 560px) {
-    .catalog-hero-stats {
-      grid-template-columns: 1fr;
-    }
     .catalog-filter-grid {
       grid-template-columns: 1fr;
     }
@@ -128,70 +104,43 @@
 {% endblock %}
 {% block content %}
 <section class="panel hero">
-  <div class="catalog-hero-grid">
-    <div class="hero-copy">
-      <span class="eyebrow">Widok katalogu</span>
-      <h1>Katalog modeli Hot Wheels</h1>
-      <p>Katalog jest teraz czytelniejszym miejscem do przeglądania całej bazy: szybkie statystyki na wejściu, wyraźne filtry i karty modeli nastawione na szybkie decyzje.</p>
-      <div class="actions-row" style="margin-top:0;">
-        <a class="button secondary" href="{% url 'catalog:coverage' %}">Zobacz zakres bazy</a>
-      </div>
-      {% if user.is_authenticated %}
-        <div class="catalog-filter-card card-surface">
-          <p style="margin:0 0 8px;">
-            <strong>Widok katalogu:</strong>
-            {% if selected_scope == 'profile' %}
-              <span class="badge">Mój zakres</span>
-            {% else %}
-              <span class="badge">Wszystko</span>
-            {% endif %}
-          </p>
+  <div class="hero-copy">
+    <div class="actions-row" style="margin-top:0;">
+      <a class="button secondary" href="{% url 'catalog:coverage' %}">Zobacz zakres bazy</a>
+    </div>
+    {% if user.is_authenticated %}
+      <div class="catalog-filter-card card-surface">
+        <p style="margin:0 0 8px;">
+          <strong>Widok katalogu:</strong>
           {% if selected_scope == 'profile' %}
-            <p class="meta" style="margin:0 0 10px;">Katalog jest ograniczony do Twoich preferencji kolekcjonowania.</p>
-            {% if scope_summary %}
-              <p class="meta" style="margin:0 0 10px;">{{ scope_summary|join:' | ' }}</p>
-            {% endif %}
+            <span class="badge">Mój zakres</span>
+          {% else %}
+            <span class="badge">Wszystko</span>
+          {% endif %}
+        </p>
+        {% if selected_scope == 'profile' %}
+          <p class="meta" style="margin:0 0 10px;">Katalog jest ograniczony do Twoich preferencji kolekcjonowania.</p>
+          {% if scope_summary %}
+            <p class="meta" style="margin:0 0 10px;">{{ scope_summary|join:' | ' }}</p>
+          {% endif %}
+          <div class="actions-row">
+            <a class="button secondary" href="{% url 'catalog:model-list' %}?scope=all">Pokaż cały katalog</a>
+            <a class="button secondary" href="{% url 'accounts:catalog-scope' %}">Ustaw zakres</a>
+          </div>
+        {% else %}
+          {% if user.catalog_scope_enabled %}
+            <p class="meta" style="margin:0 0 10px;">Masz zapisany własny zakres kolekcjonowania. Możesz przełączyć katalog na ten widok.</p>
             <div class="actions-row">
-              <a class="button secondary" href="{% url 'catalog:model-list' %}?scope=all">Pokaż cały katalog</a>
+              <a class="button secondary" href="{% url 'catalog:model-list' %}?scope=profile">Pokaż mój zakres</a>
               <a class="button secondary" href="{% url 'accounts:catalog-scope' %}">Ustaw zakres</a>
             </div>
           {% else %}
-            {% if user.catalog_scope_enabled %}
-              <p class="meta" style="margin:0 0 10px;">Masz zapisany własny zakres kolekcjonowania. Możesz przełączyć katalog na ten widok.</p>
-              <div class="actions-row">
-                <a class="button secondary" href="{% url 'catalog:model-list' %}?scope=profile">Pokaż mój zakres</a>
-                <a class="button secondary" href="{% url 'accounts:catalog-scope' %}">Ustaw zakres</a>
-              </div>
-            {% else %}
-              <p class="meta" style="margin:0 0 10px;">Skonfiguruj swój zakres kolekcjonowania, aby ukrywać niechciane marki i kategorie.</p>
-              <a class="button secondary" href="{% url 'accounts:catalog-scope' %}">Ustaw zakres</a>
-            {% endif %}
+            <p class="meta" style="margin:0 0 10px;">Skonfiguruj swój zakres kolekcjonowania, aby ukrywać niechciane marki i kategorie.</p>
+            <a class="button secondary" href="{% url 'accounts:catalog-scope' %}">Ustaw zakres</a>
           {% endif %}
-        </div>
-      {% endif %}
-    </div>
-    <div class="catalog-hero-stats">
-      <article class="stat-card">
-        <span class="stat-label">Modele w bazie</span>
-        <strong class="stat-value">{{ catalog_stats.total_models }}</strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">Wyniki po filtrach</span>
-        <strong class="stat-value">{{ catalog_stats.filtered_models }}</strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">Marki</span>
-        <strong class="stat-value">{{ catalog_stats.brand_count }}</strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">Roczniki</span>
-        <strong class="stat-value">{{ catalog_stats.year_count }}</strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">Kategorie</span>
-        <strong class="stat-value">{{ catalog_stats.category_count }}</strong>
-      </article>
-    </div>
+        {% endif %}
+      </div>
+    {% endif %}
   </div>
   <form method="get" class="filters toolbar">
     <input type="hidden" name="scope" value="{{ selected_scope }}">
