@@ -253,9 +253,12 @@
     {% else %}
       <p class="meta" style="margin-top:18px;">Najpierw utwórz kolekcję, aby dodawać modele hurtem.</p>
     {% endif %}
-  {% endif %}
+{% endif %}
 </section>
 {% if selected_view == 'table' %}
+  <p class="meta" style="margin:0 0 10px;">
+    Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ paginator.count }} entries
+  </p>
   <section class="catalog-table-wrap">
     <table class="catalog-table">
       <thead>
