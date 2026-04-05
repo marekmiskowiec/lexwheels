@@ -258,7 +258,7 @@
 {% if selected_view == 'table' %}
   <div id="catalog-table-region">
     {% if is_paginated %}
-      <div class="pagination">
+      <div class="pagination" id="catalog-table-pagination-top">
         {% if page_obj.has_previous %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
         {% for page_number in paginator.page_range %}
           {% if page_number == 1 or page_number == paginator.num_pages or page_number >= page_obj.number|add:'-2' and page_number <= page_obj.number|add:'2' %}
@@ -465,7 +465,11 @@
         if (pushState) {
           window.history.pushState({ url }, '', url);
         }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const scrollTarget = catalogTableRegion.querySelector('#catalog-table-pagination-top') || catalogTableRegion;
+        const nav = document.querySelector('.nav');
+        const navOffset = nav ? nav.getBoundingClientRect().height + 16 : 96;
+        const targetTop = window.scrollY + scrollTarget.getBoundingClientRect().top - navOffset;
+        window.scrollTo({ top: Math.max(targetTop, 0), behavior: 'smooth' });
       } catch (error) {
         window.location.href = url;
       }
