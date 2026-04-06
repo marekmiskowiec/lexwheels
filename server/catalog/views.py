@@ -74,7 +74,7 @@ class ModelListView(CatalogScopeMixin, ListView):
             filters = {
                 key: request.GET.get(key, '').strip()
                 for key in (
-                    'q', 'brand', 'series', 'year', 'category', 'exclusive_store', 'special_tag', 'case_code', 'sort', 'scope'
+                    'q', 'brand', 'series', 'year', 'category', 'exclusive_store', 'special_tag', 'case_code', 'sort', 'scope', 'only_unowned'
                 )
                 if request.GET.get(key, '').strip()
             }
@@ -131,6 +131,7 @@ class ModelListView(CatalogScopeMixin, ListView):
         )
         if not self.category_supports_case_mix(selected_category):
             selected_case_code = ''
+        selected_only_unowned = self.request.GET.get('only_unowned', '').strip() if self.request.user.is_authenticated else ''
         return {
             'raw_query': raw_query,
             'query': parsed_query['text'],
@@ -144,6 +145,7 @@ class ModelListView(CatalogScopeMixin, ListView):
             'sort': selected_sort,
             'view': selected_view,
             'per_page': per_page,
+            'only_unowned': '1' if selected_only_unowned == '1' else '',
         }
 
     def build_catalog_queryset(self, *, exclude_filters: set[str] | None = None):
@@ -173,6 +175,12 @@ class ModelListView(CatalogScopeMixin, ListView):
             queryset = queryset.filter(special_tag=filters['special_tag'])
         if filters['case_code'] and 'case_code' not in exclude_filters:
             queryset = queryset.filter(self.build_case_filter(filters['case_code']))
+        if filters['only_unowned'] and 'only_unowned' not in exclude_filters and self.request.user.is_authenticated:
+            owned_model_ids = CollectionItem.objects.filter(
+                collection__owner=self.request.user,
+                collection__kind=Collection.KIND_OWNED,
+            ).values('model_id')
+            queryset = queryset.exclude(pk__in=owned_model_ids)
 
         return queryset
 
@@ -285,6 +293,7 @@ class ModelListView(CatalogScopeMixin, ListView):
         context['selected_sort_base'] = selected_filters['sort'].lstrip('-')
         context['selected_view'] = selected_filters['view']
         context['selected_per_page'] = selected_filters['per_page']
+        context['selected_only_unowned'] = selected_filters['only_unowned']
         context['table_page_size_options'] = self.table_page_size_options
         context['current_path'] = self.request.get_full_path()
         series_options_queryset = self.build_catalog_queryset(exclude_filters={'series'})

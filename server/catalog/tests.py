@@ -804,6 +804,31 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Unowned Car')
         self.assertContains(response, 'name="model_ids"', html=False)
 
+    def test_catalog_can_filter_only_unowned_models(self):
+        user = User.objects.create_user(email='collector2@example.com', password='ComplexPass123')
+        collection = Collection.objects.create(owner=user, name='Moja kolekcja', kind=Collection.KIND_OWNED)
+        CollectionItem.objects.create(collection=collection, model=self.model_obj, quantity=1)
+        unowned_model = HotWheelsModel.objects.create(
+            app_id='def460',
+            brand='Hot Wheels',
+            toy='HCT10',
+            number='005',
+            model_name='Unowned Honda',
+            year=2024,
+            category='Mainline',
+            series='HW J-Imports',
+            series_number='5/5',
+            photo_url='https://example.com/honda.jpg',
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('catalog:model-list'), {'view': 'table', 'only_unowned': '1'})
+
+        self.assertEqual(response.context['selected_only_unowned'], '1')
+        self.assertContains(response, 'Unowned Honda')
+        self.assertNotContains(response, '1970 Pontiac Firebird')
+        self.assertContains(response, 'Tylko nieposiadane')
+
     def test_catalog_search_can_parse_year_shortcut(self):
         HotWheelsModel.objects.create(
             app_id='def456',
