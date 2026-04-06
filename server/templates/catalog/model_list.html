@@ -203,6 +203,35 @@
     background: rgba(255,255,255,0.08);
     transform: translateY(-1px);
   }
+  .catalog-owned-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(102, 211, 145, 0.35);
+    background: linear-gradient(135deg, rgba(102, 211, 145, 0.18), rgba(102, 211, 145, 0.06));
+    color: #eafff1;
+    font-size: .9rem;
+    font-weight: 700;
+  }
+  .catalog-owned-pill::before {
+    content: "✓";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: rgba(102, 211, 145, 0.22);
+    color: #eafff1;
+    line-height: 1;
+  }
+  .catalog-owned-meta {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: .82rem;
+  }
   @media (max-width: 720px) {
     .catalog-filter-card,
     .catalog-batch-card {
@@ -385,10 +414,15 @@
             <tr>
               {% if user.is_authenticated and batch_add_form.fields.collection.queryset %}
                 <td class="is-numeric">
-                  <label class="catalog-select-chip">
-                    <input type="checkbox" name="model_ids" value="{{ item.pk }}" form="batch-add-form">
-                    <span class="catalog-select-chip-label"><span class="is-default">Dodaj</span><span class="is-selected">Wybrane</span></span>
-                  </label>
+                  {% if item.catalog_is_owned %}
+                    <span class="catalog-owned-pill">Masz</span>
+                    <div class="catalog-owned-meta">{{ item.catalog_collection_summary.total_quantity }} szt. | {{ item.catalog_collection_summary.entry_count }} {% if item.catalog_collection_summary.entry_count == 1 %}wpis{% else %}wpisy{% endif %}</div>
+                  {% else %}
+                    <label class="catalog-select-chip">
+                      <input type="checkbox" name="model_ids" value="{{ item.pk }}" form="batch-add-form">
+                      <span class="catalog-select-chip-label"><span class="is-default">Dodaj</span><span class="is-selected">Wybrane</span></span>
+                    </label>
+                  {% endif %}
                 </td>
               {% endif %}
               <td>
@@ -396,7 +430,12 @@
                   <a href="{{ item.get_absolute_url }}"><img class="catalog-table-thumb" src="{{ item.catalog_primary_image_src }}" alt="{{ item.model_name }}"></a>
                 {% endif %}
               </td>
-              <td><a href="{{ item.get_absolute_url }}"><strong>{{ item.model_name }}</strong></a></td>
+              <td>
+                <a href="{{ item.get_absolute_url }}"><strong>{{ item.model_name }}</strong></a>
+                {% if item.catalog_is_owned %}
+                  <div class="catalog-owned-meta">Masz w kolekcji</div>
+                {% endif %}
+              </td>
               <td class="is-numeric">{{ item.year|default:"-" }}</td>
               <td>{{ item.category|default:"-" }}</td>
               <td>{{ item.series|default:"Bez serii" }}{% if item.series_number %} | {{ item.series_number }}{% endif %}</td>
@@ -423,10 +462,15 @@
         <article class="card catalog-card">
           <div class="card-body">
           {% if user.is_authenticated and batch_add_form.fields.collection.queryset %}
-            <label class="catalog-select-chip">
-              <input type="checkbox" name="model_ids" value="{{ item.pk }}" form="batch-add-form">
-              <span class="catalog-select-chip-label"><span class="is-default">Dodaj</span><span class="is-selected">Wybrane</span></span>
-            </label>
+            {% if item.catalog_is_owned %}
+              <span class="catalog-owned-pill">Masz w kolekcji</span>
+              <p class="catalog-owned-meta">{{ item.catalog_collection_summary.total_quantity }} szt. | {{ item.catalog_collection_summary.entry_count }} {% if item.catalog_collection_summary.entry_count == 1 %}wpis{% else %}wpisy{% endif %}</p>
+            {% else %}
+              <label class="catalog-select-chip">
+                <input type="checkbox" name="model_ids" value="{{ item.pk }}" form="batch-add-form">
+                <span class="catalog-select-chip-label"><span class="is-default">Dodaj</span><span class="is-selected">Wybrane</span></span>
+              </label>
+            {% endif %}
           {% endif %}
           {% if item.catalog_primary_image_src %}
             <a href="{{ item.get_absolute_url }}">
@@ -486,10 +530,15 @@
       <article class="card catalog-card">
         <div class="card-body">
         {% if user.is_authenticated and batch_add_form.fields.collection.queryset %}
-          <label class="catalog-select-chip">
-            <input type="checkbox" name="model_ids" value="{{ item.pk }}" form="batch-add-form">
-            <span class="catalog-select-chip-label"><span class="is-default">Dodaj</span><span class="is-selected">Wybrane</span></span>
-          </label>
+          {% if item.catalog_is_owned %}
+            <span class="catalog-owned-pill">Masz w kolekcji</span>
+            <p class="catalog-owned-meta">{{ item.catalog_collection_summary.total_quantity }} szt. | {{ item.catalog_collection_summary.entry_count }} {% if item.catalog_collection_summary.entry_count == 1 %}wpis{% else %}wpisy{% endif %}</p>
+          {% else %}
+            <label class="catalog-select-chip">
+              <input type="checkbox" name="model_ids" value="{{ item.pk }}" form="batch-add-form">
+              <span class="catalog-select-chip-label"><span class="is-default">Dodaj</span><span class="is-selected">Wybrane</span></span>
+            </label>
+          {% endif %}
         {% endif %}
         {% if item.catalog_primary_image_src %}
           <a href="{{ item.get_absolute_url }}">
@@ -666,8 +715,8 @@
 
     if (selectAllButton) {
       selectAllButton.addEventListener('click', () => {
-        const modelCheckboxes = document.querySelectorAll('input[name="model_ids"]');
-        modelCheckboxes.forEach((checkbox) => {
+        const selectableModelCheckboxes = document.querySelectorAll('input[name="model_ids"]:not(:disabled)');
+        selectableModelCheckboxes.forEach((checkbox) => {
           checkbox.checked = true;
         });
       });

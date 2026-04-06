@@ -779,6 +779,31 @@ class CatalogViewTests(TestCase):
             ['Aston Martin Vantage', '1970 Pontiac Firebird'],
         )
 
+    def test_catalog_marks_models_already_owned(self):
+        user = User.objects.create_user(email='collector@example.com', password='ComplexPass123')
+        collection = Collection.objects.create(owner=user, name='Moja kolekcja', kind=Collection.KIND_OWNED)
+        CollectionItem.objects.create(collection=collection, model=self.model_obj, quantity=2)
+        HotWheelsModel.objects.create(
+            app_id='def459',
+            brand='Hot Wheels',
+            toy='HCT09',
+            number='004',
+            model_name='Unowned Car',
+            year=2024,
+            category='Mainline',
+            series='HW Dream Garage',
+            series_number='4/5',
+            photo_url='https://example.com/case-b.jpg',
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('catalog:model-list'), {'view': 'table'})
+
+        self.assertContains(response, 'Masz w kolekcji')
+        self.assertContains(response, '2 szt. | 1 wpis')
+        self.assertContains(response, 'Unowned Car')
+        self.assertContains(response, 'name="model_ids"', html=False)
+
     def test_catalog_search_can_parse_year_shortcut(self):
         HotWheelsModel.objects.create(
             app_id='def456',
@@ -1340,7 +1365,7 @@ class CatalogScopeTests(TestCase):
         self.assertContains(response, 'Premium Supra')
         self.assertNotContains(response, 'RLC Camaro')
         self.assertNotContains(response, 'Matchbox Porsche')
-        self.assertContains(response, 'Mój zakres')
+        self.assertEqual(response.context['selected_scope'], 'profile')
 
     def test_catalog_can_switch_back_to_full_view(self):
         self.user.catalog_scope_enabled = True
@@ -1354,7 +1379,7 @@ class CatalogScopeTests(TestCase):
         self.assertContains(response, 'Premium Supra')
         self.assertContains(response, 'RLC Camaro')
         self.assertContains(response, 'Matchbox Porsche')
-        self.assertContains(response, 'Pokaż mój zakres')
+        self.assertEqual(response.context['selected_scope'], 'all')
 
     def test_catalog_scope_can_filter_by_year_range(self):
         self.user.catalog_scope_enabled = True

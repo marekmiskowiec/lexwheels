@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Count, Q, Sum
 from django.http import Http404
 from django.http import JsonResponse
 from django.shortcuts import redirect
@@ -14,6 +14,7 @@ from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 
 from collections_app.forms import CollectionBatchAddForm
+from collections_app.models import Collection, CollectionItem
 
 from .models import HotWheelsModel
 
@@ -261,6 +262,10 @@ class ModelListView(CatalogScopeMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        model_list = list(context['models'])
+        context['models'] = model_list
+        if context.get('page_obj') is not None:
+            context['page_obj'].object_list = model_list
         filtered_count = context['page_obj'].paginator.count if context.get('page_obj') else len(context['models'])
         total_queryset = HotWheelsModel.objects.all()
         scope_mode = self.get_scope_mode()
@@ -343,6 +348,25 @@ class ModelListView(CatalogScopeMixin, ListView):
         ) else []
         if self.request.user.is_authenticated:
             context['batch_add_form'] = CollectionBatchAddForm(owner=self.request.user, initial={'next': self.request.get_full_path()})
+            model_ids = [item.pk for item in model_list]
+            owned_rows = CollectionItem.objects.filter(
+                collection__owner=self.request.user,
+                collection__kind=Collection.KIND_OWNED,
+                model_id__in=model_ids,
+            ).values('model_id').annotate(
+                entry_count=Count('id'),
+                total_quantity=Sum('quantity'),
+            )
+            owned_summary = {
+                row['model_id']: {
+                    'entry_count': row['entry_count'] or 0,
+                    'total_quantity': row['total_quantity'] or 0,
+                }
+                for row in owned_rows
+            }
+            for item in model_list:
+                item.catalog_collection_summary = owned_summary.get(item.pk, {'entry_count': 0, 'total_quantity': 0})
+                item.catalog_is_owned = bool(owned_summary.get(item.pk))
         context['search_suggestions_url'] = reverse('catalog:model-search-suggestions')
         context['saved_filters'] = self.request.session.get(CATALOG_FILTER_SESSION_KEY, {})
         return context
