@@ -586,6 +586,30 @@
   const catalogPageUrl = '{{ request.path|escapejs }}';
   let catalogPageRegion = document.getElementById('catalog-page-region');
   let catalogTableRegion = document.getElementById('catalog-table-region');
+  let catalogMoreFiltersOpen = null;
+
+  const getMoreFiltersDetails = (root = document) => root.querySelector('.catalog-filter-details');
+
+  const syncCatalogMoreFiltersState = () => {
+    const details = getMoreFiltersDetails();
+    if (!details || details.dataset.stateReady === '1') {
+      return;
+    }
+    details.addEventListener('toggle', () => {
+      catalogMoreFiltersOpen = details.open;
+    });
+    details.dataset.stateReady = '1';
+  };
+
+  const applyCatalogMoreFiltersState = (root) => {
+    if (catalogMoreFiltersOpen === null) {
+      return;
+    }
+    const details = getMoreFiltersDetails(root);
+    if (details) {
+      details.open = catalogMoreFiltersOpen;
+    }
+  };
 
   const setupCatalogSearchSuggestions = () => {
     const catalogSearchInput = document.getElementById('q');
@@ -664,6 +688,10 @@
       window.location.href = url;
       return;
     }
+    const currentMoreFilters = getMoreFiltersDetails();
+    if (currentMoreFilters) {
+      catalogMoreFiltersOpen = currentMoreFilters.open;
+    }
     try {
       const response = await fetch(url, {
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -685,6 +713,7 @@
       catalogPageRegion.replaceWith(nextRegion);
       catalogPageRegion = nextRegion;
       catalogTableRegion = nextRegion.querySelector('#catalog-table-region');
+      applyCatalogMoreFiltersState(nextRegion);
       if (pushState) {
         window.history.pushState({ url }, '', url);
       }
@@ -819,6 +848,7 @@
     setupCatalogSearchSuggestions();
     setupCaseMixVisibility();
     setupCatalogTableRegion();
+    syncCatalogMoreFiltersState();
     if (typeof setupBatchSelectionButtons === 'function') {
       setupBatchSelectionButtons();
     }
