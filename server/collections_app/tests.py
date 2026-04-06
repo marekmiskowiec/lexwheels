@@ -810,8 +810,7 @@ class CollectionTests(TestCase):
 
         response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
 
-        self.assertContains(response, 'Rok: 2022')
-        self.assertContains(response, 'Kategoria: Mainline')
+        self.assertContains(response, '2022 | Mainline | Hot Wheels')
         self.assertNotContains(response, 'Statystyki i wykresy')
 
     def test_owner_collection_detail_shows_stats_link(self):

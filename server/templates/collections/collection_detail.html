@@ -17,38 +17,59 @@
   }
   .collection-model-list {
     display: grid;
-    gap: 12px;
+    gap: 10px;
   }
   .collection-model-row {
     display: grid;
-    gap: 12px;
-    padding: 16px 18px;
+    gap: 10px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.03);
   }
   .collection-model-head {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 10px 16px;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 74px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
   }
-  .collection-model-meta {
+  .collection-model-thumb {
+    width: 74px;
+    height: 74px;
+    object-fit: contain;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line);
+    padding: 6px;
+  }
+  .collection-model-copy {
     display: grid;
     gap: 4px;
+    min-width: 0;
+  }
+  .collection-model-copy h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
+  .collection-model-copy .meta {
+    margin: 0;
+  }
+  .collection-model-summary {
+    margin: 0;
+    text-align: right;
+    white-space: nowrap;
   }
   .collection-variant-list {
     display: grid;
-    gap: 8px;
-    margin-top: 2px;
+    gap: 6px;
   }
   .collection-variant-row {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 12px;
+    gap: 10px;
     align-items: center;
-    padding: 10px 12px;
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    background: rgba(255,255,255,0.03);
+    padding: 8px 10px;
+    border-top: 1px solid rgba(255,255,255,0.06);
   }
   .collection-variant-select {
     display: flex;
@@ -63,15 +84,15 @@
     margin: 0;
   }
   .item-variant-thumb {
-    width: 62px;
-    height: 62px;
+    width: 52px;
+    height: 52px;
     margin: 0;
-    padding: 6px;
-    border-radius: 14px;
+    padding: 4px;
+    border-radius: 12px;
   }
   .collection-variant-body {
     display: grid;
-    gap: 4px;
+    gap: 2px;
     min-width: 0;
   }
   .collection-variant-summary {
@@ -79,7 +100,7 @@
   }
   .collection-variant-notes {
     margin: 0;
-    font-size: .92rem;
+    font-size: .88rem;
   }
   .collection-variant-actions {
     display: flex;
@@ -96,6 +117,13 @@
   }
   @media (max-width: 900px) {
     .collection-hero-grid { grid-template-columns: 1fr; }
+    .collection-model-head {
+      grid-template-columns: 74px minmax(0, 1fr);
+    }
+    .collection-model-summary {
+      grid-column: 1 / -1;
+      text-align: left;
+    }
     .collection-variant-row {
       grid-template-columns: minmax(0, 1fr);
       align-items: flex-start;
@@ -252,7 +280,7 @@
   </div>
   <div class="collection-model-list">
   {% for item in items %}
-    <div class="list-item collection-item-card collection-model-row">
+    <div class="collection-model-row">
       {% if user == collection_obj.owner %}
         <label class="meta" style="display:flex; align-items:center; gap:8px; margin:0;">
           <input type="checkbox" name="model_ids" value="{{ item.model.pk }}" form="batch-delete-form" class="batch-delete-checkbox" style="width:auto;">
@@ -260,11 +288,19 @@
         </label>
       {% endif %}
       <div class="collection-model-head">
-        <div class="collection-model-meta">
-          <h3 style="margin:0;"><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h3>
-          <p class="meta">Marka: {{ item.model.brand|default:"-" }} | Rok: {{ item.model.year|default:"-" }} | Kategoria: {{ item.model.category|default:"-" }}</p>
+        {% if item.variants.0.image_src %}
+          <a href="{{ item.model.get_absolute_url }}">
+            <img class="collection-model-thumb" src="{{ item.variants.0.image_src }}" alt="{{ item.model.model_name }}">
+          </a>
+        {% else %}
+          <div class="collection-model-thumb"></div>
+        {% endif %}
+        <div class="collection-model-copy">
+          <h3><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h3>
+          <p class="meta">{{ item.model.year|default:"-" }} | {{ item.model.category|default:"-" }}{% if item.model.brand %} | {{ item.model.brand }}{% endif %}</p>
+          <p class="meta">Toy: {{ item.model.toy|default:"-" }} | Nr: {{ item.model.number|default:"-" }}</p>
         </div>
-        <p class="meta" style="margin:0;">Łącznie: {{ item.total_quantity }} szt. | Warianty: {{ item.variants|length }}</p>
+        <p class="meta collection-model-summary">Łącznie: {{ item.total_quantity }} szt. | Warianty: {{ item.variants|length }}</p>
       </div>
       <section class="collection-variant-list">
         {% for variant in item.variants %}
