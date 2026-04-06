@@ -278,8 +278,9 @@
 </style>
 {% endblock %}
 {% block content %}
+<div id="catalog-page-region">
 <section class="panel hero">
-  <form method="get" class="filters toolbar">
+  <form method="get" class="filters toolbar" id="catalog-filters-form">
     <input type="hidden" name="scope" value="{{ selected_scope }}">
     <input type="hidden" name="view" value="{{ selected_view }}">
     <input type="hidden" name="per_page" value="{{ selected_per_page }}">
@@ -290,8 +291,8 @@
       <p class="meta" style="margin:6px 0 0;">Skróty: `y:` rok, `c:` kategoria, `b:` marka, `s:` seria, `x:` exclusive, `t:` tag, `case:` mix.</p>
     </div>
     <div class="catalog-filter-grid" style="width:100%;">
-      <div><label for="year">Rok</label><select id="year" name="year"><option value="">Wszystkie lata</option>{% for year in year_options %}<option value="{{ year }}"{% if selected_year == year|stringformat:"s" %} selected{% endif %}>{{ year }}</option>{% endfor %}</select></div>
-      <div><label for="category">Kategoria</label><select id="category" name="category"><option value="">Wszystkie kategorie</option>{% for category in category_options %}<option value="{{ category }}"{% if selected_category == category %} selected{% endif %}>{{ category }}</option>{% endfor %}</select></div>
+      <div><label for="year">Rok</label><select id="year" name="year" data-auto-submit="catalog"><option value="">Wszystkie lata</option>{% for year in year_options %}<option value="{{ year }}"{% if selected_year == year|stringformat:"s" %} selected{% endif %}>{{ year }}</option>{% endfor %}</select></div>
+      <div><label for="category">Kategoria</label><select id="category" name="category" data-auto-submit="catalog"><option value="">Wszystkie kategorie</option>{% for category in category_options %}<option value="{{ category }}"{% if selected_category == category %} selected{% endif %}>{{ category }}</option>{% endfor %}</select></div>
     </div>
     <details class="catalog-filter-details"{% if selected_series or selected_case_code or selected_brand or selected_exclusive_store or selected_special_tag %} open{% endif %}>
       <summary>Więcej filtrów</summary>
@@ -307,7 +308,7 @@
       <button type="submit">Filtruj</button>
       {% if user.is_authenticated %}
         <label class="meta" style="display:flex; align-items:center; gap:8px; margin:0;">
-          <input type="checkbox" name="only_unowned" value="1" {% if selected_only_unowned %}checked{% endif %} style="width:auto; margin:0;">
+          <input type="checkbox" name="only_unowned" value="1" {% if selected_only_unowned %}checked{% endif %} style="width:auto; margin:0;" data-auto-submit="catalog">
           Tylko nieposiadane
         </label>
       {% endif %}
@@ -579,12 +580,19 @@
     {% endfor %}
   </section>
 {% endif %}
+</div>
 <script>
-  const catalogSearchInput = document.getElementById('q');
-  const catalogSuggestionsList = document.getElementById('catalog-search-suggestions');
   const catalogSuggestionsUrl = '{{ search_suggestions_url|escapejs }}';
+  const catalogPageUrl = '{{ request.path|escapejs }}';
+  let catalogPageRegion = document.getElementById('catalog-page-region');
+  let catalogTableRegion = document.getElementById('catalog-table-region');
 
-  if (catalogSearchInput && catalogSuggestionsList && catalogSuggestionsUrl) {
+  const setupCatalogSearchSuggestions = () => {
+    const catalogSearchInput = document.getElementById('q');
+    const catalogSuggestionsList = document.getElementById('catalog-search-suggestions');
+    if (!catalogSearchInput || !catalogSuggestionsList || !catalogSuggestionsUrl || catalogSearchInput.dataset.suggestionsReady === '1') {
+      return;
+    }
     let searchSuggestionsTimeout;
 
     const renderSuggestions = (items) => {
@@ -622,15 +630,19 @@
         }
       }, 140);
     });
-  }
+    catalogSearchInput.dataset.suggestionsReady = '1';
+  };
 </script>
 <script>
-  const categorySelect = document.getElementById('category');
-  const caseMixField = document.querySelector('[data-filter-field="case-mix"]');
-  const caseMixSelect = document.getElementById('case_code');
   const caseMixDisabledCategories = new Set(['premium', 'semi premium', 'rlc', 'xl', '5 pack']);
 
-  if (categorySelect && caseMixField && caseMixSelect) {
+  const setupCaseMixVisibility = () => {
+    const categorySelect = document.getElementById('category');
+    const caseMixField = document.querySelector('[data-filter-field="case-mix"]');
+    const caseMixSelect = document.getElementById('case_code');
+    if (!categorySelect || !caseMixField || !caseMixSelect || categorySelect.dataset.caseMixReady === '1') {
+      return;
+    }
     const syncCaseMixVisibility = () => {
       const selectedCategory = categorySelect.value.trim().toLowerCase();
       const shouldShowCaseMix = !selectedCategory || !caseMixDisabledCategories.has(selectedCategory);
@@ -643,12 +655,51 @@
 
     syncCaseMixVisibility();
     categorySelect.addEventListener('change', syncCaseMixVisibility);
-  }
+    categorySelect.dataset.caseMixReady = '1';
+  };
 </script>
 <script>
-  let catalogTableRegion = document.getElementById('catalog-table-region');
+  const replaceCatalogPageRegion = async (url, pushState = true) => {
+    if (!catalogPageRegion) {
+      window.location.href = url;
+      return;
+    }
+    try {
+      const response = await fetch(url, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      });
+      if (!response.ok) {
+        window.location.href = url;
+        return;
+      }
 
-  if (catalogTableRegion) {
+      const html = await response.text();
+      const parser = new DOMParser();
+      const nextDocument = parser.parseFromString(html, 'text/html');
+      const nextRegion = nextDocument.getElementById('catalog-page-region');
+      if (!nextRegion) {
+        window.location.href = url;
+        return;
+      }
+
+      catalogPageRegion.replaceWith(nextRegion);
+      catalogPageRegion = nextRegion;
+      catalogTableRegion = nextRegion.querySelector('#catalog-table-region');
+      if (pushState) {
+        window.history.pushState({ url }, '', url);
+      }
+      initCatalogPageBehavior();
+    } catch (error) {
+      window.location.href = url;
+    }
+  };
+
+  const setupCatalogTableRegion = () => {
+    catalogTableRegion = document.getElementById('catalog-table-region');
+    if (!catalogTableRegion) {
+      return;
+    }
+
     const replaceTableRegion = async (url, pushState = true) => {
       try {
         const response = await fetch(url, {
@@ -683,59 +734,99 @@
       }
     };
 
-    document.addEventListener('click', (event) => {
-      const link = event.target.closest('#catalog-table-region .pagination a, #catalog-table-region .catalog-sort-link');
-      if (!link) {
-        return;
-      }
-      event.preventDefault();
-      replaceTableRegion(link.href);
-    });
+    if (!document.body.dataset.catalogHandlersReady) {
+      document.addEventListener('click', (event) => {
+        const link = event.target.closest('#catalog-table-region .pagination a, #catalog-table-region .catalog-sort-link');
+        if (!link) {
+          return;
+        }
+        event.preventDefault();
+        replaceTableRegion(link.href);
+      });
 
-    document.addEventListener('change', (event) => {
-      const select = event.target.closest('#catalog-table-region .catalog-page-size select');
-      if (!select) {
-        return;
-      }
-      const form = select.form;
-      if (!form) {
-        return;
-      }
-      const params = new URLSearchParams(new FormData(form));
-      replaceTableRegion(`${form.action}?${params.toString()}`);
-    });
+      document.addEventListener('change', (event) => {
+        const select = event.target.closest('#catalog-table-region .catalog-page-size select');
+        if (!select) {
+          return;
+        }
+        const form = select.form;
+        if (!form) {
+          return;
+        }
+        const params = new URLSearchParams(new FormData(form));
+        replaceTableRegion(`${form.action}?${params.toString()}`);
+      });
 
-    window.addEventListener('popstate', () => {
-      if (window.location.search.includes('view=table')) {
-        replaceTableRegion(window.location.href, false);
-      }
-    });
-  }
+      window.addEventListener('popstate', () => {
+        if (window.location.pathname === catalogPageUrl) {
+          replaceCatalogPageRegion(window.location.href, false);
+        }
+      });
+
+      document.body.dataset.catalogHandlersReady = '1';
+    }
+  };
 </script>
 {% if user.is_authenticated and batch_add_form.fields.collection.queryset %}
   <script>
-    const selectAllButton = document.getElementById('select-all-models');
-    const clearAllButton = document.getElementById('clear-all-models');
+    const setupBatchSelectionButtons = () => {
+      const selectAllButton = document.getElementById('select-all-models');
+      const clearAllButton = document.getElementById('clear-all-models');
 
-    if (selectAllButton) {
-      selectAllButton.addEventListener('click', () => {
-        const selectableModelCheckboxes = document.querySelectorAll('input[name="model_ids"]:not(:disabled)');
-        selectableModelCheckboxes.forEach((checkbox) => {
-          checkbox.checked = true;
+      if (selectAllButton && selectAllButton.dataset.ready !== '1') {
+        selectAllButton.addEventListener('click', () => {
+          const selectableModelCheckboxes = document.querySelectorAll('input[name="model_ids"]:not(:disabled)');
+          selectableModelCheckboxes.forEach((checkbox) => {
+            checkbox.checked = true;
+          });
         });
-      });
-    }
+        selectAllButton.dataset.ready = '1';
+      }
 
-    if (clearAllButton) {
-      clearAllButton.addEventListener('click', () => {
-        const modelCheckboxes = document.querySelectorAll('input[name="model_ids"]');
-        modelCheckboxes.forEach((checkbox) => {
-          checkbox.checked = false;
+      if (clearAllButton && clearAllButton.dataset.ready !== '1') {
+        clearAllButton.addEventListener('click', () => {
+          const modelCheckboxes = document.querySelectorAll('input[name="model_ids"]');
+          modelCheckboxes.forEach((checkbox) => {
+            checkbox.checked = false;
+          });
         });
-      });
-    }
+        clearAllButton.dataset.ready = '1';
+      }
+    };
   </script>
 {% endif %}
+<script>
+  const setupAutoFilterControls = () => {
+    const filterForm = document.getElementById('catalog-filters-form');
+    if (!filterForm) {
+      return;
+    }
+
+    filterForm.querySelectorAll('[data-auto-submit="catalog"]').forEach((field) => {
+      if (field.dataset.autoReady === '1') {
+        return;
+      }
+      field.addEventListener('change', () => {
+        const params = new URLSearchParams(new FormData(filterForm));
+        params.delete('page');
+        replaceCatalogPageRegion(`${catalogPageUrl}?${params.toString()}`);
+      });
+      field.dataset.autoReady = '1';
+    });
+  };
+
+  const initCatalogPageBehavior = () => {
+    setupCatalogSearchSuggestions();
+    setupCaseMixVisibility();
+    setupCatalogTableRegion();
+    if (typeof setupBatchSelectionButtons === 'function') {
+      setupBatchSelectionButtons();
+    }
+    setupAutoFilterControls();
+  };
+
+  initCatalogPageBehavior();
+</script>
 {% if is_paginated and selected_view != 'table' %}
   <div class="pagination">
     {% if page_obj.has_previous %}<a class="button secondary" href="?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&only_unowned={{ selected_only_unowned }}&sort={{ selected_sort }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
