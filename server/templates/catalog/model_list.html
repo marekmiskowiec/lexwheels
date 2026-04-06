@@ -688,6 +688,10 @@
       window.location.href = url;
       return;
     }
+    const activeElement = document.activeElement;
+    const shouldRestoreSearchFocus = activeElement && activeElement.id === 'q';
+    const searchSelectionStart = shouldRestoreSearchFocus ? activeElement.selectionStart : null;
+    const searchSelectionEnd = shouldRestoreSearchFocus ? activeElement.selectionEnd : null;
     const currentMoreFilters = getMoreFiltersDetails();
     if (currentMoreFilters) {
       catalogMoreFiltersOpen = currentMoreFilters.open;
@@ -718,6 +722,15 @@
         window.history.pushState({ url }, '', url);
       }
       initCatalogPageBehavior();
+      if (shouldRestoreSearchFocus) {
+        const nextSearchInput = document.getElementById('q');
+        if (nextSearchInput) {
+          nextSearchInput.focus({ preventScroll: true });
+          if (typeof searchSelectionStart === 'number' && typeof searchSelectionEnd === 'number') {
+            nextSearchInput.setSelectionRange(searchSelectionStart, searchSelectionEnd);
+          }
+        }
+      }
     } catch (error) {
       window.location.href = url;
     }
@@ -831,17 +844,66 @@
       return;
     }
 
+    const submitCatalogFilters = () => {
+      const params = new URLSearchParams(new FormData(filterForm));
+      params.delete('page');
+      replaceCatalogPageRegion(`${catalogPageUrl}?${params.toString()}`);
+    };
+
     filterForm.querySelectorAll('[data-auto-submit="catalog"]').forEach((field) => {
       if (field.dataset.autoReady === '1') {
         return;
       }
       field.addEventListener('change', () => {
-        const params = new URLSearchParams(new FormData(filterForm));
-        params.delete('page');
-        replaceCatalogPageRegion(`${catalogPageUrl}?${params.toString()}`);
+        submitCatalogFilters();
       });
       field.dataset.autoReady = '1';
     });
+
+    const searchInput = filterForm.querySelector('#q');
+    if (!searchInput || searchInput.dataset.autoSearchReady === '1') {
+      return;
+    }
+
+    let searchSubmitTimeout;
+    let lastSubmittedQuery = searchInput.value.trim();
+
+    const queueSearchSubmit = () => {
+      const nextQuery = searchInput.value.trim();
+      window.clearTimeout(searchSubmitTimeout);
+      if (nextQuery === lastSubmittedQuery) {
+        return;
+      }
+      searchSubmitTimeout = window.setTimeout(() => {
+        lastSubmittedQuery = nextQuery;
+        submitCatalogFilters();
+      }, 1500);
+    };
+
+    searchInput.addEventListener('input', queueSearchSubmit);
+    searchInput.addEventListener('search', () => {
+      const nextQuery = searchInput.value.trim();
+      window.clearTimeout(searchSubmitTimeout);
+      if (nextQuery === lastSubmittedQuery) {
+        return;
+      }
+      lastSubmittedQuery = nextQuery;
+      submitCatalogFilters();
+    });
+    searchInput.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') {
+        return;
+      }
+      event.preventDefault();
+      const nextQuery = searchInput.value.trim();
+      window.clearTimeout(searchSubmitTimeout);
+      if (nextQuery === lastSubmittedQuery) {
+        return;
+      }
+      lastSubmittedQuery = nextQuery;
+      submitCatalogFilters();
+    });
+    searchInput.dataset.autoSearchReady = '1';
   };
 
   const initCatalogPageBehavior = () => {

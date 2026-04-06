@@ -880,6 +880,63 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, '<option value="Walmart Exclusive" selected>', html=False)
         self.assertContains(response, '<option value="Super Treasure Hunt" selected>', html=False)
 
+    def test_catalog_search_shortcuts_support_partial_exclusive_match(self):
+        self.model_obj.exclusive_store = 'Walmart Exclusive'
+        self.model_obj.save(update_fields=['exclusive_store'])
+        HotWheelsModel.objects.create(
+            app_id='def457a',
+            brand='Hot Wheels',
+            toy='HCT07A',
+            number='003',
+            model_name='Target Car',
+            year=2022,
+            category='Mainline',
+            series='Muscle Mania',
+            exclusive_store='Target Exclusive',
+            series_number='3/5',
+            photo_url='https://example.com/target.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:model-list'), {'q': 'x:Walmart'})
+
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertNotContains(response, 'Target Car')
+
+    def test_catalog_search_shortcuts_support_partial_special_tag_match(self):
+        self.model_obj.special_tag = 'Treasure Hunt'
+        self.model_obj.save(update_fields=['special_tag'])
+        HotWheelsModel.objects.create(
+            app_id='def457b',
+            brand='Hot Wheels',
+            toy='HCT07B',
+            number='004',
+            model_name='Super Treasure Car',
+            year=2022,
+            category='Mainline',
+            series='HW Dream Garage',
+            special_tag='Super Treasure Hunt',
+            series_number='4/5',
+            photo_url='https://example.com/super-treasure.jpg',
+        )
+        HotWheelsModel.objects.create(
+            app_id='def457c',
+            brand='Hot Wheels',
+            toy='HCT07C',
+            number='005',
+            model_name='Regular Car',
+            year=2022,
+            category='Mainline',
+            series='HW Dream Garage',
+            series_number='5/5',
+            photo_url='https://example.com/regular.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:model-list'), {'q': 't:Treasure'})
+
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertContains(response, 'Super Treasure Car')
+        self.assertNotContains(response, 'Regular Car')
+
     def test_catalog_shows_summary_stats(self):
         HotWheelsModel.objects.create(
             app_id='def456',

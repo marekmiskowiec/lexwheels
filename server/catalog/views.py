@@ -146,6 +146,12 @@ class ModelListView(CatalogScopeMixin, ListView):
             'view': selected_view,
             'per_page': per_page,
             'only_unowned': '1' if selected_only_unowned == '1' else '',
+            'exclusive_store_from_query': bool(
+                parsed_query['exclusive_store'] and not self.request.GET.get('exclusive_store', '').strip()
+            ),
+            'special_tag_from_query': bool(
+                parsed_query['special_tag'] and not self.request.GET.get('special_tag', '').strip()
+            ),
         }
 
     def build_catalog_queryset(self, *, exclude_filters: set[str] | None = None):
@@ -170,9 +176,15 @@ class ModelListView(CatalogScopeMixin, ListView):
         if filters['category'] and 'category' not in exclude_filters:
             queryset = queryset.filter(category=filters['category'])
         if filters['exclusive_store'] and 'exclusive_store' not in exclude_filters:
-            queryset = queryset.filter(exclusive_store=filters['exclusive_store'])
+            if filters.get('exclusive_store_from_query'):
+                queryset = queryset.filter(exclusive_store__icontains=filters['exclusive_store'])
+            else:
+                queryset = queryset.filter(exclusive_store=filters['exclusive_store'])
         if filters['special_tag'] and 'special_tag' not in exclude_filters:
-            queryset = queryset.filter(special_tag=filters['special_tag'])
+            if filters.get('special_tag_from_query'):
+                queryset = queryset.filter(special_tag__icontains=filters['special_tag'])
+            else:
+                queryset = queryset.filter(special_tag=filters['special_tag'])
         if filters['case_code'] and 'case_code' not in exclude_filters:
             queryset = queryset.filter(self.build_case_filter(filters['case_code']))
         if filters['only_unowned'] and 'only_unowned' not in exclude_filters and self.request.user.is_authenticated:
