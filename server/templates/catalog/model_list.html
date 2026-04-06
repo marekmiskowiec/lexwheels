@@ -50,6 +50,9 @@
     flex-wrap: wrap;
     gap: 8px;
   }
+  .catalog-mobile-sort {
+    display: none;
+  }
   .catalog-table-wrap {
     overflow-x: auto;
     border: 1px solid var(--line);
@@ -245,8 +248,8 @@
     .catalog-results-toolbar > * {
       width: 100%;
     }
-    .catalog-view-switcher {
-      display: none;
+    .catalog-mobile-sort {
+      display: block;
     }
   }
   @media (max-width: 900px) {
@@ -311,15 +314,8 @@
       {% if query or selected_brand or selected_series or selected_year or selected_category or selected_case_code or selected_exclusive_store or selected_special_tag or selected_sort != 'number' or selected_only_unowned %}<a class="button secondary" href="{% url 'catalog:model-list' %}?scope={{ selected_scope }}&view={{ selected_view }}&per_page={{ selected_per_page }}">Usuń wszystkie filtry</a>{% endif %}
     </div>
     <div class="catalog-filter-actions">
-      <div style="min-width: 220px; flex: 0 1 260px;">
+      <div class="catalog-mobile-sort" style="min-width: 220px; flex: 0 1 260px;">
         <label for="sort">Sortowanie</label><select id="sort" name="sort"><option value="number" {% if selected_sort == 'number' %}selected{% endif %}>Nr rosnąco</option><option value="-number" {% if selected_sort == '-number' %}selected{% endif %}>Nr malejąco</option><option value="name" {% if selected_sort == 'name' %}selected{% endif %}>Nazwa A-Z</option><option value="-name" {% if selected_sort == '-name' %}selected{% endif %}>Nazwa Z-A</option><option value="year" {% if selected_sort == 'year' %}selected{% endif %}>Rok rosnąco</option><option value="-year" {% if selected_sort == '-year' %}selected{% endif %}>Rok malejąco</option><option value="category" {% if selected_sort == 'category' %}selected{% endif %}>Kategoria A-Z</option><option value="-category" {% if selected_sort == '-category' %}selected{% endif %}>Kategoria Z-A</option><option value="series" {% if selected_sort == 'series' %}selected{% endif %}>Seria A-Z</option><option value="-series" {% if selected_sort == '-series' %}selected{% endif %}>Seria Z-A</option><option value="toy" {% if selected_sort == 'toy' %}selected{% endif %}>Toy rosnąco</option><option value="-toy" {% if selected_sort == '-toy' %}selected{% endif %}>Toy malejąco</option><option value="case" {% if selected_sort == 'case' %}selected{% endif %}>Case A-Z</option><option value="-case" {% if selected_sort == '-case' %}selected{% endif %}>Case Z-A</option><option value="exclusive" {% if selected_sort == 'exclusive' %}selected{% endif %}>Exclusive A-Z</option><option value="-exclusive" {% if selected_sort == '-exclusive' %}selected{% endif %}>Exclusive Z-A</option></select>
-      </div>
-      <div>
-        <span class="meta" style="display:block; margin-bottom:6px;">Widok</span>
-        <div class="catalog-view-switcher">
-          <a class="button{% if selected_view != 'table' %} secondary{% endif %}" href="?scope={{ selected_scope }}&view=grid&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&only_unowned={{ selected_only_unowned }}">Kafelki</a>
-          <a class="button{% if selected_view == 'table' %}{% else %} secondary{% endif %}" href="?scope={{ selected_scope }}&view=table&per_page={{ selected_per_page }}&q={{ query }}&brand={{ selected_brand }}&series={{ selected_series }}&year={{ selected_year }}&category={{ selected_category }}&case_code={{ selected_case_code }}&exclusive_store={{ selected_exclusive_store }}&special_tag={{ selected_special_tag }}&sort={{ selected_sort }}&only_unowned={{ selected_only_unowned }}">Tabela</a>
-        </div>
       </div>
       <button type="submit" name="save_filters" value="1" class="secondary">Zapisz filtry</button>
       {% if saved_filters %}<a class="button secondary" href="{% url 'catalog:model-list' %}?apply_saved_filters=1">Przywróć zapisane</a><a class="button secondary" href="{% url 'catalog:model-list' %}?clear_saved_filters=1">Usuń zapisane</a>{% endif %}
