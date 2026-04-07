@@ -110,6 +110,39 @@
     border: 1px solid var(--line);
     padding: 6px;
   }
+  .catalog-image-preview {
+    position: fixed;
+    z-index: 2000;
+    width: min(320px, 34vw);
+    min-height: 180px;
+    padding: 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 22px;
+    background: rgba(12, 18, 31, 0.96);
+    box-shadow: 0 22px 70px rgba(0, 0, 0, 0.42);
+    pointer-events: none;
+    opacity: 0;
+    transform: translate3d(0, 8px, 0) scale(0.98);
+    transition: opacity .12s ease, transform .12s ease;
+  }
+  .catalog-image-preview.is-visible {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  .catalog-image-preview img {
+    display: block;
+    width: 100%;
+    max-height: 360px;
+    object-fit: contain;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+  }
+  .catalog-image-preview-title {
+    margin: 10px 2px 0;
+    color: var(--ink);
+    font-size: .92rem;
+    font-weight: 700;
+  }
   .catalog-table td.is-numeric {
     white-space: nowrap;
   }
@@ -258,6 +291,11 @@
     }
     .catalog-table-mobile-fallback {
       display: grid;
+    }
+  }
+  @media (hover: none), (pointer: coarse), (max-width: 900px) {
+    .catalog-image-preview {
+      display: none;
     }
   }
   @media (max-width: 560px) {
@@ -432,7 +470,7 @@
               {% endif %}
               <td>
                 {% if item.catalog_primary_image_src %}
-                  <a href="{{ item.get_absolute_url }}"><img class="catalog-table-thumb" src="{{ item.catalog_primary_image_src }}" alt="{{ item.model_name }}"></a>
+                  <a href="{{ item.get_absolute_url }}"><img class="catalog-table-thumb" src="{{ item.catalog_primary_image_src }}" alt="{{ item.model_name }}" data-catalog-preview-src="{{ item.catalog_primary_image_src }}" data-catalog-preview-title="{{ item.model_name }}"></a>
                 {% endif %}
               </td>
               <td>
@@ -483,6 +521,8 @@
                 class="thumb catalog-card-image"
                 src="{{ item.catalog_primary_image_src }}"
                 alt="{{ item.model_name }}"
+                data-catalog-preview-src="{{ item.catalog_primary_image_src }}"
+                data-catalog-preview-title="{{ item.model_name }}"
               >
             </a>
           {% endif %}
@@ -551,6 +591,8 @@
               class="thumb catalog-card-image"
               src="{{ item.catalog_primary_image_src }}"
               alt="{{ item.model_name }}"
+              data-catalog-preview-src="{{ item.catalog_primary_image_src }}"
+              data-catalog-preview-title="{{ item.model_name }}"
             >
           </a>
         {% endif %}
@@ -609,6 +651,74 @@
     if (details) {
       details.open = catalogMoreFiltersOpen;
     }
+  };
+
+  const setupCatalogImagePreview = () => {
+    if (document.body.dataset.catalogImagePreviewReady === '1') {
+      return;
+    }
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 901px)').matches;
+    if (!canHover) {
+      return;
+    }
+
+    const preview = document.createElement('div');
+    preview.className = 'catalog-image-preview';
+    preview.setAttribute('aria-hidden', 'true');
+    preview.innerHTML = '<img alt=""><p class="catalog-image-preview-title"></p>';
+    document.body.appendChild(preview);
+    const previewImage = preview.querySelector('img');
+    const previewTitle = preview.querySelector('.catalog-image-preview-title');
+
+    const movePreview = (event) => {
+      const margin = 18;
+      const offset = 22;
+      const rect = preview.getBoundingClientRect();
+      let left = event.clientX + offset;
+      let top = event.clientY + offset;
+      if (left + rect.width + margin > window.innerWidth) {
+        left = event.clientX - rect.width - offset;
+      }
+      if (top + rect.height + margin > window.innerHeight) {
+        top = event.clientY - rect.height - offset;
+      }
+      preview.style.left = `${Math.max(margin, left)}px`;
+      preview.style.top = `${Math.max(margin, top)}px`;
+    };
+
+    document.addEventListener('mouseover', (event) => {
+      const target = event.target.closest('[data-catalog-preview-src]');
+      if (!target) {
+        return;
+      }
+      previewImage.src = target.dataset.catalogPreviewSrc;
+      previewImage.alt = target.alt || '';
+      previewTitle.textContent = target.dataset.catalogPreviewTitle || target.alt || '';
+      movePreview(event);
+      preview.classList.add('is-visible');
+    });
+
+    document.addEventListener('mousemove', (event) => {
+      if (!preview.classList.contains('is-visible')) {
+        return;
+      }
+      movePreview(event);
+    });
+
+    document.addEventListener('mouseout', (event) => {
+      const target = event.target.closest('[data-catalog-preview-src]');
+      if (!target || target.contains(event.relatedTarget)) {
+        return;
+      }
+      preview.classList.remove('is-visible');
+      previewImage.removeAttribute('src');
+    });
+
+    document.addEventListener('scroll', () => {
+      preview.classList.remove('is-visible');
+    }, true);
+
+    document.body.dataset.catalogImagePreviewReady = '1';
   };
 
   const setupCatalogSearchSuggestions = () => {
@@ -907,6 +1017,7 @@
   };
 
   const initCatalogPageBehavior = () => {
+    setupCatalogImagePreview();
     setupCatalogSearchSuggestions();
     setupCaseMixVisibility();
     setupCatalogTableRegion();
