@@ -12,7 +12,10 @@ from catalog.models import HotWheelsModel
 class Command(BaseCommand):
     help = 'Import catalog models from one JSON file or from the full data/catalog tree.'
     SERIES_MARKER_PATTERN = re.compile(r'New for 20\d{2}!')
-    COLOR_VARIANT_SUFFIX_PATTERN = re.compile(r'\s*\((?:\d+(?:st|nd|rd|th)\s+color)\)\s*$', re.IGNORECASE)
+    COLOR_VARIANT_SUFFIX_PATTERN = re.compile(
+        r'\s*\((?:\d+(?:st|nd|rd|th)\s+color(?:\s*-\s*[^)]+)?)\)\s*$',
+        re.IGNORECASE,
+    )
     EXCLUSIVE_STORE_MARKERS = (
         ('Dollar Tree/Family Dollar Exclusive', 'Dollar Tree/Family Dollar Exclusive'),
         ('Family Dollar/Dollar Tree Exclusive', 'Dollar Tree/Family Dollar Exclusive'),

@@ -17,6 +17,8 @@ class ImportModelsCommandTests(TestCase):
     def test_clean_model_name_removes_color_variant_suffix(self):
         self.assertEqual(Command.clean_model_name('Honda Civic (2nd color)'), 'Honda Civic')
         self.assertEqual(Command.clean_model_name('Toyota Supra (3rd color)'), 'Toyota Supra')
+        self.assertEqual(Command.clean_model_name('Honda Civic (2nd color - zamac)'), 'Honda Civic')
+        self.assertEqual(Command.clean_model_name('Toyota Supra (3rd color - zamac)'), 'Toyota Supra')
         self.assertEqual(Command.clean_model_name('Mazda RX-7'), 'Mazda RX-7')
 
     def test_clean_series_removes_new_for_marker(self):
@@ -423,7 +425,7 @@ class ImportModelsCommandTests(TestCase):
         payload = [{
             'Toy': 'HW01',
             'Number': '001',
-            'Model Name': 'Honda Civic (2nd color)',
+            'Model Name': 'Honda Civic (2nd color - zamac)',
             'Series': 'Series A',
             'Series Number': '1/5',
         }]
