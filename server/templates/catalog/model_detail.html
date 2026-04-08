@@ -5,22 +5,48 @@
   .model-detail-layout {
     display: grid;
     gap: 22px;
-    grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+    grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
     align-items: start;
   }
   .model-gallery {
     display: grid;
     gap: 14px;
   }
-  .model-gallery .card {
-    overflow: hidden;
+  .model-gallery-card {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.035);
   }
-  .model-gallery .thumb {
-    height: 220px;
+  .model-gallery-card .thumb {
+    height: 240px;
   }
   .model-summary {
     display: grid;
     gap: 18px;
+  }
+  .model-hero-card {
+    display: grid;
+    gap: 14px;
+  }
+  .model-kpis {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+  .model-kpi {
+    display: grid;
+    gap: 4px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.035);
+  }
+  .model-kpi strong {
+    color: var(--ink);
+    font-size: 1.3rem;
   }
   .model-meta-grid {
     display: grid;
@@ -36,18 +62,44 @@
     flex-wrap: wrap;
     gap: 10px;
   }
-  .case-entry-list {
+  .case-entry-list,
+  .collection-link-grid,
+  .related-link-grid {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
   }
-  .collection-link-grid {
+  .owned-item-list,
+  .wanted-item-list {
+    display: grid;
+    gap: 10px;
+  }
+  .owned-item-row,
+  .wanted-item-row {
+    display: grid;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.03);
+  }
+  .owned-item-head,
+  .wanted-item-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+  }
+  .owned-item-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
   }
-  @media (max-width: 860px) {
-    .model-detail-layout { grid-template-columns: 1fr; }
+  @media (max-width: 920px) {
+    .model-detail-layout {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 {% endblock %}
@@ -56,17 +108,22 @@
   <div class="model-detail-layout">
     <div class="model-gallery">
       {% for panel in model_obj.packaging_image_panels %}
-        <div class="card compact-card">
-          <p class="meta" style="margin-bottom:10px;">{% if panel.key == 'loose' %}Luzak{% else %}{{ panel.label }} karta{% endif %}</p>
+        <div class="model-gallery-card">
+          <div class="section-copy">
+            <h3 style="margin:0;">{% if panel.key == 'loose' %}Luzak{% else %}{{ panel.label }} karta{% endif %}</h3>
+            <p class="meta" style="margin:0;">Wariant zdjęcia dla tego modelu.</p>
+          </div>
           <img class="thumb" src="{{ panel.src }}" alt="{{ model_obj.model_name }} - {{ panel.label|lower }}">
         </div>
       {% endfor %}
     </div>
     <div class="model-summary">
-      <div class="hero-copy">
-        <span class="eyebrow">Szczegóły modelu</span>
-      <h1>{{ model_obj.model_name }}</h1>
-        <p class="meta">Pojedynczy widok modelu z pełnym zestawem podstawowych danych i szybkimi akcjami do kolekcji oraz szukanych.</p>
+      <div class="card-surface model-hero-card">
+        <div class="hero-copy">
+          <span class="eyebrow">Szczegóły modelu</span>
+          <h1>{{ model_obj.model_name }}</h1>
+          <p class="meta">To jest główne miejsce do sprawdzenia wariantów zdjęć, stanu w kolekcji i szybkiego przejścia do podobnych modeli w katalogu.</p>
+        </div>
         <div class="catalog-summary">
           <span class="badge">Toy {{ model_obj.toy }}</span>
           <span class="badge">Nr {{ model_obj.number }}</span>
@@ -76,7 +133,28 @@
             <span class="badge">Case {{ case_code }}</span>
           {% endfor %}
         </div>
+        <div class="model-kpis">
+          <div class="model-kpi">
+            <span class="meta">Warianty zdjęć</span>
+            <strong>{{ model_obj.packaging_image_panels|length }}</strong>
+          </div>
+          <div class="model-kpi">
+            <span class="meta">Case'y</span>
+            <strong>{{ model_obj.case_code_list|length }}</strong>
+          </div>
+          {% if user.is_authenticated %}
+            <div class="model-kpi">
+              <span class="meta">Masz w kolekcji</span>
+              <strong>{{ owned_total_quantity }}</strong>
+            </div>
+            <div class="model-kpi">
+              <span class="meta">Aktywne szukane</span>
+              <strong>{{ active_wanted_count }}</strong>
+            </div>
+          {% endif %}
+        </div>
       </div>
+
       <div class="model-meta-grid">
         <div class="card-surface model-meta-card">
           <span class="meta">Marka</span>
@@ -109,6 +187,21 @@
           </div>
         {% endif %}
       </div>
+
+      {% if related_catalog_links %}
+        <div class="card-surface">
+          <div class="section-copy">
+            <h3>Powiązane widoki katalogu</h3>
+            <p class="meta">Szybkie przejścia do podobnych modeli według roku, kategorii, serii i oznaczeń.</p>
+          </div>
+          <div class="related-link-grid" style="margin-top:12px;">
+            {% for entry in related_catalog_links %}
+              <a class="button secondary" href="{{ entry.url }}">{{ entry.label }}</a>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
       {% if case_entries %}
         <div class="card-surface">
           <div class="section-copy">
@@ -126,28 +219,89 @@
           </div>
         </div>
       {% endif %}
+
       {% if user.is_authenticated %}
         <div class="card-surface">
           <div class="section-copy">
-            <h3>Szybkie działania</h3>
-            <p class="meta">Dodaj model do własnej kolekcji albo oznacz go jako szukany.</p>
+            <h3>Twoja kolekcja</h3>
+            <p class="meta">
+              {% if owned_items %}
+                Masz ten model w {{ owned_collection_count }} {% if owned_collection_count == 1 %}kolekcji{% else %}kolekcjach{% endif %}
+                i łącznie {{ owned_total_quantity }} {% if owned_total_quantity == 1 %}sztukę{% else %}sztuk{% endif %}.
+              {% else %}
+                Tego modelu nie ma jeszcze w Twojej kolekcji.
+              {% endif %}
+            </p>
           </div>
           <div class="model-actions" style="margin-top:12px;">
-          <a class="button" href="{% url 'collections:dashboard' %}">Przejdź do swoich kolekcji</a>
-          <a class="button secondary" href="{% url 'collections:wanted-create' %}?model={{ model_obj.pk }}">Szukam tego modelu</a>
+            <a class="button" href="{% url 'collections:dashboard' %}">Moje kolekcje</a>
+            <a class="button secondary" href="{% url 'collections:wanted-create' %}?model={{ model_obj.pk }}">Szukam tego modelu</a>
           </div>
           {% with collections=user.collections.all %}
             {% if collections %}
               <span class="meta" style="display:block; margin-top:14px;">Dodaj bezpośrednio do wybranej kolekcji:</span>
               <div class="collection-link-grid" style="margin-top:8px;">
-              {% for collection in collections %}
-                {% if collection.kind == 'owned' %}
-                  <a class="button secondary" href="{% url 'collections:item-create' collection.pk %}?model={{ model_obj.pk }}">{{ collection.name }}</a>
-                {% endif %}
-              {% endfor %}
+                {% for collection in collections %}
+                  {% if collection.kind == 'owned' %}
+                    <a class="button secondary" href="{% url 'collections:item-create' collection.pk %}?model={{ model_obj.pk }}">{{ collection.name }}</a>
+                  {% endif %}
+                {% endfor %}
               </div>
             {% endif %}
           {% endwith %}
+          {% if owned_items %}
+            <div class="owned-item-list" style="margin-top:16px;">
+              {% for item in owned_items %}
+                <div class="owned-item-row">
+                  <div class="owned-item-head">
+                    <strong><a href="{{ item.collection.get_absolute_url }}">{{ item.collection.name }}</a></strong>
+                    <span class="badge">{{ item.quantity }} {% if item.quantity == 1 %}szt.{% else %}szt.{% endif %}</span>
+                  </div>
+                  <p class="meta" style="margin:0;">{{ item.get_packaging_state_display }} | {{ item.get_condition_display }}</p>
+                  {% if item.attribute_badges %}
+                    <p class="meta" style="margin:0;">{{ item.attribute_badges|join:", " }}</p>
+                  {% endif %}
+                  <div class="owned-item-actions">
+                    <a class="button secondary" href="{% url 'collections:item-update' item.pk %}">Edytuj wariant</a>
+                    <a class="button secondary" href="{{ item.collection.get_absolute_url }}">Otwórz kolekcję</a>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="card-surface">
+          <div class="section-copy">
+            <h3>Twoje szukane</h3>
+            <p class="meta">
+              {% if wanted_items %}
+                Masz zapisane {{ wanted_items|length }} {% if wanted_items|length == 1 %}szukane{% else %}szukane{% endif %} dla tego modelu.
+              {% else %}
+                Nie masz jeszcze zapisanego szukanego dla tego modelu.
+              {% endif %}
+            </p>
+          </div>
+          {% if wanted_items %}
+            <div class="wanted-item-list" style="margin-top:12px;">
+              {% for wanted in wanted_items %}
+                <div class="wanted-item-row">
+                  <div class="wanted-item-head">
+                    <strong>{% if wanted.is_active %}Aktywne{% else %}Nieaktywne{% endif %}</strong>
+                    <span class="badge">{{ wanted.get_packaging_state_display }}</span>
+                  </div>
+                  <p class="meta" style="margin:0;">Stan min.: {{ wanted.get_condition_min_display }}{% if wanted.budget_max %} | budżet do {{ wanted.budget_max }} PLN{% endif %}</p>
+                  {% if wanted.notes %}
+                    <p style="margin:0;">{{ wanted.notes }}</p>
+                  {% endif %}
+                  <div class="owned-item-actions">
+                    <a class="button secondary" href="{% url 'collections:wanted-update' wanted.pk %}">Edytuj szukane</a>
+                    <a class="button secondary" href="{% url 'collections:wanted-delete' wanted.pk %}">Usuń</a>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
         </div>
       {% endif %}
     </div>

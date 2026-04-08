@@ -7,13 +7,18 @@ from django.test import TestCase
 from django.urls import reverse
 
 from accounts.models import User
-from collections_app.models import Collection, CollectionItem
+from collections_app.models import Collection, CollectionItem, WantedItem
 
 from .management.commands.import_models import Command
 from .models import HotWheelsModel
 
 
 class ImportModelsCommandTests(TestCase):
+    def test_clean_model_name_removes_color_variant_suffix(self):
+        self.assertEqual(Command.clean_model_name('Honda Civic (2nd color)'), 'Honda Civic')
+        self.assertEqual(Command.clean_model_name('Toyota Supra (3rd color)'), 'Toyota Supra')
+        self.assertEqual(Command.clean_model_name('Mazda RX-7'), 'Mazda RX-7')
+
     def test_clean_series_removes_new_for_marker(self):
         self.assertEqual(
             Command.clean_series("HW MetroNew for 2022!Ryu's Rides"),
@@ -413,6 +418,23 @@ class ImportModelsCommandTests(TestCase):
         self.assertEqual(HotWheelsModel.objects.count(), 2)
         self.assertTrue(HotWheelsModel.objects.filter(model_name='Car One', brand='Hot Wheels').exists())
         self.assertTrue(HotWheelsModel.objects.filter(model_name='Car Two', brand='Matchbox', category='Collectors').exists())
+
+    def test_import_removes_color_variant_suffix_from_model_name(self):
+        payload = [{
+            'Toy': 'HW01',
+            'Number': '001',
+            'Model Name': 'Honda Civic (2nd color)',
+            'Series': 'Series A',
+            'Series Number': '1/5',
+        }]
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / 'models.json'
+            path.write_text(json.dumps(payload))
+            call_command('import_models', path=str(path))
+
+        model = HotWheelsModel.objects.get()
+        self.assertEqual(model.model_name, 'Honda Civic')
 
     def test_import_can_filter_dataset_tree(self):
         hot_wheels_payload = [{
@@ -1281,6 +1303,40 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, "Case'y modelu")
         self.assertContains(response, reverse('catalog:case-mix-detail', args=[2022, 'a']))
         self.assertContains(response, reverse('catalog:case-mix-detail', args=[2022, 'q']))
+
+    def test_authenticated_model_detail_shows_owned_and_wanted_state(self):
+        user = User.objects.create_user(email='collector@example.com', password='ComplexPass123')
+        collection = Collection.objects.create(owner=user, name='Główna', kind=Collection.KIND_OWNED)
+        owned_item = CollectionItem.objects.create(
+            collection=collection,
+            model=self.model_obj,
+            quantity=2,
+            packaging_state='loose',
+            condition='good',
+        )
+        wanted_item = WantedItem.objects.create(
+            owner=user,
+            model=self.model_obj,
+            packaging_state='long_card',
+            condition_min='mint',
+            is_active=True,
+        )
+
+        self.client.force_login(user)
+        response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
+
+        self.assertContains(response, 'Twoja kolekcja')
+        self.assertContains(response, 'Główna')
+        self.assertContains(response, '2 sztuk')
+        self.assertContains(response, 'Luzak')
+        self.assertContains(response, reverse('collections:item-update', args=[owned_item.pk]))
+        self.assertContains(response, 'Twoje szukane')
+        self.assertContains(response, 'Aktywne')
+        self.assertContains(response, 'Długa karta')
+        self.assertContains(response, reverse('collections:wanted-update', args=[wanted_item.pk]))
+        self.assertContains(response, f'{reverse("catalog:model-list")}?year=2022')
+        self.assertContains(response, f'{reverse("catalog:model-list")}?category=Mainline')
+        self.assertContains(response, f'{reverse("catalog:model-list")}?series=HW+Dream+Garage&amp;year=2022')
 
     def test_semi_premium_model_detail_hides_short_card(self):
         self.model_obj.category = 'Semi Premium'

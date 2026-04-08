@@ -14,7 +14,7 @@ from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 
 from collections_app.forms import CollectionBatchAddForm
-from collections_app.models import Collection, CollectionItem
+from collections_app.models import Collection, CollectionItem, WantedItem
 
 from .models import HotWheelsModel
 
@@ -441,6 +441,77 @@ class ModelDetailView(DetailView):
             }
             for case_code in model_obj.case_code_list
         ]
+        context['related_catalog_links'] = [
+            {
+                'label': f'Rok {model_obj.year}',
+                'url': f"{reverse('catalog:model-list')}?{urlencode({'year': model_obj.year})}",
+            }
+            for _ in [1]
+            if model_obj.year
+        ]
+        if model_obj.category:
+            context['related_catalog_links'].append(
+                {
+                    'label': model_obj.category,
+                    'url': f"{reverse('catalog:model-list')}?{urlencode({'category': model_obj.category})}",
+                }
+            )
+        if model_obj.series:
+            context['related_catalog_links'].append(
+                {
+                    'label': model_obj.series,
+                    'url': f"{reverse('catalog:model-list')}?{urlencode({'series': model_obj.series, 'year': model_obj.year})}"
+                    if model_obj.year
+                    else f"{reverse('catalog:model-list')}?{urlencode({'series': model_obj.series})}",
+                }
+            )
+        if model_obj.brand:
+            context['related_catalog_links'].append(
+                {
+                    'label': model_obj.brand,
+                    'url': f"{reverse('catalog:model-list')}?{urlencode({'brand': model_obj.brand})}",
+                }
+            )
+        if model_obj.special_tag:
+            context['related_catalog_links'].append(
+                {
+                    'label': model_obj.special_tag,
+                    'url': f"{reverse('catalog:model-list')}?{urlencode({'special_tag': model_obj.special_tag})}",
+                }
+            )
+        if model_obj.exclusive_store:
+            context['related_catalog_links'].append(
+                {
+                    'label': model_obj.exclusive_store,
+                    'url': f"{reverse('catalog:model-list')}?{urlencode({'exclusive_store': model_obj.exclusive_store})}",
+                }
+            )
+
+        if self.request.user.is_authenticated:
+            owned_items = list(
+                CollectionItem.objects.filter(
+                    collection__owner=self.request.user,
+                    collection__kind=Collection.KIND_OWNED,
+                    model=model_obj,
+                ).select_related('collection')
+            )
+            wanted_items = list(
+                WantedItem.objects.filter(
+                    owner=self.request.user,
+                    model=model_obj,
+                )
+            )
+            context['owned_items'] = owned_items
+            context['wanted_items'] = wanted_items
+            context['owned_total_quantity'] = sum(item.quantity for item in owned_items)
+            context['owned_collection_count'] = len({item.collection_id for item in owned_items})
+            context['active_wanted_count'] = sum(1 for item in wanted_items if item.is_active)
+        else:
+            context['owned_items'] = []
+            context['wanted_items'] = []
+            context['owned_total_quantity'] = 0
+            context['owned_collection_count'] = 0
+            context['active_wanted_count'] = 0
         return context
 
 

@@ -12,6 +12,7 @@ from catalog.models import HotWheelsModel
 class Command(BaseCommand):
     help = 'Import catalog models from one JSON file or from the full data/catalog tree.'
     SERIES_MARKER_PATTERN = re.compile(r'New for 20\d{2}!')
+    COLOR_VARIANT_SUFFIX_PATTERN = re.compile(r'\s*\((?:\d+(?:st|nd|rd|th)\s+color)\)\s*$', re.IGNORECASE)
     EXCLUSIVE_STORE_MARKERS = (
         ('Dollar Tree/Family Dollar Exclusive', 'Dollar Tree/Family Dollar Exclusive'),
         ('Family Dollar/Dollar Tree Exclusive', 'Dollar Tree/Family Dollar Exclusive'),
@@ -112,7 +113,7 @@ class Command(BaseCommand):
                     'brand': self.extract_brand(row, metadata),
                     'toy': row.get('Toy', ''),
                     'number': row.get('Number', ''),
-                    'model_name': row.get('Model Name', ''),
+                    'model_name': self.clean_model_name(row.get('Model Name', '')),
                     'year': self.extract_year(row, metadata),
                     'category': category,
                     'series': parsed_series['series'],
@@ -297,13 +298,21 @@ class Command(BaseCommand):
         parts = [
             row.get('Toy', ''),
             row.get('Number', ''),
-            row.get('Model Name', ''),
+            Command.clean_model_name(row.get('Model Name', '')),
             parsed_series['series'],
             exclusive_store,
             special_tag,
             row.get('Series Number', ''),
         ]
         return hashlib.sha256('|'.join(parts).encode('utf-8')).hexdigest()[:24]
+
+    @classmethod
+    def clean_model_name(cls, value) -> str:
+        cleaned = cls.clean_optional_text(value)
+        if not cleaned:
+            return ''
+        cleaned = cls.COLOR_VARIANT_SUFFIX_PATTERN.sub('', cleaned)
+        return re.sub(r'\s+', ' ', cleaned).strip()
 
     @staticmethod
     def extract_year(row: dict, metadata: dict | None = None) -> int | None:
