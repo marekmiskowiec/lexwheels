@@ -412,8 +412,8 @@
     {% for model in recent_models %}
       <article class="card compact-card recent-card">
         <div class="model-row">
-          {% if model.catalog_primary_image_src %}
-            <img class="model-thumb" src="{{ model.catalog_primary_image_src }}" alt="{{ model.model_name }}">
+          {% if model.catalog_primary_thumb_src %}
+            <img class="model-thumb" src="{{ model.catalog_primary_thumb_src }}" alt="{{ model.model_name }}">
           {% else %}
             <div class="model-thumb"></div>
           {% endif %}

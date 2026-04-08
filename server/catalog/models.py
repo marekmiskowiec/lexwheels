@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
+from pathlib import Path
 
 
 class HotWheelsModel(models.Model):
@@ -9,6 +10,7 @@ class HotWheelsModel(models.Model):
         ('long_card', 'Długa'),
         ('loose', 'Luzak'),
     )
+    IMAGE_VARIANT_NAMES = ('thumb', 'preview', 'detail')
     app_id = models.CharField(max_length=64, unique=True)
     brand = models.CharField(max_length=64, default='Hot Wheels')
     toy = models.CharField(max_length=32)
@@ -78,6 +80,30 @@ class HotWheelsModel(models.Model):
             return False
         return (settings.PROJECT_ROOT / self.local_photo_path).exists()
 
+    @staticmethod
+    def build_image_variant_relative_path(relative_path: str, variant_name: str) -> str:
+        if not relative_path or variant_name not in HotWheelsModel.IMAGE_VARIANT_NAMES:
+            return ''
+        source_path = Path(relative_path)
+        return str(source_path.with_name(f'{source_path.stem}--{variant_name}.webp'))
+
+    def image_variant_exists(self, relative_path: str, variant_name: str) -> bool:
+        variant_relative_path = self.build_image_variant_relative_path(relative_path, variant_name)
+        if not variant_relative_path:
+            return False
+        return (settings.PROJECT_ROOT / variant_relative_path).exists()
+
+    @staticmethod
+    def media_src_for_relative_path(relative_path: str) -> str:
+        if not relative_path:
+            return ''
+        return f'{settings.MEDIA_URL}{relative_path}'
+
+    def image_variant_src_for_relative_path(self, relative_path: str, variant_name: str) -> str:
+        if self.image_variant_exists(relative_path, variant_name):
+            return self.media_src_for_relative_path(self.build_image_variant_relative_path(relative_path, variant_name))
+        return self.media_src_for_relative_path(relative_path)
+
     def local_packaging_photo_exists(self, packaging_state: str) -> bool:
         path_attr = {
             'short_card': 'short_card_local_photo_path',
@@ -95,10 +121,10 @@ class HotWheelsModel(models.Model):
     @property
     def image_src(self) -> str:
         if self.local_photo_exists:
-            return f'{settings.MEDIA_URL}{self.local_photo_path}'
+            return self.media_src_for_relative_path(self.local_photo_path)
         return self.photo_url
 
-    def image_src_for_packaging(self, packaging_state: str) -> str:
+    def image_src_for_packaging(self, packaging_state: str, variant_name: str = 'detail') -> str:
         if packaging_state not in self.available_packaging_states:
             return ''
 
@@ -114,7 +140,7 @@ class HotWheelsModel(models.Model):
         }.get(packaging_state)
 
         if path_attr and self.local_packaging_photo_exists(packaging_state):
-            return f"{settings.MEDIA_URL}{getattr(self, path_attr)}"
+            return self.image_variant_src_for_relative_path(getattr(self, path_attr), variant_name)
 
         if url_attr and getattr(self, url_attr):
             return getattr(self, url_attr)
@@ -153,6 +179,9 @@ class HotWheelsModel(models.Model):
 
     @property
     def catalog_image_variants(self) -> list[dict]:
+        return self.catalog_image_variants_for_usage()
+
+    def catalog_image_variants_for_usage(self, variant_name: str = 'detail') -> list[dict]:
         variants = []
         for packaging_state, label in self.available_packaging_choices:
             if not self.has_packaging_image(packaging_state):
@@ -161,7 +190,7 @@ class HotWheelsModel(models.Model):
                 {
                     'key': packaging_state,
                     'label': label,
-                    'src': self.image_src_for_packaging(packaging_state),
+                    'src': self.image_src_for_packaging(packaging_state, variant_name),
                 }
             )
 
@@ -169,13 +198,17 @@ class HotWheelsModel(models.Model):
             return variants
 
         if self.image_src:
-            return [{'key': 'default', 'label': 'Zdjęcie', 'src': self.image_src}]
+            src = self.image_variant_src_for_relative_path(self.local_photo_path, variant_name) if self.local_photo_exists else self.image_src
+            return [{'key': 'default', 'label': 'Zdjęcie', 'src': src}]
 
         return []
 
     @property
     def catalog_primary_image_src(self) -> str:
-        variants = self.catalog_image_variants
+        return self.catalog_primary_image_src_for_usage()
+
+    def catalog_primary_image_src_for_usage(self, variant_name: str = 'detail') -> str:
+        variants = self.catalog_image_variants_for_usage(variant_name)
         if not variants:
             return ''
 
@@ -188,13 +221,24 @@ class HotWheelsModel(models.Model):
         return variants[0]['src']
 
     @property
+    def catalog_primary_thumb_src(self) -> str:
+        return self.catalog_primary_image_src_for_usage('thumb')
+
+    @property
+    def catalog_primary_preview_src(self) -> str:
+        return self.catalog_primary_image_src_for_usage('preview')
+
+    @property
     def packaging_image_panels(self) -> list[dict]:
+        return self.packaging_image_panels_for_usage()
+
+    def packaging_image_panels_for_usage(self, variant_name: str = 'detail') -> list[dict]:
         return [
             {
                 'key': packaging_state,
                 'label': label,
-                'src': self.image_src_for_packaging(packaging_state),
+                'src': self.image_src_for_packaging(packaging_state, variant_name),
             }
             for packaging_state, label in self.available_packaging_choices
-            if self.image_src_for_packaging(packaging_state)
+            if self.image_src_for_packaging(packaging_state, variant_name)
         ]

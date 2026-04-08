@@ -469,8 +469,8 @@
                 </td>
               {% endif %}
               <td>
-                {% if item.catalog_primary_image_src %}
-                  <a href="{{ item.get_absolute_url }}"><img class="catalog-table-thumb" src="{{ item.catalog_primary_image_src }}" alt="{{ item.model_name }}" data-catalog-preview-src="{{ item.catalog_primary_image_src }}" data-catalog-preview-title="{{ item.model_name }}"></a>
+                {% if item.catalog_primary_thumb_src %}
+                  <a href="{{ item.get_absolute_url }}"><img class="catalog-table-thumb" src="{{ item.catalog_primary_thumb_src }}" alt="{{ item.model_name }}" data-catalog-preview-src="{{ item.catalog_primary_preview_src }}" data-catalog-preview-title="{{ item.model_name }}"></a>
                 {% endif %}
               </td>
               <td>
@@ -515,13 +515,13 @@
               </label>
             {% endif %}
           {% endif %}
-          {% if item.catalog_primary_image_src %}
+          {% if item.catalog_primary_thumb_src %}
             <a href="{{ item.get_absolute_url }}">
               <img
                 class="thumb catalog-card-image"
-                src="{{ item.catalog_primary_image_src }}"
+                src="{{ item.catalog_primary_thumb_src }}"
                 alt="{{ item.model_name }}"
-                data-catalog-preview-src="{{ item.catalog_primary_image_src }}"
+                data-catalog-preview-src="{{ item.catalog_primary_preview_src }}"
                 data-catalog-preview-title="{{ item.model_name }}"
               >
             </a>
@@ -585,13 +585,13 @@
             </label>
           {% endif %}
         {% endif %}
-        {% if item.catalog_primary_image_src %}
+        {% if item.catalog_primary_thumb_src %}
           <a href="{{ item.get_absolute_url }}">
             <img
               class="thumb catalog-card-image"
-              src="{{ item.catalog_primary_image_src }}"
+              src="{{ item.catalog_primary_thumb_src }}"
               alt="{{ item.model_name }}"
-              data-catalog-preview-src="{{ item.catalog_primary_image_src }}"
+              data-catalog-preview-src="{{ item.catalog_primary_preview_src }}"
               data-catalog-preview-title="{{ item.model_name }}"
             >
           </a>

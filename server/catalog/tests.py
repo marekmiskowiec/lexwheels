@@ -671,6 +671,18 @@ class CatalogViewTests(TestCase):
 
         self.assertEqual([variant['key'] for variant in variants], ['short_card', 'long_card'])
         self.assertEqual(self.model_obj.catalog_primary_image_src, 'https://example.com/long.jpg')
+        self.assertEqual(self.model_obj.catalog_primary_thumb_src, 'https://example.com/long.jpg')
+        self.assertEqual(self.model_obj.catalog_primary_preview_src, 'https://example.com/long.jpg')
+
+    def test_build_image_variant_relative_path(self):
+        self.assertEqual(
+            HotWheelsModel.build_image_variant_relative_path('images/hot-wheels/mainline/car.jpg', 'thumb'),
+            'images/hot-wheels/mainline/car--thumb.webp',
+        )
+        self.assertEqual(
+            HotWheelsModel.build_image_variant_relative_path('images/hot-wheels/mainline/car.png', 'preview'),
+            'images/hot-wheels/mainline/car--preview.webp',
+        )
 
     def test_semi_premium_model_hides_short_card_variant(self):
         self.model_obj.category = 'Semi Premium'

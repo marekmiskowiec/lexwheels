@@ -73,8 +73,8 @@
       {% for item in models %}
         <article class="card">
           <div class="case-model-row">
-            {% if item.catalog_primary_image_src %}
-              <img class="case-thumb" src="{{ item.catalog_primary_image_src }}" alt="{{ item.model_name }}">
+            {% if item.catalog_primary_thumb_src %}
+              <img class="case-thumb" src="{{ item.catalog_primary_thumb_src }}" alt="{{ item.model_name }}">
             {% endif %}
             <div>
               <h3 style="margin-bottom:6px;"><a href="{{ item.get_absolute_url }}">{{ item.number }} · {{ item.model_name }}</a></h3>
