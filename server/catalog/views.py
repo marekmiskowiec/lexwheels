@@ -479,71 +479,25 @@ class CatalogCoverageView(CatalogScopeMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         scope_mode = self.get_scope_mode()
         queryset = self.apply_profile_scope(HotWheelsModel.objects.all())
-        rows = queryset.values('brand', 'category', 'series', 'year').order_by('brand', 'category', 'series', 'year')
-
-        coverage_map: dict[str, dict[str, dict]] = {}
-        total_years = set()
-
-        for row in rows:
-            brand = (row['brand'] or 'Nieznana marka').strip()
-            category = (row['category'] or 'Bez kategorii').strip()
-            year = row['year']
-            group_name, uses_search = self.normalize_group_name(category, row['series'])
-
-            brand_bucket = coverage_map.setdefault(brand, {})
-            group_bucket = brand_bucket.setdefault(
-                group_name,
-                {
-                    'name': group_name,
-                    'category': category,
-                    'year_rows': {},
-                    'uses_search': uses_search,
-                },
-            )
-            if year not in group_bucket['year_rows']:
-                group_bucket['year_rows'][year] = {
-                    'year': year,
-                    'count': 0,
-                    'url': self.build_catalog_url(scope_mode, category, year, group_name, group_bucket['uses_search']),
-                }
-            group_bucket['year_rows'][year]['count'] += 1
-            if year is not None:
-                total_years.add(year)
-
-        coverage_groups = []
-        for brand, groups in coverage_map.items():
-            items = []
-            model_total = 0
-            for group in sorted(groups.values(), key=lambda item: (item['category'].lower(), item['name'].lower())):
-                year_rows = sorted(
-                    group['year_rows'].values(),
-                    key=lambda item: (item['year'] is None, item['year']),
-                )
-                group_count = sum(row['count'] for row in year_rows)
-                model_total += group_count
-                items.append(
-                    {
-                        'name': group['name'],
-                        'category': group['category'],
-                        'year_rows': year_rows,
-                        'group_count': group_count,
-                    }
-                )
-            coverage_groups.append(
-                {
-                    'brand': brand,
-                    'items': items,
-                    'model_total': model_total,
-                    'group_count': len(items),
-                }
-            )
-
-        coverage_groups.sort(key=lambda item: item['brand'].lower())
-        context['coverage_groups'] = coverage_groups
+        category_rows = (
+            queryset.values('category')
+            .annotate(model_count=Count('id'), year_count=Count('year', distinct=True))
+            .order_by('-model_count', 'category')
+        )
+        context['category_summary'] = [
+            {
+                'name': (row['category'] or 'Bez kategorii').strip(),
+                'model_count': row['model_count'],
+                'year_count': row['year_count'],
+                'url': f"{reverse('catalog:model-list')}?{urlencode({'scope': scope_mode, 'category': row['category']})}"
+                if row['category']
+                else f"{reverse('catalog:model-list')}?{urlencode({'scope': scope_mode})}",
+            }
+            for row in category_rows
+        ]
         context['coverage_stats'] = {
-            'brand_count': len(coverage_groups),
-            'group_count': sum(group['group_count'] for group in coverage_groups),
-            'year_count': len(total_years),
+            'category_count': len(context['category_summary']),
+            'year_count': queryset.exclude(year__isnull=True).values('year').distinct().count(),
             'model_count': queryset.count(),
         }
         context['selected_scope'] = scope_mode

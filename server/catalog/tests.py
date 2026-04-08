@@ -1197,7 +1197,7 @@ class CatalogViewTests(TestCase):
         apply_response = self.client.get(reverse('catalog:model-list'), {'apply_saved_filters': '1'})
         self.assertRedirects(apply_response, f"{reverse('catalog:model-list')}?brand=Hot+Wheels&sort=name")
 
-    def test_catalog_coverage_groups_models_by_category_and_series_family(self):
+    def test_catalog_coverage_summarizes_models_by_category(self):
         HotWheelsModel.objects.create(
             app_id='premium-1',
             brand='Hot Wheels',
@@ -1234,14 +1234,13 @@ class CatalogViewTests(TestCase):
 
         response = self.client.get(reverse('catalog:coverage'))
 
-        self.assertContains(response, 'Co jest już w bazie')
+        self.assertContains(response, 'Zakres bazy')
         self.assertContains(response, 'Mainline')
-        self.assertContains(response, 'Hot Wheels Boulevard')
-        self.assertContains(response, 'MBX Road Trip')
-        self.assertContains(response, '2025')
-        self.assertContains(response, '2024')
-        self.assertContains(response, f'{reverse("catalog:model-list")}?scope=all&amp;year=2025&amp;category=Premium&amp;q=Hot+Wheels+Boulevard')
-        self.assertContains(response, f'{reverse("catalog:model-list")}?scope=all&amp;year=2022&amp;category=Mainline')
+        self.assertContains(response, 'Premium')
+        self.assertContains(response, 'Collectors')
+        self.assertContains(response, '2 modeli')
+        self.assertContains(response, f'{reverse("catalog:model-list")}?scope=all&amp;category=Premium')
+        self.assertContains(response, f'{reverse("catalog:model-list")}?scope=all&amp;category=Mainline')
 
     def test_catalog_coverage_can_use_profile_scope(self):
         user = User.objects.create_user(email='scope@example.com', password='ComplexPass123')
@@ -1266,7 +1265,7 @@ class CatalogViewTests(TestCase):
 
         self.assertContains(response, 'Mój zakres')
         self.assertContains(response, 'Mainline')
-        self.assertNotContains(response, 'Hot Wheels Boulevard')
+        self.assertNotContains(response, 'Premium')
 
     def test_model_detail(self):
         self.model_obj.case_codes = 'A,Q'
