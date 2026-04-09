@@ -3,6 +3,7 @@ import shlex
 from pathlib import Path
 from urllib.parse import urlencode
 
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.conf import settings
 from django.contrib import messages
 from django.db.models import Count, Q, Sum
@@ -590,6 +591,11 @@ class CatalogCoverageView(CatalogScopeMixin, TemplateView):
         return context
 
 
+class CatalogImageAdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    def test_func(self):
+        return bool(self.request.user.is_staff or self.request.user.is_superuser)
+
+
 class MissingPackagingImageListView(CatalogScopeMixin, TemplateView):
     template_name = 'catalog/missing_packaging_images.html'
 
@@ -659,6 +665,96 @@ class MissingPackagingImageListView(CatalogScopeMixin, TemplateView):
             self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
         ) else []
         return context
+
+
+class UnassignedImageListView(CatalogScopeMixin, TemplateView):
+    template_name = 'catalog/unassigned_images.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        scope_mode = self.get_scope_mode()
+        queryset = self.apply_profile_scope(HotWheelsModel.objects.all())
+        selected_category = self.request.GET.get('category', '').strip()
+        if selected_category:
+            queryset = queryset.filter(category=selected_category)
+
+        unassigned_models = []
+        for model in queryset.only(
+            'brand',
+            'toy',
+            'number',
+            'model_name',
+            'year',
+            'category',
+            'series',
+            'exclusive_store',
+            'photo_url',
+            'local_photo_path',
+            'short_card_photo_url',
+            'short_card_local_photo_path',
+            'long_card_photo_url',
+            'long_card_local_photo_path',
+            'loose_photo_url',
+            'loose_local_photo_path',
+        ):
+            if not model.has_unassigned_image:
+                continue
+            unassigned_models.append(
+                {
+                    'model': model,
+                    'image_src': model.unassigned_image_src,
+                }
+            )
+
+        unassigned_models.sort(
+            key=lambda entry: (
+                entry['model'].category or '',
+                -(entry['model'].year or 0),
+                entry['model'].number or '',
+                entry['model'].model_name or '',
+            )
+        )
+        category_options = (
+            self.apply_profile_scope(HotWheelsModel.objects.all())
+            .exclude(category='')
+            .values_list('category', flat=True)
+            .distinct()
+            .order_by('category')
+        )
+        context['unassigned_models'] = unassigned_models
+        context['unassigned_stats'] = {'model_count': len(unassigned_models)}
+        context['selected_scope'] = scope_mode
+        context['selected_category'] = selected_category
+        context['category_options'] = category_options
+        context['scope_summary'] = self.request.user.catalog_scope_summary if (
+            self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
+        ) else []
+        return context
+
+
+class AssignGenericImageView(CatalogImageAdminRequiredMixin, View):
+    def post(self, request, pk, packaging_state):
+        model = HotWheelsModel.objects.filter(pk=pk).first()
+        if not model:
+            raise Http404
+        if packaging_state not in dict(HotWheelsModel.PACKAGING_LABELS):
+            raise Http404
+        if packaging_state not in model.available_packaging_states:
+            raise Http404
+        if not model.has_unassigned_image:
+            messages.info(request, 'To zdjęcie zostało już przypisane.')
+            return redirect(request.POST.get('next') or reverse('catalog:unassigned-images'))
+
+        reference = model.unassigned_image_reference
+        path_attr = f'{packaging_state}_local_photo_path'
+        url_attr = f'{packaging_state}_photo_url'
+        setattr(model, path_attr, reference['local_path'])
+        setattr(model, url_attr, reference['url'])
+        model.local_photo_path = ''
+        model.photo_url = ''
+        model.save(update_fields=[path_attr, url_attr, 'local_photo_path', 'photo_url'])
+        messages.success(request, f'Przypisano zdjęcie do wariantu: {model.packaging_labels[packaging_state]}.')
+        return redirect(request.POST.get('next') or reverse('catalog:unassigned-images'))
 
 
 def load_case_year_metadata(year: int) -> dict:

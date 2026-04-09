@@ -126,12 +126,6 @@ class HotWheelsModel(models.Model):
                 return variant_src
         return self.photo_url
 
-    def default_packaging_state_for_generic_image(self) -> str:
-        for packaging_state in ('short_card', 'long_card', 'loose'):
-            if packaging_state in self.available_packaging_states:
-                return packaging_state
-        return ''
-
     def generic_image_reference(self) -> dict[str, str]:
         return {
             'local_path': self.local_photo_path,
@@ -202,17 +196,28 @@ class HotWheelsModel(models.Model):
         if packaging_state not in self.available_packaging_states:
             return None
 
-        generic_reference = self.generic_image_reference()
-        generic_signature = self.image_reference_signature(generic_reference)
         packaging_reference = self.packaging_image_reference(packaging_state)
         packaging_signature = self.image_reference_signature(packaging_reference)
-        default_packaging_state = self.default_packaging_state_for_generic_image()
-
-        if packaging_signature != ('', '') and packaging_signature != generic_signature:
+        if packaging_signature != ('', ''):
             return packaging_reference
-        if generic_signature != ('', '') and packaging_state == default_packaging_state:
-            return generic_reference
         return None
+
+    @property
+    def unassigned_image_reference(self) -> dict[str, str] | None:
+        generic_reference = self.generic_image_reference()
+        if self.image_reference_signature(generic_reference) == ('', ''):
+            return None
+        return generic_reference
+
+    @property
+    def unassigned_image_src(self) -> str:
+        if not self.unassigned_image_reference:
+            return ''
+        return self.image_src_for_reference(self.unassigned_image_reference)
+
+    @property
+    def has_unassigned_image(self) -> bool:
+        return bool(self.unassigned_image_reference)
 
     @property
     def missing_packaging_image_states(self) -> list[str]:

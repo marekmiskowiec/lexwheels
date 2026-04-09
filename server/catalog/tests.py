@@ -682,8 +682,15 @@ class CatalogViewTests(TestCase):
 
         variants = self.model_obj.catalog_image_variants
 
-        self.assertEqual([variant['key'] for variant in variants], ['short_card'])
-        self.assertEqual(self.model_obj.missing_packaging_image_states, ['long_card', 'loose'])
+        self.assertEqual([variant['key'] for variant in variants], ['short_card', 'long_card', 'loose'])
+        self.assertEqual(self.model_obj.missing_packaging_image_states, [])
+
+    def test_catalog_model_treats_generic_image_as_unassigned(self):
+        variants = self.model_obj.catalog_image_variants
+
+        self.assertEqual([variant['key'] for variant in variants], ['default'])
+        self.assertTrue(self.model_obj.has_unassigned_image)
+        self.assertEqual(self.model_obj.missing_packaging_image_states, ['short_card', 'long_card', 'loose'])
 
     def test_build_image_variant_relative_path(self):
         self.assertEqual(
@@ -1377,15 +1384,10 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Luzak')
 
     def test_model_detail_hides_duplicate_packaging_panels_and_shows_missing_slots(self):
-        self.model_obj.short_card_photo_url = 'https://example.com/car.jpg'
-        self.model_obj.long_card_photo_url = 'https://example.com/car.jpg'
-        self.model_obj.loose_photo_url = ''
-        self.model_obj.save(update_fields=['short_card_photo_url', 'long_card_photo_url', 'loose_photo_url'])
-
         response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
 
-        self.assertEqual([panel['key'] for panel in response.context['model_obj'].packaging_image_panels], ['short_card'])
-        self.assertContains(response, 'Krótka karta')
+        self.assertEqual([panel['key'] for panel in response.context['model_obj'].packaging_image_panels], [])
+        self.assertContains(response, 'Nieprzypisane zdjęcie')
         self.assertContains(response, 'Brakujące warianty zdjęć')
         self.assertContains(response, 'Brakujące zdjęcia')
         self.assertContains(response, 'Luzak')
@@ -1418,6 +1420,33 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Brak długiej karty', html=False)
         self.assertContains(response, 'Brak luzaka', html=False)
         self.assertNotContains(response, complete_model.model_name)
+
+    def test_unassigned_images_view_lists_models_with_generic_images(self):
+        response = self.client.get(reverse('catalog:unassigned-images'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertContains(response, 'Nieprzypisane zdjęcia')
+
+    def test_staff_can_assign_generic_image_to_packaging_state(self):
+        admin = User.objects.create_user(
+            email='admin@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.client.force_login(admin)
+
+        response = self.client.post(
+            reverse('catalog:assign-generic-image', args=[self.model_obj.pk, 'long_card']),
+            {'next': reverse('catalog:unassigned-images')},
+        )
+
+        self.assertRedirects(response, reverse('catalog:unassigned-images'))
+        self.model_obj.refresh_from_db()
+        self.assertEqual(self.model_obj.photo_url, '')
+        self.assertEqual(self.model_obj.local_photo_path, '')
+        self.assertEqual(self.model_obj.long_card_photo_url, 'https://example.com/car.jpg')
+        self.assertEqual([panel['key'] for panel in self.model_obj.packaging_image_panels], ['long_card'])
 
     def test_healthcheck(self):
         response = self.client.get(reverse('healthcheck'))
