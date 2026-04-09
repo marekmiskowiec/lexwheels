@@ -99,16 +99,12 @@
       <strong>{{ admin_stats.unassigned_model_count }}</strong>
     </div>
     <div class="admin-kpi">
-      <span class="meta">Komplet zdjęć</span>
-      <strong>{{ admin_stats.complete_model_count }}</strong>
+      <span class="meta">Kompletne bez weryfikacji</span>
+      <strong>{{ admin_stats.complete_unverified_model_count }}</strong>
     </div>
     <div class="admin-kpi">
       <span class="meta">Zweryfikowane komplety</span>
       <strong>{{ admin_stats.verified_model_count }}</strong>
-    </div>
-    <div class="admin-kpi">
-      <span class="meta">Kompletne bez weryfikacji</span>
-      <strong>{{ admin_stats.complete_unverified_model_count }}</strong>
     </div>
   </div>
 </section>
@@ -123,7 +119,6 @@
   <div class="admin-grid">
     {% for item in admin_links %}
       <a class="admin-card" href="{{ item.url }}">
-        <span class="badge">{{ item.count }}</span>
         <strong>{{ item.title }}</strong>
         <span class="meta">{{ item.meta }}</span>
       </a>

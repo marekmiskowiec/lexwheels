@@ -787,9 +787,19 @@ class CatalogAdminDashboardView(CatalogImageAdminRequiredMixin, CatalogScopeMixi
             },
             {
                 'title': 'Komplet zdjęć',
-                'meta': 'Modele z kompletem zdjęć, gotowe do potwierdzenia jakości.',
-                'count': complete_model_count,
-                'url': f"{reverse('catalog:complete-images')}{query_suffix}",
+                'meta': 'Modele z kompletem zdjęć, które czekają jeszcze na potwierdzenie jakości.',
+                'count': complete_unverified_model_count,
+                'url': f"{reverse('catalog:complete-images')}?{urlencode({'scope': scope_mode, 'verified': 'unverified'})}"
+                if scope_mode == CATALOG_SCOPE_PROFILE
+                else f"{reverse('catalog:complete-images')}?{urlencode({'verified': 'unverified'})}",
+            },
+            {
+                'title': 'Verified',
+                'meta': 'Modele z kompletem zdjęć już ręcznie potwierdzonym przez staff.',
+                'count': verified_model_count,
+                'url': f"{reverse('catalog:complete-images')}?{urlencode({'scope': scope_mode, 'verified': 'verified'})}"
+                if scope_mode == CATALOG_SCOPE_PROFILE
+                else f"{reverse('catalog:complete-images')}?{urlencode({'verified': 'verified'})}",
             },
         ]
         return context
@@ -890,7 +900,7 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
                 | (~excluded_short_q & (short_present | long_present | loose_present))
             )
         elif self.workflow_name == 'complete':
-            queryset = queryset.exclude(relevant_missing_q).filter(photo_url='', local_photo_path='')
+            queryset = queryset.exclude(relevant_missing_q)
         return queryset.order_by(*self.workflow_queryset_order(filters['sort']))
 
     def paginate_workflow_queryset(self, queryset):
@@ -964,16 +974,10 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
             'selected_series': filters['series'],
             'selected_year': filters['year'],
             'selected_sort': filters['sort'],
-            'selected_verified': filters.get('verified', ''),
             'category_options': category_options,
             'series_options': series_options,
             'year_options': year_options,
             'sort_options': IMAGE_WORKFLOW_SORT_OPTIONS,
-            'verified_options': (
-                ('', 'Wszystkie'),
-                ('unverified', 'Tylko niezweryfikowane'),
-                ('verified', 'Tylko zweryfikowane'),
-            ),
         }
 
     def build_workflow_detail_navigation(self, current_model):

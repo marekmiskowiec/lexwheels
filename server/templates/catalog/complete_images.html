@@ -100,14 +100,6 @@
         {% endfor %}
       </select>
     </div>
-    <div style="flex: 0 1 220px;">
-      <label for="verified">Weryfikacja</label>
-      <select id="verified" name="verified">
-        {% for value, label in verified_options %}
-          <option value="{{ value }}" {% if selected_verified == value %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
     <div style="flex: 0 1 200px;">
       <label for="sort">Sortowanie</label>
       <select id="sort" name="sort">
@@ -117,7 +109,7 @@
       </select>
     </div>
     <div><button type="submit">Filtruj</button></div>
-    {% if selected_category or selected_year or selected_series or selected_verified or selected_sort != 'workflow' or selected_scope == 'profile' %}
+    {% if selected_category or selected_year or selected_series or selected_sort != 'workflow' or selected_scope == 'profile' %}
       <div><a class="button secondary" href="{% url 'catalog:complete-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Wyczyść</a></div>
     {% endif %}
   </form>

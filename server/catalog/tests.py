@@ -1362,6 +1362,7 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Brakujące warianty')
         self.assertContains(response, 'Nieprzypisane zdjęcia')
         self.assertContains(response, 'Komplet zdjęć')
+        self.assertContains(response, 'Verified')
         self.assertContains(response, 'Modele według kategorii')
         self.assertContains(response, reverse('catalog:missing-packaging-images'))
         self.assertContains(response, reverse('catalog:unassigned-images'))
@@ -1729,6 +1730,24 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Komplet zdjęć')
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertContains(response, 'Do weryfikacji')
+
+    def test_complete_images_view_includes_complete_models_with_generic_photo_left_in_data(self):
+        admin = User.objects.create_user(
+            email='admin-complete-generic@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.category = 'Premium'
+        self.model_obj.photo_url = 'https://example.com/generic-premium.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/generic-premium.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose-premium.jpg'
+        self.model_obj.short_card_photo_url = ''
+        self.model_obj.save(update_fields=['category', 'photo_url', 'long_card_photo_url', 'loose_photo_url', 'short_card_photo_url'])
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse('catalog:complete-images'))
+
+        self.assertContains(response, '1970 Pontiac Firebird')
 
     def test_complete_images_view_supports_verified_filter(self):
         admin = User.objects.create_user(
