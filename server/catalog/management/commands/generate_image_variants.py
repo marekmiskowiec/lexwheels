@@ -39,13 +39,13 @@ class Command(BaseCommand):
         skipped = 0
 
         for relative_path in source_paths:
-            source_path = settings.PROJECT_ROOT / relative_path
+            source_path = settings.CATALOG_SOURCE_ROOT / relative_path
             if not source_path.exists():
                 continue
 
             for variant_name, width in self.VARIANT_WIDTHS.items():
                 destination_relative_path = HotWheelsModel.build_image_variant_relative_path(relative_path, variant_name)
-                destination_path = settings.PROJECT_ROOT / destination_relative_path
+                destination_path = settings.MEDIA_ROOT / destination_relative_path
                 destination_path.parent.mkdir(parents=True, exist_ok=True)
 
                 if (

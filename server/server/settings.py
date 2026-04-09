@@ -135,6 +135,7 @@ STORAGES = {
 }
 MEDIA_URL = '/media/'
 MEDIA_ROOT = PROJECT_ROOT
+CATALOG_SOURCE_ROOT = Path(os.getenv('CATALOG_SOURCE_ROOT', str(PROJECT_ROOT.parent / 'lexwheels-source-images')))
 
 LOGIN_REDIRECT_URL = 'collections:dashboard'
 LOGOUT_REDIRECT_URL = 'catalog:model-list'
