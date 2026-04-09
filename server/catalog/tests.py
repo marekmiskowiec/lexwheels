@@ -1457,6 +1457,44 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Brak luzaka', html=False)
         self.assertNotContains(response, complete_model.model_name)
 
+    def test_missing_packaging_images_view_supports_year_series_and_sort_filters(self):
+        HotWheelsModel.objects.create(
+            app_id='missing-older',
+            brand='Hot Wheels',
+            toy='HCT11',
+            number='011',
+            model_name='Alpha Missing',
+            year=2021,
+            category='Mainline',
+            series='HW Drift',
+            photo_url='https://example.com/alpha.jpg',
+            short_card_photo_url='https://example.com/alpha.jpg',
+        )
+        HotWheelsModel.objects.create(
+            app_id='missing-same-series',
+            brand='Hot Wheels',
+            toy='HCT12',
+            number='012',
+            model_name='Beta Missing',
+            year=2021,
+            category='Mainline',
+            series='HW Dream Garage',
+            photo_url='https://example.com/beta.jpg',
+            short_card_photo_url='https://example.com/beta.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:missing-packaging-images'), {
+            'year': '2021',
+            'series': 'HW Dream Garage',
+            'sort': 'name',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Beta Missing')
+        self.assertNotContains(response, 'Alpha Missing')
+        self.assertContains(response, 'value="2021" selected')
+        self.assertContains(response, 'value="HW Dream Garage" selected')
+
     def test_unassigned_images_view_lists_models_with_generic_images(self):
         admin = User.objects.create_user(
             email='admin2@example.com',
@@ -1470,6 +1508,42 @@ class CatalogViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertContains(response, 'Nieprzypisane zdjęcia')
+
+    def test_unassigned_images_view_passes_workflow_navigation_to_detail(self):
+        admin = User.objects.create_user(
+            email='admin-nav@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        previous_model = HotWheelsModel.objects.create(
+            app_id='nav-1',
+            brand='Hot Wheels',
+            toy='HCT01',
+            number='001',
+            model_name='A Model',
+            year=2022,
+            category='Mainline',
+            series='HW Dream Garage',
+            photo_url='https://example.com/a.jpg',
+        )
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]), {
+            'workflow': 'unassigned',
+            'category': 'Mainline',
+            'sort': 'name',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Nieprzypisane zdjęcia')
+        self.assertContains(
+            response,
+            f'{reverse("catalog:model-detail", args=[previous_model.pk])}?workflow=unassigned&amp;category=Mainline&amp;sort=name',
+        )
+        self.assertContains(
+            response,
+            f'{reverse("catalog:unassigned-images")}?category=Mainline&amp;sort=name',
+        )
 
     def test_unassigned_images_view_excludes_premium_models_with_complete_packaging(self):
         admin = User.objects.create_user(
@@ -1576,6 +1650,39 @@ class CatalogViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Przypisane zdjęcia')
         self.assertContains(response, '1970 Pontiac Firebird')
+
+    def test_assigned_images_view_supports_year_series_and_sort_filters(self):
+        admin = User.objects.create_user(
+            email='admin7@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.save(update_fields=['long_card_photo_url'])
+        HotWheelsModel.objects.create(
+            app_id='assigned-2',
+            brand='Hot Wheels',
+            toy='HCT22',
+            number='022',
+            model_name='Older Assigned',
+            year=2020,
+            category='Mainline',
+            series='HW Drift',
+            long_card_photo_url='https://example.com/older-long.jpg',
+        )
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse('catalog:assigned-images'), {
+            'year': '2022',
+            'series': 'HW Dream Garage',
+            'sort': 'name',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertNotContains(response, 'Older Assigned')
+        self.assertContains(response, 'value="2022" selected')
+        self.assertContains(response, 'value="HW Dream Garage" selected')
 
     def test_non_staff_cannot_open_assigned_images_view(self):
         user = User.objects.create_user(

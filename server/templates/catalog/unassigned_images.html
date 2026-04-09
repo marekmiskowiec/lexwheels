@@ -76,6 +76,15 @@
   <form method="get" class="filters">
     {% if selected_scope == 'profile' %}<input type="hidden" name="scope" value="profile">{% endif %}
     <div style="flex: 1 1 220px;">
+      <label for="year">Rok</label>
+      <select id="year" name="year">
+        <option value="">Wszystkie roczniki</option>
+        {% for year in year_options %}
+          <option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="flex: 1 1 220px;">
       <label for="category">Kategoria</label>
       <select id="category" name="category">
         <option value="">Wszystkie kategorie</option>
@@ -84,8 +93,25 @@
         {% endfor %}
       </select>
     </div>
+    <div style="flex: 1 1 280px;">
+      <label for="series">Seria</label>
+      <select id="series" name="series">
+        <option value="">Wszystkie serie</option>
+        {% for series in series_options %}
+          <option value="{{ series }}" {% if selected_series == series %}selected{% endif %}>{{ series }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="flex: 0 1 200px;">
+      <label for="sort">Sortowanie</label>
+      <select id="sort" name="sort">
+        {% for value, label in sort_options %}
+          <option value="{{ value }}" {% if selected_sort == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
     <div><button type="submit">Filtruj</button></div>
-    {% if selected_category or selected_scope == 'profile' %}
+    {% if selected_category or selected_year or selected_series or selected_sort != 'workflow' or selected_scope == 'profile' %}
       <div><a class="button secondary" href="{% url 'catalog:unassigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Wyczyść</a></div>
     {% endif %}
   </form>
@@ -95,11 +121,11 @@
   <section class="unassigned-image-list">
     {% for entry in unassigned_models %}
       <div class="unassigned-image-row">
-        <a href="{{ entry.model.get_absolute_url }}">
+        <a href="{{ entry.detail_url }}">
           <img class="unassigned-image-thumb" src="{{ entry.image_src }}" alt="{{ entry.model.model_name }}">
         </a>
         <div class="unassigned-image-copy">
-          <h3><a href="{{ entry.model.get_absolute_url }}">{{ entry.model.model_name }}</a></h3>
+          <h3><a href="{{ entry.detail_url }}">{{ entry.model.model_name }}</a></h3>
           <p class="meta">{{ entry.model.year|default:"-" }} | {{ entry.model.category|default:"-" }}{% if entry.model.series %} | {{ entry.model.series }}{% endif %}</p>
           <p class="meta">Toy: {{ entry.model.toy|default:"-" }} | Nr: {{ entry.model.number|default:"-" }}</p>
         </div>

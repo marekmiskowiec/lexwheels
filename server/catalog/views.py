@@ -24,6 +24,32 @@ CATALOG_FILTER_SESSION_KEY = 'catalog_filters'
 CATALOG_SCOPE_PROFILE = 'profile'
 CATALOG_SCOPE_ALL = 'all'
 CASE_METADATA_ROOT = settings.PROJECT_ROOT / 'data' / 'case-highlights' / 'hot-wheels' / 'mainline'
+IMAGE_WORKFLOW_ALLOWED_FIELDS = (
+    'brand',
+    'toy',
+    'number',
+    'model_name',
+    'year',
+    'category',
+    'series',
+    'exclusive_store',
+    'photo_url',
+    'local_photo_path',
+    'short_card_photo_url',
+    'short_card_local_photo_path',
+    'long_card_photo_url',
+    'long_card_local_photo_path',
+    'loose_photo_url',
+    'loose_local_photo_path',
+)
+IMAGE_WORKFLOW_SORT_OPTIONS = (
+    ('workflow', 'Domyślnie'),
+    ('newest', 'Najnowszy rok'),
+    ('oldest', 'Najstarszy rok'),
+    ('name', 'Nazwa A-Z'),
+    ('number', 'Numer / Toy'),
+)
+IMAGE_WORKFLOW_NAMES = {'missing', 'unassigned', 'assigned'}
 
 
 class CatalogScopeMixin:
@@ -426,10 +452,135 @@ class ModelSearchSuggestionsView(CatalogScopeMixin, View):
         return JsonResponse({'suggestions': suggestions})
 
 
-class ModelDetailView(DetailView):
+class ModelDetailView(CatalogScopeMixin, DetailView):
     model = HotWheelsModel
     template_name = 'catalog/model_detail.html'
     context_object_name = 'model_obj'
+
+    def get_workflow_filters(self) -> dict[str, str]:
+        return {
+            'scope': self.get_scope_mode(),
+            'category': self.request.GET.get('category', '').strip(),
+            'series': self.request.GET.get('series', '').strip(),
+            'year': self.request.GET.get('year', '').strip(),
+            'sort': self.request.GET.get('sort', 'workflow').strip() or 'workflow',
+        }
+
+    def apply_workflow_filters(self, queryset, filters: dict[str, str]):
+        if filters['category']:
+            queryset = queryset.filter(category=filters['category'])
+        if filters['series']:
+            queryset = queryset.filter(series=filters['series'])
+        if filters['year'].isdigit():
+            queryset = queryset.filter(year=int(filters['year']))
+        return queryset
+
+    def workflow_sort_key(self, entry: dict, sort_name: str):
+        model = entry['model']
+        default_key = (
+            model.category or '',
+            -(model.year or 0),
+            model.number or '',
+            model.model_name or '',
+        )
+        if sort_name == 'oldest':
+            return (model.category or '', model.year or 0, model.number or '', model.model_name or '')
+        if sort_name == 'name':
+            return (model.model_name or '', -(model.year or 0), model.number or '')
+        if sort_name == 'number':
+            return (model.number or '', model.toy or '', model.model_name or '')
+        return default_key
+
+    def sort_workflow_entries(self, entries: list[dict], sort_name: str) -> list[dict]:
+        sort_name = sort_name if sort_name in dict(IMAGE_WORKFLOW_SORT_OPTIONS) else 'workflow'
+        return sorted(entries, key=lambda entry: self.workflow_sort_key(entry, sort_name))
+
+    def build_detail_url(self, model, workflow: str, filters: dict[str, str]) -> str:
+        params = {'workflow': workflow}
+        if filters['scope'] == CATALOG_SCOPE_PROFILE:
+            params['scope'] = filters['scope']
+        if filters['category']:
+            params['category'] = filters['category']
+        if filters['series']:
+            params['series'] = filters['series']
+        if filters['year']:
+            params['year'] = filters['year']
+        if filters['sort'] and filters['sort'] != 'workflow':
+            params['sort'] = filters['sort']
+        return f"{model.get_absolute_url()}?{urlencode(params)}"
+
+    def get_workflow_entries(self, workflow: str, queryset, filters: dict[str, str]) -> list[dict]:
+        entries = []
+        for model in queryset.only(*IMAGE_WORKFLOW_ALLOWED_FIELDS):
+            if workflow == 'missing':
+                missing_choices = model.missing_packaging_image_choices
+                if not missing_choices:
+                    continue
+                entries.append({'model': model, 'missing_choices': missing_choices})
+            elif workflow == 'unassigned':
+                if not model.has_unassigned_image:
+                    continue
+                entries.append({'model': model})
+            elif workflow == 'assigned':
+                panels = model.packaging_image_panels
+                if not panels:
+                    continue
+                entries.append({'model': model, 'panels': panels})
+        return self.sort_workflow_entries(entries, filters['sort'])
+
+    def build_workflow_detail_navigation(self, current_model):
+        workflow = self.request.GET.get('workflow', '').strip()
+        if workflow not in IMAGE_WORKFLOW_NAMES:
+            return None
+
+        filters = self.get_workflow_filters()
+        queryset = self.apply_workflow_filters(self.apply_profile_scope(HotWheelsModel.objects.all()), filters)
+        entries = self.get_workflow_entries(workflow, queryset, filters)
+        model_ids = [entry['model'].pk for entry in entries]
+        if current_model.pk not in model_ids:
+            return None
+
+        current_index = model_ids.index(current_model.pk)
+        previous_entry = entries[current_index - 1] if current_index > 0 else None
+        next_entry = entries[current_index + 1] if current_index + 1 < len(entries) else None
+        list_url_name = {
+            'missing': 'catalog:missing-packaging-images',
+            'unassigned': 'catalog:unassigned-images',
+            'assigned': 'catalog:assigned-images',
+        }[workflow]
+        params = {}
+        if filters['scope'] == CATALOG_SCOPE_PROFILE:
+            params['scope'] = filters['scope']
+        if filters['category']:
+            params['category'] = filters['category']
+        if filters['series']:
+            params['series'] = filters['series']
+        if filters['year']:
+            params['year'] = filters['year']
+        if filters['sort'] and filters['sort'] != 'workflow':
+            params['sort'] = filters['sort']
+        list_url = reverse(list_url_name)
+        if params:
+            list_url = f'{list_url}?{urlencode(params)}'
+        return {
+            'workflow': workflow,
+            'label': {
+                'missing': 'Brakujące warianty zdjęć',
+                'unassigned': 'Nieprzypisane zdjęcia',
+                'assigned': 'Przypisane zdjęcia',
+            }[workflow],
+            'index': current_index + 1,
+            'total': len(entries),
+            'list_url': list_url,
+            'previous': {
+                'url': self.build_detail_url(previous_entry['model'], workflow, filters),
+                'label': previous_entry['model'].model_name,
+            } if previous_entry else None,
+            'next': {
+                'url': self.build_detail_url(next_entry['model'], workflow, filters),
+                'label': next_entry['model'].model_name,
+            } if next_entry else None,
+        }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -513,6 +664,7 @@ class ModelDetailView(DetailView):
             context['owned_total_quantity'] = 0
             context['owned_collection_count'] = 0
             context['active_wanted_count'] = 0
+        context['image_workflow_nav'] = self.build_workflow_detail_navigation(model_obj)
         return context
 
 
@@ -596,36 +748,163 @@ class CatalogImageAdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return bool(self.request.user.is_staff or self.request.user.is_superuser)
 
 
-class MissingPackagingImageListView(CatalogScopeMixin, TemplateView):
+class CatalogImageWorkflowMixin(CatalogScopeMixin):
+    workflow_name = ''
+
+    def get_workflow_filters(self) -> dict[str, str]:
+        return {
+            'scope': self.get_scope_mode(),
+            'category': self.request.GET.get('category', '').strip(),
+            'series': self.request.GET.get('series', '').strip(),
+            'year': self.request.GET.get('year', '').strip(),
+            'sort': self.request.GET.get('sort', 'workflow').strip() or 'workflow',
+        }
+
+    def apply_workflow_filters(self, queryset, filters: dict[str, str]):
+        if filters['category']:
+            queryset = queryset.filter(category=filters['category'])
+        if filters['series']:
+            queryset = queryset.filter(series=filters['series'])
+        if filters['year'].isdigit():
+            queryset = queryset.filter(year=int(filters['year']))
+        return queryset
+
+    def workflow_sort_key(self, entry: dict, sort_name: str):
+        model = entry['model']
+        default_key = (
+            model.category or '',
+            -(model.year or 0),
+            model.number or '',
+            model.model_name or '',
+        )
+        if sort_name == 'oldest':
+            return (model.category or '', model.year or 0, model.number or '', model.model_name or '')
+        if sort_name == 'name':
+            return (model.model_name or '', -(model.year or 0), model.number or '')
+        if sort_name == 'number':
+            return (model.number or '', model.toy or '', model.model_name or '')
+        return default_key
+
+    def sort_workflow_entries(self, entries: list[dict], sort_name: str) -> list[dict]:
+        sort_name = sort_name if sort_name in dict(IMAGE_WORKFLOW_SORT_OPTIONS) else 'workflow'
+        return sorted(entries, key=lambda entry: self.workflow_sort_key(entry, sort_name))
+
+    def build_detail_url(self, model, filters: dict[str, str]) -> str:
+        params = {'workflow': self.workflow_name}
+        if filters['scope'] == CATALOG_SCOPE_PROFILE:
+            params['scope'] = filters['scope']
+        if filters['category']:
+            params['category'] = filters['category']
+        if filters['series']:
+            params['series'] = filters['series']
+        if filters['year']:
+            params['year'] = filters['year']
+        if filters['sort'] and filters['sort'] != 'workflow':
+            params['sort'] = filters['sort']
+        query = urlencode(params)
+        return f"{model.get_absolute_url()}?{query}" if query else model.get_absolute_url()
+
+    def workflow_options_context(self, scope_mode: str, base_queryset, filters: dict[str, str]) -> dict:
+        category_options = (
+            self.apply_profile_scope(HotWheelsModel.objects.all())
+            .exclude(category='')
+            .values_list('category', flat=True)
+            .distinct()
+            .order_by('category')
+        )
+        year_options = (
+            self.apply_profile_scope(HotWheelsModel.objects.all())
+            .exclude(year__isnull=True)
+            .values_list('year', flat=True)
+            .distinct()
+            .order_by('-year')
+        )
+
+        series_queryset = self.apply_profile_scope(HotWheelsModel.objects.all())
+        if filters['category']:
+            series_queryset = series_queryset.filter(category=filters['category'])
+        if filters['year'].isdigit():
+            series_queryset = series_queryset.filter(year=int(filters['year']))
+        series_options = (
+            series_queryset.exclude(series='')
+            .values_list('series', flat=True)
+            .distinct()
+            .order_by('series')
+        )
+        return {
+            'selected_scope': scope_mode,
+            'selected_category': filters['category'],
+            'selected_series': filters['series'],
+            'selected_year': filters['year'],
+            'selected_sort': filters['sort'],
+            'category_options': category_options,
+            'series_options': series_options,
+            'year_options': year_options,
+            'sort_options': IMAGE_WORKFLOW_SORT_OPTIONS,
+        }
+
+    def build_workflow_detail_navigation(self, current_model):
+        workflow = self.request.GET.get('workflow', '').strip()
+        if workflow not in IMAGE_WORKFLOW_NAMES:
+            return None
+
+        filters = self.get_workflow_filters()
+        queryset = self.apply_workflow_filters(self.apply_profile_scope(HotWheelsModel.objects.all()), filters)
+        entries = self.get_workflow_entries(queryset, filters)
+        model_ids = [entry['model'].pk for entry in entries]
+        if current_model.pk not in model_ids:
+            return None
+
+        current_index = model_ids.index(current_model.pk)
+        previous_entry = entries[current_index - 1] if current_index > 0 else None
+        next_entry = entries[current_index + 1] if current_index + 1 < len(entries) else None
+        list_url_name = {
+            'missing': 'catalog:missing-packaging-images',
+            'unassigned': 'catalog:unassigned-images',
+            'assigned': 'catalog:assigned-images',
+        }[workflow]
+        params = {}
+        if filters['scope'] == CATALOG_SCOPE_PROFILE:
+            params['scope'] = filters['scope']
+        if filters['category']:
+            params['category'] = filters['category']
+        if filters['series']:
+            params['series'] = filters['series']
+        if filters['year']:
+            params['year'] = filters['year']
+        if filters['sort'] and filters['sort'] != 'workflow':
+            params['sort'] = filters['sort']
+        list_url = reverse(list_url_name)
+        if params:
+            list_url = f'{list_url}?{urlencode(params)}'
+        return {
+            'workflow': workflow,
+            'label': {
+                'missing': 'Brakujące warianty zdjęć',
+                'unassigned': 'Nieprzypisane zdjęcia',
+                'assigned': 'Przypisane zdjęcia',
+            }[workflow],
+            'index': current_index + 1,
+            'total': len(entries),
+            'list_url': list_url,
+            'previous': {
+                'url': self.build_detail_url(previous_entry['model'], filters),
+                'label': previous_entry['model'].model_name,
+            } if previous_entry else None,
+            'next': {
+                'url': self.build_detail_url(next_entry['model'], filters),
+                'label': next_entry['model'].model_name,
+            } if next_entry else None,
+        }
+
+
+class MissingPackagingImageListView(CatalogImageWorkflowMixin, TemplateView):
     template_name = 'catalog/missing_packaging_images.html'
+    workflow_name = 'missing'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        scope_mode = self.get_scope_mode()
-        queryset = self.apply_profile_scope(HotWheelsModel.objects.all())
-        selected_category = self.request.GET.get('category', '').strip()
-        if selected_category:
-            queryset = queryset.filter(category=selected_category)
-
+    def get_workflow_entries(self, queryset, filters: dict[str, str]) -> list[dict]:
         models_with_missing_images = []
-        for model in queryset.only(
-            'brand',
-            'toy',
-            'number',
-            'model_name',
-            'year',
-            'category',
-            'series',
-            'exclusive_store',
-            'photo_url',
-            'local_photo_path',
-            'short_card_photo_url',
-            'short_card_local_photo_path',
-            'long_card_photo_url',
-            'long_card_local_photo_path',
-            'loose_photo_url',
-            'loose_local_photo_path',
-        ):
+        for model in queryset.only(*IMAGE_WORKFLOW_ALLOWED_FIELDS):
             missing_choices = model.missing_packaging_image_choices
             if not missing_choices:
                 continue
@@ -634,134 +913,69 @@ class MissingPackagingImageListView(CatalogScopeMixin, TemplateView):
                     'model': model,
                     'missing_choices': missing_choices,
                     'primary_image_src': model.catalog_primary_thumb_src or model.catalog_primary_image_src,
+                    'detail_url': self.build_detail_url(model, filters),
                 }
             )
+        return self.sort_workflow_entries(models_with_missing_images, filters['sort'])
 
-        models_with_missing_images.sort(
-            key=lambda entry: (
-                entry['model'].category or '',
-                -(entry['model'].year or 0),
-                entry['model'].number or '',
-                entry['model'].model_name or '',
-            )
-        )
-
-        category_options = (
-            self.apply_profile_scope(HotWheelsModel.objects.all())
-            .exclude(category='')
-            .values_list('category', flat=True)
-            .distinct()
-            .order_by('category')
-        )
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        scope_mode = self.get_scope_mode()
+        filters = self.get_workflow_filters()
+        queryset = self.apply_workflow_filters(self.apply_profile_scope(HotWheelsModel.objects.all()), filters)
+        models_with_missing_images = self.get_workflow_entries(queryset, filters)
         context['missing_image_models'] = models_with_missing_images
         context['missing_image_stats'] = {
             'model_count': len(models_with_missing_images),
             'slot_count': sum(len(entry['missing_choices']) for entry in models_with_missing_images),
         }
-        context['selected_scope'] = scope_mode
-        context['selected_category'] = selected_category
-        context['category_options'] = category_options
+        context.update(self.workflow_options_context(scope_mode, queryset, filters))
         context['scope_summary'] = self.request.user.catalog_scope_summary if (
             self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
         ) else []
         return context
 
 
-class UnassignedImageListView(CatalogImageAdminRequiredMixin, CatalogScopeMixin, TemplateView):
+class UnassignedImageListView(CatalogImageAdminRequiredMixin, CatalogImageWorkflowMixin, TemplateView):
     template_name = 'catalog/unassigned_images.html'
+    workflow_name = 'unassigned'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        scope_mode = self.get_scope_mode()
-        queryset = self.apply_profile_scope(HotWheelsModel.objects.all())
-        selected_category = self.request.GET.get('category', '').strip()
-        if selected_category:
-            queryset = queryset.filter(category=selected_category)
-
+    def get_workflow_entries(self, queryset, filters: dict[str, str]) -> list[dict]:
         unassigned_models = []
-        for model in queryset.only(
-            'brand',
-            'toy',
-            'number',
-            'model_name',
-            'year',
-            'category',
-            'series',
-            'exclusive_store',
-            'photo_url',
-            'local_photo_path',
-            'short_card_photo_url',
-            'short_card_local_photo_path',
-            'long_card_photo_url',
-            'long_card_local_photo_path',
-            'loose_photo_url',
-            'loose_local_photo_path',
-        ):
+        for model in queryset.only(*IMAGE_WORKFLOW_ALLOWED_FIELDS):
             if not model.has_unassigned_image:
                 continue
             unassigned_models.append(
                 {
                     'model': model,
                     'image_src': model.unassigned_image_src,
+                    'detail_url': self.build_detail_url(model, filters),
                 }
             )
+        return self.sort_workflow_entries(unassigned_models, filters['sort'])
 
-        unassigned_models.sort(
-            key=lambda entry: (
-                entry['model'].category or '',
-                -(entry['model'].year or 0),
-                entry['model'].number or '',
-                entry['model'].model_name or '',
-            )
-        )
-        category_options = (
-            self.apply_profile_scope(HotWheelsModel.objects.all())
-            .exclude(category='')
-            .values_list('category', flat=True)
-            .distinct()
-            .order_by('category')
-        )
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        scope_mode = self.get_scope_mode()
+        filters = self.get_workflow_filters()
+        queryset = self.apply_workflow_filters(self.apply_profile_scope(HotWheelsModel.objects.all()), filters)
+        unassigned_models = self.get_workflow_entries(queryset, filters)
         context['unassigned_models'] = unassigned_models
         context['unassigned_stats'] = {'model_count': len(unassigned_models)}
-        context['selected_scope'] = scope_mode
-        context['selected_category'] = selected_category
-        context['category_options'] = category_options
+        context.update(self.workflow_options_context(scope_mode, queryset, filters))
         context['scope_summary'] = self.request.user.catalog_scope_summary if (
             self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
         ) else []
         return context
 
 
-class AssignedImageListView(CatalogImageAdminRequiredMixin, CatalogScopeMixin, TemplateView):
+class AssignedImageListView(CatalogImageAdminRequiredMixin, CatalogImageWorkflowMixin, TemplateView):
     template_name = 'catalog/assigned_images.html'
+    workflow_name = 'assigned'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        scope_mode = self.get_scope_mode()
-        queryset = self.apply_profile_scope(HotWheelsModel.objects.all())
-        selected_category = self.request.GET.get('category', '').strip()
-        if selected_category:
-            queryset = queryset.filter(category=selected_category)
-
+    def get_workflow_entries(self, queryset, filters: dict[str, str]) -> list[dict]:
         assigned_models = []
-        for model in queryset.only(
-            'brand',
-            'toy',
-            'number',
-            'model_name',
-            'year',
-            'category',
-            'series',
-            'exclusive_store',
-            'photo_url',
-            'local_photo_path',
-            'short_card_photo_url',
-            'short_card_local_photo_path',
-            'long_card_photo_url',
-            'long_card_local_photo_path',
-            'loose_photo_url',
-            'loose_local_photo_path',
-        ):
+        for model in queryset.only(*IMAGE_WORKFLOW_ALLOWED_FIELDS):
             panels = model.packaging_image_panels
             if not panels:
                 continue
@@ -770,32 +984,23 @@ class AssignedImageListView(CatalogImageAdminRequiredMixin, CatalogScopeMixin, T
                     'model': model,
                     'panels': panels,
                     'primary_image_src': model.catalog_primary_thumb_src or model.catalog_primary_image_src,
+                    'detail_url': self.build_detail_url(model, filters),
                 }
             )
+        return self.sort_workflow_entries(assigned_models, filters['sort'])
 
-        assigned_models.sort(
-            key=lambda entry: (
-                entry['model'].category or '',
-                -(entry['model'].year or 0),
-                entry['model'].number or '',
-                entry['model'].model_name or '',
-            )
-        )
-        category_options = (
-            self.apply_profile_scope(HotWheelsModel.objects.all())
-            .exclude(category='')
-            .values_list('category', flat=True)
-            .distinct()
-            .order_by('category')
-        )
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        scope_mode = self.get_scope_mode()
+        filters = self.get_workflow_filters()
+        queryset = self.apply_workflow_filters(self.apply_profile_scope(HotWheelsModel.objects.all()), filters)
+        assigned_models = self.get_workflow_entries(queryset, filters)
         context['assigned_models'] = assigned_models
         context['assigned_stats'] = {
             'model_count': len(assigned_models),
             'slot_count': sum(len(entry['panels']) for entry in assigned_models),
         }
-        context['selected_scope'] = scope_mode
-        context['selected_category'] = selected_category
-        context['category_options'] = category_options
+        context.update(self.workflow_options_context(scope_mode, queryset, filters))
         context['scope_summary'] = self.request.user.catalog_scope_summary if (
             self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
         ) else []
