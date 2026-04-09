@@ -64,7 +64,7 @@
     <h1>Brakujące warianty zdjęć</h1>
     <p>
       Tutaj widać modele, którym brakuje jeszcze zdjęć dla części wariantów opakowania.
-      Obecnie to {{ missing_image_stats.model_count }} modeli i {{ missing_image_stats.slot_count }} brakujących slotów.
+      Obecnie to {{ missing_image_stats.model_count }} modeli.
     </p>
     <div class="actions-row">
       <a class="button secondary" href="{% url 'catalog:assigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Przypisane zdjęcia</a>
@@ -121,6 +121,14 @@
   </form>
 </section>
 
+{% if is_paginated %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}<a class="button secondary" href="?{% if workflow_querystring %}{{ workflow_querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+    <span class="meta">Strona {{ page_obj.number }} z {{ paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a class="button secondary" href="?{% if workflow_querystring %}{{ workflow_querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+  </div>
+{% endif %}
+
 {% if missing_image_models %}
   <section class="missing-image-list">
     {% for entry in missing_image_models %}
@@ -158,5 +166,12 @@
     <h2>Brak modeli do uzupełnienia</h2>
     <p class="meta">W tym zakresie wszystkie widoczne modele mają komplet zdjęć dla swoich wariantów.</p>
   </section>
+{% endif %}
+{% if is_paginated %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}<a class="button secondary" href="?{% if workflow_querystring %}{{ workflow_querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+    <span class="meta">Strona {{ page_obj.number }} z {{ paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a class="button secondary" href="?{% if workflow_querystring %}{{ workflow_querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+  </div>
 {% endif %}
 {% endblock %}

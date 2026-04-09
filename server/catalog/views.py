@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.conf import settings
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.db.models import Count, Q, Sum
 from django.http import Http404
 from django.http import JsonResponse
@@ -50,6 +51,7 @@ IMAGE_WORKFLOW_SORT_OPTIONS = (
     ('number', 'Numer / Toy'),
 )
 IMAGE_WORKFLOW_NAMES = {'missing', 'unassigned', 'assigned'}
+IMAGE_WORKFLOW_PAGE_SIZE = 100
 
 
 class CatalogScopeMixin:
@@ -763,6 +765,18 @@ class CatalogAdminDashboardView(CatalogImageAdminRequiredMixin, CatalogScopeMixi
 class CatalogImageWorkflowMixin(CatalogScopeMixin):
     workflow_name = ''
 
+    @staticmethod
+    def packaging_state_empty_q(packaging_state: str) -> Q:
+        return Q(**{f'{packaging_state}_photo_url': '', f'{packaging_state}_local_photo_path': ''})
+
+    @staticmethod
+    def packaging_state_present_q(packaging_state: str) -> Q:
+        return ~CatalogImageWorkflowMixin.packaging_state_empty_q(packaging_state)
+
+    @staticmethod
+    def generic_image_present_q() -> Q:
+        return ~Q(photo_url='', local_photo_path='')
+
     def get_workflow_filters(self) -> dict[str, str]:
         return {
             'scope': self.get_scope_mode(),
@@ -800,6 +814,62 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
     def sort_workflow_entries(self, entries: list[dict], sort_name: str) -> list[dict]:
         sort_name = sort_name if sort_name in dict(IMAGE_WORKFLOW_SORT_OPTIONS) else 'workflow'
         return sorted(entries, key=lambda entry: self.workflow_sort_key(entry, sort_name))
+
+    def workflow_queryset_order(self, sort_name: str) -> tuple[str, ...]:
+        if sort_name == 'oldest':
+            return ('category', 'year', 'number', 'model_name')
+        if sort_name == 'name':
+            return ('model_name', '-year', 'number')
+        if sort_name == 'number':
+            return ('number', 'toy', 'model_name')
+        return ('category', '-year', 'number', 'model_name')
+
+    def workflow_relevant_missing_q(self) -> Q:
+        short_missing = self.packaging_state_empty_q('short_card')
+        long_missing = self.packaging_state_empty_q('long_card')
+        loose_missing = self.packaging_state_empty_q('loose')
+        excluded_short_q = Q(category__in=['Premium', 'Semi Premium', 'XL', 'RLC', '5 Pack']) | ~Q(exclusive_store='')
+        return (
+            (excluded_short_q & (long_missing | loose_missing))
+            | (~excluded_short_q & (short_missing | long_missing | loose_missing))
+        )
+
+    def workflow_entry_queryset(self, queryset, filters: dict[str, str]):
+        queryset = self.apply_workflow_filters(queryset, filters)
+        relevant_missing_q = self.workflow_relevant_missing_q()
+        if self.workflow_name == 'missing':
+            queryset = queryset.filter(relevant_missing_q)
+        elif self.workflow_name == 'unassigned':
+            queryset = queryset.filter(self.generic_image_present_q()).filter(relevant_missing_q)
+        elif self.workflow_name == 'assigned':
+            short_present = self.packaging_state_present_q('short_card')
+            long_present = self.packaging_state_present_q('long_card')
+            loose_present = self.packaging_state_present_q('loose')
+            excluded_short_q = Q(category__in=['Premium', 'Semi Premium', 'XL', 'RLC', '5 Pack']) | ~Q(exclusive_store='')
+            queryset = queryset.filter(
+                (excluded_short_q & (long_present | loose_present))
+                | (~excluded_short_q & (short_present | long_present | loose_present))
+            )
+        return queryset.order_by(*self.workflow_queryset_order(filters['sort']))
+
+    def paginate_workflow_queryset(self, queryset):
+        paginator = Paginator(queryset, IMAGE_WORKFLOW_PAGE_SIZE)
+        page_number = self.request.GET.get('page') or 1
+        return paginator.get_page(page_number)
+
+    def workflow_querystring(self, filters: dict[str, str]) -> str:
+        params = {}
+        if filters['scope'] == CATALOG_SCOPE_PROFILE:
+            params['scope'] = filters['scope']
+        if filters['year']:
+            params['year'] = filters['year']
+        if filters['category']:
+            params['category'] = filters['category']
+        if filters['series']:
+            params['series'] = filters['series']
+        if filters['sort'] and filters['sort'] != 'workflow':
+            params['sort'] = filters['sort']
+        return urlencode(params)
 
     def build_detail_url(self, model, filters: dict[str, str]) -> str:
         params = {'workflow': self.workflow_name}
@@ -934,14 +1004,18 @@ class MissingPackagingImageListView(CatalogImageWorkflowMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         scope_mode = self.get_scope_mode()
         filters = self.get_workflow_filters()
-        queryset = self.apply_workflow_filters(self.apply_profile_scope(HotWheelsModel.objects.all()), filters)
-        models_with_missing_images = self.get_workflow_entries(queryset, filters)
+        queryset = self.workflow_entry_queryset(self.apply_profile_scope(HotWheelsModel.objects.all()), filters)
+        page_obj = self.paginate_workflow_queryset(queryset)
+        models_with_missing_images = self.get_workflow_entries(page_obj.object_list, filters)
         context['missing_image_models'] = models_with_missing_images
         context['missing_image_stats'] = {
-            'model_count': len(models_with_missing_images),
-            'slot_count': sum(len(entry['missing_choices']) for entry in models_with_missing_images),
+            'model_count': queryset.count(),
         }
         context.update(self.workflow_options_context(scope_mode, queryset, filters))
+        context['page_obj'] = page_obj
+        context['paginator'] = page_obj.paginator
+        context['is_paginated'] = page_obj.has_other_pages()
+        context['workflow_querystring'] = self.workflow_querystring(filters)
         context['scope_summary'] = self.request.user.catalog_scope_summary if (
             self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
         ) else []
@@ -970,11 +1044,16 @@ class UnassignedImageListView(CatalogImageAdminRequiredMixin, CatalogImageWorkfl
         context = super().get_context_data(**kwargs)
         scope_mode = self.get_scope_mode()
         filters = self.get_workflow_filters()
-        queryset = self.apply_workflow_filters(self.apply_profile_scope(HotWheelsModel.objects.all()), filters)
-        unassigned_models = self.get_workflow_entries(queryset, filters)
+        queryset = self.workflow_entry_queryset(self.apply_profile_scope(HotWheelsModel.objects.all()), filters)
+        page_obj = self.paginate_workflow_queryset(queryset)
+        unassigned_models = self.get_workflow_entries(page_obj.object_list, filters)
         context['unassigned_models'] = unassigned_models
-        context['unassigned_stats'] = {'model_count': len(unassigned_models)}
+        context['unassigned_stats'] = {'model_count': queryset.count()}
         context.update(self.workflow_options_context(scope_mode, queryset, filters))
+        context['page_obj'] = page_obj
+        context['paginator'] = page_obj.paginator
+        context['is_paginated'] = page_obj.has_other_pages()
+        context['workflow_querystring'] = self.workflow_querystring(filters)
         context['scope_summary'] = self.request.user.catalog_scope_summary if (
             self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
         ) else []
@@ -1005,14 +1084,18 @@ class AssignedImageListView(CatalogImageAdminRequiredMixin, CatalogImageWorkflow
         context = super().get_context_data(**kwargs)
         scope_mode = self.get_scope_mode()
         filters = self.get_workflow_filters()
-        queryset = self.apply_workflow_filters(self.apply_profile_scope(HotWheelsModel.objects.all()), filters)
-        assigned_models = self.get_workflow_entries(queryset, filters)
+        queryset = self.workflow_entry_queryset(self.apply_profile_scope(HotWheelsModel.objects.all()), filters)
+        page_obj = self.paginate_workflow_queryset(queryset)
+        assigned_models = self.get_workflow_entries(page_obj.object_list, filters)
         context['assigned_models'] = assigned_models
         context['assigned_stats'] = {
-            'model_count': len(assigned_models),
-            'slot_count': sum(len(entry['panels']) for entry in assigned_models),
+            'model_count': queryset.count(),
         }
         context.update(self.workflow_options_context(scope_mode, queryset, filters))
+        context['page_obj'] = page_obj
+        context['paginator'] = page_obj.paginator
+        context['is_paginated'] = page_obj.has_other_pages()
+        context['workflow_querystring'] = self.workflow_querystring(filters)
         context['scope_summary'] = self.request.user.catalog_scope_summary if (
             self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
         ) else []

@@ -57,7 +57,7 @@
     <h1>Przypisane zdjęcia</h1>
     <p>
       Tu widać modele, które mają już sklasyfikowane zdjęcia wariantów opakowania.
-      Obecnie to {{ assigned_stats.model_count }} modeli i {{ assigned_stats.slot_count }} przypisanych slotów.
+      Obecnie to {{ assigned_stats.model_count }} modeli.
     </p>
     <div class="actions-row">
       <a class="button secondary" href="{% url 'catalog:unassigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Nieprzypisane zdjęcia</a>
@@ -114,6 +114,14 @@
   </form>
 </section>
 
+{% if is_paginated %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}<a class="button secondary" href="?{% if workflow_querystring %}{{ workflow_querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+    <span class="meta">Strona {{ page_obj.number }} z {{ paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a class="button secondary" href="?{% if workflow_querystring %}{{ workflow_querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+  </div>
+{% endif %}
+
 {% if assigned_models %}
   <section class="assigned-image-list">
     {% for entry in assigned_models %}
@@ -143,5 +151,12 @@
     <h2>Brak przypisanych zdjęć</h2>
     <p class="meta">W tym zakresie nie ma jeszcze modeli ze sklasyfikowanymi zdjęciami opakowań.</p>
   </section>
+{% endif %}
+{% if is_paginated %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}<a class="button secondary" href="?{% if workflow_querystring %}{{ workflow_querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+    <span class="meta">Strona {{ page_obj.number }} z {{ paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a class="button secondary" href="?{% if workflow_querystring %}{{ workflow_querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+  </div>
 {% endif %}
 {% endblock %}
