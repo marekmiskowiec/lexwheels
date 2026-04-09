@@ -171,7 +171,7 @@ class VariantSectionsMixin:
         return selected_variants
 
 
-class CollectionItemForm(forms.ModelForm):
+class CollectionItemForm(VariantSectionsMixin, forms.ModelForm):
     acquired_at = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
 
     class Meta:
