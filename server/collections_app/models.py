@@ -92,7 +92,7 @@ class CollectionItem(models.Model):
 
     @property
     def image_src(self) -> str:
-        return self.model.image_src_for_packaging(self.packaging_state)
+        return self.model.image_src_for_packaging(self.packaging_state, 'thumb') or self.model.catalog_primary_thumb_src
 
     @property
     def supports_card_attributes(self) -> bool:

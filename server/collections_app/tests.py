@@ -813,6 +813,15 @@ class CollectionTests(TestCase):
         self.assertContains(response, '2022 | Mainline | Hot Wheels')
         self.assertNotContains(response, 'Statystyki i wykresy')
 
+    def test_collection_item_uses_catalog_thumbnail_when_variant_image_missing(self):
+        item = CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            packaging_state='long_card',
+        )
+
+        self.assertEqual(item.image_src, self.model_obj.catalog_primary_thumb_src)
+
     def test_owner_collection_detail_shows_stats_link(self):
         CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj)
         self.client.force_login(self.owner)
