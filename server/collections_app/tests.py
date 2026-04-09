@@ -1067,6 +1067,31 @@ class CollectionTests(TestCase):
         self.assertNotContains(response, 'Custom Mustang')
         self.assertContains(response, 'z duplikatami')
 
+    def test_collection_detail_can_show_only_favorite_models(self):
+        second_model = HotWheelsModel.objects.create(
+            app_id='def456',
+            toy='HCT06',
+            number='002',
+            model_name='Custom Mustang',
+            year=2022,
+            category='Mainline',
+            series='HW Dream Garage',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+        CollectionItem.objects.create(collection=self.public_collection, model=self.model_obj, is_favorite=True)
+        CollectionItem.objects.create(collection=self.public_collection, model=second_model, is_favorite=False)
+
+        response = self.client.get(
+            reverse('collections:collection-detail', args=[self.public_collection.pk]),
+            {'favorite_only': '1'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertNotContains(response, 'Custom Mustang')
+        self.assertContains(response, 'oznaczonych jako ulubione')
+
     def test_collection_detail_can_sort_models_by_name(self):
         second_model = HotWheelsModel.objects.create(
             app_id='def456',
@@ -1090,6 +1115,65 @@ class CollectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertLess(content.index('1970 Pontiac Firebird'), content.index('Custom Mustang'))
+
+    def test_collection_detail_shows_add_variant_link_and_prefills_model(self):
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj)
+        self.client.force_login(self.owner)
+
+        detail_response = self.client.get(reverse('collections:collection-detail', args=[self.private_collection.pk]))
+
+        self.assertContains(
+            detail_response,
+            reverse('collections:item-create', args=[self.private_collection.pk]) + f'?model={self.model_obj.pk}',
+        )
+
+        form_response = self.client.get(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {'model': str(self.model_obj.pk)},
+        )
+
+        self.assertEqual(form_response.status_code, 200)
+        self.assertContains(form_response, 'Dodajesz nowy wariant dla modelu')
+        self.assertContains(form_response, '1970 Pontiac Firebird')
+
+    def test_owner_can_adjust_item_quantity_from_collection_detail(self):
+        item = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=2,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-adjust-quantity', args=[item.pk]),
+            {'delta': '1', 'next': f'{self.private_collection.get_absolute_url()}?favorite_only=1'},
+        )
+
+        self.assertRedirects(response, f'{self.private_collection.get_absolute_url()}?favorite_only=1')
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 3)
+
+    def test_owner_can_toggle_favorite_from_collection_detail(self):
+        item = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            is_favorite=False,
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-toggle-favorite', args=[item.pk]),
+            {'next': f'{self.private_collection.get_absolute_url()}?sort=name'},
+        )
+
+        self.assertRedirects(response, f'{self.private_collection.get_absolute_url()}?sort=name')
+        item.refresh_from_db()
+        self.assertTrue(item.is_favorite)
 
     def test_owner_can_export_collection_as_csv(self):
         CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=2, is_favorite=True)

@@ -109,10 +109,40 @@
     gap: 10px;
     white-space: nowrap;
   }
+  .collection-variant-actions form {
+    margin: 0;
+  }
   .collection-variant-actions a {
     color: var(--muted);
   }
   .collection-variant-actions a:hover {
+    color: var(--ink);
+  }
+  .collection-inline-button {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .collection-inline-button.is-active {
+    border-color: rgba(255,184,120,0.45);
+    background: rgba(255,184,120,0.12);
+    color: #ffcf9f;
+  }
+  .collection-quantity-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .collection-quantity-value {
+    min-width: 28px;
+    text-align: center;
+    font-weight: 700;
     color: var(--ink);
   }
   @media (max-width: 900px) {
@@ -262,6 +292,12 @@
           Tylko duplikaty
         </label>
       </div>
+      <div style="display:flex; align-items:flex-end; min-width:170px;">
+        <label class="meta" style="display:flex; align-items:center; gap:8px; margin:0;">
+          <input type="checkbox" name="favorite_only" value="1" {% if favorite_only %}checked{% endif %} style="width:auto;">
+          Tylko ulubione
+        </label>
+      </div>
       <div style="flex: 1 1 180px;">
         <label for="sealed">Zafoliowany</label>
         <select id="sealed" name="sealed">
@@ -313,9 +349,9 @@
       <div><button type="submit">Szukaj</button></div>
       <div><button type="submit" name="save_filters" value="1" class="secondary">Zapisz filtry</button></div>
       {% if saved_filters %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}?apply_saved_filters=1">Przywróć zapisane</a></div><div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}?clear_saved_filters=1">Usuń zapisane</a></div>{% endif %}
-      {% if query or selected_year or selected_category or selected_series or selected_brand or selected_condition or selected_packaging or duplicates_only or selected_sort != 'recent' or selected_sealed or selected_soft_corners or selected_protector or selected_signed or selected_bent_hook or selected_cracked_blister %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Usuń wszystkie filtry</a></div>{% endif %}
+      {% if query or selected_year or selected_category or selected_series or selected_brand or selected_condition or selected_packaging or duplicates_only or favorite_only or selected_sort != 'recent' or selected_sealed or selected_soft_corners or selected_protector or selected_signed or selected_bent_hook or selected_cracked_blister %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Usuń wszystkie filtry</a></div>{% endif %}
     </form>
-    <p class="meta" style="margin:12px 0 0;">Wyświetlasz {{ filtered_count }} modeli{% if query %} dla frazy "{{ query }}"{% endif %}{% if duplicates_only %} z duplikatami{% endif %}.</p>
+    <p class="meta" style="margin:12px 0 0;">Wyświetlasz {{ filtered_count }} modeli{% if query %} dla frazy "{{ query }}"{% endif %}{% if duplicates_only %} z duplikatami{% endif %}{% if favorite_only %} oznaczonych jako ulubione{% endif %}.</p>
   </div>
   <div class="collection-model-list">
   {% for item in items %}
@@ -338,6 +374,9 @@
           <h3><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h3>
           <p class="meta">{{ item.model.year|default:"-" }} | {{ item.model.category|default:"-" }}{% if item.model.brand %} | {{ item.model.brand }}{% endif %}</p>
           <p class="meta">Toy: {{ item.model.toy|default:"-" }} | Nr: {{ item.model.number|default:"-" }}</p>
+          {% if user == collection_obj.owner %}
+            <p class="meta" style="margin:2px 0 0;"><a href="{% url 'collections:item-create' collection_obj.pk %}?model={{ item.model.pk }}">Dodaj wariant</a></p>
+          {% endif %}
         </div>
         <p class="meta collection-model-summary">Łącznie: {{ item.total_quantity }} szt. | Warianty: {{ item.variants|length }}</p>
       </div>
@@ -364,7 +403,30 @@
             </div>
             {% if user == collection_obj.owner %}
               <input type="hidden" name="item_ids" value="{{ variant.pk }}" form="batch-edit-form" class="batch-edit-proxy" disabled>
-              <div class="collection-variant-actions"><a href="{% url 'collections:item-update' variant.pk %}">Edytuj</a><a href="{% url 'collections:item-delete' variant.pk %}">Usuń</a></div>
+              <div class="collection-variant-actions">
+                <form method="post" action="{% url 'collections:item-toggle-favorite' variant.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ current_collection_path }}">
+                  <button type="submit" class="collection-inline-button {% if variant.is_favorite %}is-active{% endif %}">{% if variant.is_favorite %}★ Ulubione{% else %}☆ Ulubione{% endif %}</button>
+                </form>
+                <form method="post" action="{% url 'collections:item-adjust-quantity' variant.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ current_collection_path }}">
+                  <input type="hidden" name="delta" value="-1">
+                  <div class="collection-quantity-controls">
+                    <button type="submit" class="collection-inline-button" {% if variant.quantity <= 1 %}disabled{% endif %}>-</button>
+                    <span class="collection-quantity-value">{{ variant.quantity }}</span>
+                  </div>
+                </form>
+                <form method="post" action="{% url 'collections:item-adjust-quantity' variant.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ current_collection_path }}">
+                  <input type="hidden" name="delta" value="1">
+                  <button type="submit" class="collection-inline-button">+</button>
+                </form>
+                <a href="{% url 'collections:item-update' variant.pk %}">Edytuj</a>
+                <a href="{% url 'collections:item-delete' variant.pk %}">Usuń</a>
+              </div>
             {% endif %}
           </div>
         {% endfor %}

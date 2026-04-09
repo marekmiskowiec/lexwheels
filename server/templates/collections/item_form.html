@@ -15,11 +15,17 @@
         <label for="model-search">Znajdź model</label>
         <input id="model-search" type="search" name="q" value="{{ model_query }}" placeholder="Nazwa, Toy, numer, marka, seria">
       </div>
+      {% if selected_model_for_variant_add %}
+        <input type="hidden" name="model" value="{{ selected_model_for_variant_add.pk }}">
+      {% endif %}
       <div><button type="submit">Szukaj modeli</button></div>
       {% if model_query or form.initial.model %}
         <div><a class="button secondary" href="{% url 'collections:item-create' collection_obj.pk %}">Wyczyść wyszukiwanie</a></div>
       {% endif %}
     </form>
+    {% if selected_model_for_variant_add %}
+      <p class="meta" style="margin-top:0; margin-bottom:14px;">Dodajesz nowy wariant dla modelu <strong>{{ selected_model_for_variant_add.model_name }}</strong>. Możesz od razu wybrać opakowanie poniżej albo zmienić model przez wyszukiwarkę.</p>
+    {% endif %}
     {% if model_query %}
       <p class="meta" style="margin-top:0; margin-bottom:14px;">Znalezione modele: {{ model_results_count }}{% if model_results_count == 100 %}+{% endif %}</p>
     {% else %}

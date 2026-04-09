@@ -14,6 +14,8 @@ from .views import (
     ImportBacklogListView,
     CollectionItemCreateView,
     CollectionItemDeleteView,
+    CollectionItemFavoriteToggleView,
+    CollectionItemQuantityAdjustView,
     CollectionItemUpdateView,
     CollectionUpdateView,
     DashboardView,
@@ -51,5 +53,7 @@ urlpatterns = [
     path('<int:pk>/delete/', CollectionDeleteView.as_view(), name='collection-delete'),
     path('<int:collection_pk>/items/new/', CollectionItemCreateView.as_view(), name='item-create'),
     path('items/<int:pk>/edit/', CollectionItemUpdateView.as_view(), name='item-update'),
+    path('items/<int:pk>/adjust-quantity/', CollectionItemQuantityAdjustView.as_view(), name='item-adjust-quantity'),
+    path('items/<int:pk>/toggle-favorite/', CollectionItemFavoriteToggleView.as_view(), name='item-toggle-favorite'),
     path('items/<int:pk>/delete/', CollectionItemDeleteView.as_view(), name='item-delete'),
 ]

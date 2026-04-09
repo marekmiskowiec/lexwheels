@@ -848,6 +848,7 @@ class CollectionDetailView(DetailView):
                     'condition',
                     'packaging',
                     'duplicates_only',
+                    'favorite_only',
                     'sort',
                     'sealed',
                     'soft_corners',
@@ -889,6 +890,7 @@ class CollectionDetailView(DetailView):
         selected_condition = self.request.GET.get('condition', '').strip()
         selected_packaging = self.request.GET.get('packaging', '').strip()
         duplicates_only = self.request.GET.get('duplicates_only', '').strip() == '1'
+        favorite_only = self.request.GET.get('favorite_only', '').strip() == '1'
         selected_sort = self.request.GET.get('sort', '').strip()
         selected_sealed = self.request.GET.get('sealed', '').strip()
         selected_soft_corners = self.request.GET.get('soft_corners', '').strip()
@@ -917,6 +919,8 @@ class CollectionDetailView(DetailView):
             items = items.filter(condition=selected_condition)
         if selected_packaging in dict(CollectionItem.PACKAGING_CHOICES):
             items = items.filter(packaging_state=selected_packaging)
+        if favorite_only:
+            items = items.filter(is_favorite=True)
         for query_key, model_field in ATTRIBUTE_FILTER_FIELDS:
             parsed_value = parse_boolean_filter(self.request.GET.get(query_key, ''))
             if parsed_value is not None:
@@ -994,6 +998,7 @@ class CollectionDetailView(DetailView):
         context['selected_condition'] = selected_condition
         context['selected_packaging'] = selected_packaging
         context['duplicates_only'] = duplicates_only
+        context['favorite_only'] = favorite_only
         context['selected_sort'] = selected_sort
         context['selected_sealed'] = selected_sealed
         context['selected_soft_corners'] = selected_soft_corners
@@ -1036,6 +1041,7 @@ class CollectionDetailView(DetailView):
         context['filtered_count'] = len(grouped_items)
         context['saved_filters'] = self.request.session.get(collection_filter_session_key(self.object.pk), {})
         context['bulk_edit_form'] = CollectionBulkEditForm(collection=self.object)
+        context['current_collection_path'] = self.request.get_full_path()
         return context
 
 
@@ -1357,10 +1363,15 @@ class CollectionItemCreateView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        fixed_model = None
+        selected_model_id = self.request.GET.get('model', '').strip() or self.request.POST.get('model', '').strip()
+        if selected_model_id.isdigit():
+            fixed_model = HotWheelsModel.objects.filter(pk=int(selected_model_id)).first()
         context['is_multi_variant_form'] = True
         context['collection_obj'] = self.collection
         context['model_query'] = self.request.GET.get('q', '').strip() or self.request.POST.get('_model_query', '').strip()
         context['model_results_count'] = context['form'].fields['model'].queryset.count()
+        context['selected_model_for_variant_add'] = fixed_model
         return context
 
 
@@ -1415,3 +1426,31 @@ class CollectionItemDeleteView(OwnerRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return self.object.collection.get_absolute_url()
+
+
+class CollectionItemQuantityAdjustView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        item = get_object_or_404(CollectionItem.objects.select_related('collection'), pk=pk)
+        if item.collection.owner != request.user:
+            raise Http404
+
+        delta = request.POST.get('delta', '').strip()
+        if delta == '1':
+            item.quantity += 1
+            item.save(update_fields=['quantity'])
+        elif delta == '-1' and item.quantity > 1:
+            item.quantity -= 1
+            item.save(update_fields=['quantity'])
+
+        return redirect(request.POST.get('next') or item.collection.get_absolute_url())
+
+
+class CollectionItemFavoriteToggleView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        item = get_object_or_404(CollectionItem.objects.select_related('collection'), pk=pk)
+        if item.collection.owner != request.user:
+            raise Http404
+
+        item.is_favorite = not item.is_favorite
+        item.save(update_fields=['is_favorite'])
+        return redirect(request.POST.get('next') or item.collection.get_absolute_url())
