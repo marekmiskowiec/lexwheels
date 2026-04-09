@@ -817,6 +817,14 @@ class CollectionDetailView(DetailView):
     template_name = 'collections/collection_detail.html'
     context_object_name = 'collection_obj'
 
+    SORT_OPTIONS = (
+        ('recent', 'Ostatnio dodane'),
+        ('name', 'Nazwa A-Z'),
+        ('year_desc', 'Rok malejąco'),
+        ('year_asc', 'Rok rosnąco'),
+        ('quantity_desc', 'Najwięcej sztuk'),
+    )
+
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
         if obj.is_public or (self.request.user.is_authenticated and obj.owner == self.request.user):
@@ -833,9 +841,14 @@ class CollectionDetailView(DetailView):
                 key: request.GET.get(key, '').strip()
                 for key in (
                     'q',
+                    'year',
+                    'category',
+                    'series',
                     'brand',
                     'condition',
                     'packaging',
+                    'duplicates_only',
+                    'sort',
                     'sealed',
                     'soft_corners',
                     'protector',
@@ -869,9 +882,14 @@ class CollectionDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         items = self.object.items.select_related('model')
         query = self.request.GET.get('q', '').strip()
+        selected_year = self.request.GET.get('year', '').strip()
+        selected_category = self.request.GET.get('category', '').strip()
+        selected_series = self.request.GET.get('series', '').strip()
         selected_brand = self.request.GET.get('brand', '').strip()
         selected_condition = self.request.GET.get('condition', '').strip()
         selected_packaging = self.request.GET.get('packaging', '').strip()
+        duplicates_only = self.request.GET.get('duplicates_only', '').strip() == '1'
+        selected_sort = self.request.GET.get('sort', '').strip()
         selected_sealed = self.request.GET.get('sealed', '').strip()
         selected_soft_corners = self.request.GET.get('soft_corners', '').strip()
         selected_protector = self.request.GET.get('protector', '').strip()
@@ -887,6 +905,12 @@ class CollectionDetailView(DetailView):
                 | Q(model__brand__icontains=query)
                 | Q(model__series__icontains=query)
             )
+        if selected_year.isdigit():
+            items = items.filter(model__year=int(selected_year))
+        if selected_category:
+            items = items.filter(model__category=selected_category)
+        if selected_series:
+            items = items.filter(model__series=selected_series)
         if selected_brand:
             items = items.filter(model__brand=selected_brand)
         if selected_condition in dict(CollectionItem.CONDITION_CHOICES):
@@ -908,16 +932,69 @@ class CollectionDetailView(DetailView):
                     'variants': variants,
                     'total_quantity': sum(item.quantity for item in variants),
                     'favorite_count': sum(1 for item in variants if item.is_favorite),
+                    'latest_variant_pk': max(item.pk for item in variants),
                 }
+            )
+
+        if duplicates_only:
+            grouped_items = [item for item in grouped_items if item['total_quantity'] > 1]
+
+        valid_sort_options = {value for value, _ in self.SORT_OPTIONS}
+        if selected_sort not in valid_sort_options:
+            selected_sort = 'recent'
+
+        if selected_sort == 'name':
+            grouped_items.sort(
+                key=lambda item: (
+                    (item['model'].model_name or '').lower(),
+                    -(item['model'].year or 0),
+                    (item['model'].number or ''),
+                )
+            )
+        elif selected_sort == 'year_desc':
+            grouped_items.sort(
+                key=lambda item: (
+                    -(item['model'].year or 0),
+                    (item['model'].model_name or '').lower(),
+                    (item['model'].number or ''),
+                )
+            )
+        elif selected_sort == 'year_asc':
+            grouped_items.sort(
+                key=lambda item: (
+                    item['model'].year or 0,
+                    (item['model'].model_name or '').lower(),
+                    (item['model'].number or ''),
+                )
+            )
+        elif selected_sort == 'quantity_desc':
+            grouped_items.sort(
+                key=lambda item: (
+                    -item['total_quantity'],
+                    (item['model'].model_name or '').lower(),
+                    -(item['model'].year or 0),
+                )
+            )
+        else:
+            grouped_items.sort(
+                key=lambda item: (
+                    -item['latest_variant_pk'],
+                    (item['model'].model_name or '').lower(),
+                )
             )
 
         stats_context = build_collection_stats_context(self.object.items.all())
         context['stats'] = stats_context['stats']
         context['items'] = grouped_items
         context['query'] = query
+        context['selected_year'] = selected_year
+        context['selected_category'] = selected_category
+        context['selected_series'] = selected_series
         context['selected_brand'] = selected_brand
         context['selected_condition'] = selected_condition
         context['selected_packaging'] = selected_packaging
+        context['duplicates_only'] = duplicates_only
+        context['selected_sort'] = selected_sort
         context['selected_sealed'] = selected_sealed
         context['selected_soft_corners'] = selected_soft_corners
         context['selected_protector'] = selected_protector
@@ -930,8 +1007,27 @@ class CollectionDetailView(DetailView):
             .distinct()
             .order_by('model__brand')
         )
+        context['year_options'] = (
+            self.object.items.exclude(model__year__isnull=True)
+            .values_list('model__year', flat=True)
+            .distinct()
+            .order_by('-model__year')
+        )
+        context['category_options'] = (
+            self.object.items.exclude(model__category='')
+            .values_list('model__category', flat=True)
+            .distinct()
+            .order_by('model__category')
+        )
+        context['series_options'] = (
+            self.object.items.exclude(model__series='')
+            .values_list('model__series', flat=True)
+            .distinct()
+            .order_by('model__series')
+        )
         context['condition_options'] = CollectionItem.CONDITION_CHOICES
         context['packaging_options'] = CollectionItem.PACKAGING_CHOICES
+        context['sort_options'] = self.SORT_OPTIONS
         context['boolean_filter_options'] = (
             ('', 'Wszystkie'),
             ('yes', 'Tak'),

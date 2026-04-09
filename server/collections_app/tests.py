@@ -803,7 +803,7 @@ class CollectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Custom Mustang')
         self.assertNotContains(response, '1970 Pontiac Firebird')
-        self.assertContains(response, 'Znaleziono 1 pozycji')
+        self.assertContains(response, 'Wyświetlasz 1 modeli dla frazy "Mustang"')
 
     def test_collection_detail_shows_model_year_and_category(self):
         CollectionItem.objects.create(collection=self.public_collection, model=self.model_obj)
@@ -1017,6 +1017,80 @@ class CollectionTests(TestCase):
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertNotContains(response, 'MBX Adventure')
 
+    def test_collection_detail_can_filter_by_year_category_and_series(self):
+        second_model = HotWheelsModel.objects.create(
+            app_id='def456',
+            brand='Hot Wheels',
+            toy='HCT06',
+            number='002',
+            model_name='Custom Mustang',
+            year=2023,
+            category='Premium',
+            series='Boulevard',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+        CollectionItem.objects.create(collection=self.public_collection, model=self.model_obj)
+        CollectionItem.objects.create(collection=self.public_collection, model=second_model)
+
+        response = self.client.get(
+            reverse('collections:collection-detail', args=[self.public_collection.pk]),
+            {'year': '2022', 'category': 'Mainline', 'series': 'HW Dream Garage'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertNotContains(response, 'Custom Mustang')
+
+    def test_collection_detail_can_show_only_duplicate_models(self):
+        second_model = HotWheelsModel.objects.create(
+            app_id='def456',
+            toy='HCT06',
+            number='002',
+            model_name='Custom Mustang',
+            year=2022,
+            category='Mainline',
+            series='HW Dream Garage',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+        CollectionItem.objects.create(collection=self.public_collection, model=self.model_obj, quantity=2)
+        CollectionItem.objects.create(collection=self.public_collection, model=second_model, quantity=1)
+
+        response = self.client.get(
+            reverse('collections:collection-detail', args=[self.public_collection.pk]),
+            {'duplicates_only': '1'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertNotContains(response, 'Custom Mustang')
+        self.assertContains(response, 'z duplikatami')
+
+    def test_collection_detail_can_sort_models_by_name(self):
+        second_model = HotWheelsModel.objects.create(
+            app_id='def456',
+            toy='HCT06',
+            number='002',
+            model_name='Custom Mustang',
+            year=2022,
+            category='Mainline',
+            series='HW Dream Garage',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+        CollectionItem.objects.create(collection=self.public_collection, model=self.model_obj)
+        CollectionItem.objects.create(collection=self.public_collection, model=second_model)
+
+        response = self.client.get(
+            reverse('collections:collection-detail', args=[self.public_collection.pk]),
+            {'sort': 'name'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertLess(content.index('1970 Pontiac Firebird'), content.index('Custom Mustang'))
+
     def test_owner_can_export_collection_as_csv(self):
         CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=2, is_favorite=True)
         self.client.force_login(self.owner)
@@ -1177,15 +1251,21 @@ class CollectionTests(TestCase):
 
         save_response = self.client.get(
             reverse('collections:collection-detail', args=[self.private_collection.pk]),
-            {'brand': 'Matchbox', 'sealed': 'yes', 'cracked_blister': 'no', 'save_filters': '1'},
+            {'brand': 'Matchbox', 'year': '2022', 'duplicates_only': '1', 'sort': 'quantity_desc', 'sealed': 'yes', 'cracked_blister': 'no', 'save_filters': '1'},
         )
-        self.assertRedirects(save_response, f'{self.private_collection.get_absolute_url()}?brand=Matchbox&sealed=yes&cracked_blister=no')
+        self.assertRedirects(
+            save_response,
+            f'{self.private_collection.get_absolute_url()}?year=2022&brand=Matchbox&duplicates_only=1&sort=quantity_desc&sealed=yes&cracked_blister=no',
+        )
 
         apply_response = self.client.get(
             reverse('collections:collection-detail', args=[self.private_collection.pk]),
             {'apply_saved_filters': '1'},
         )
-        self.assertRedirects(apply_response, f'{self.private_collection.get_absolute_url()}?brand=Matchbox&sealed=yes&cracked_blister=no')
+        self.assertRedirects(
+            apply_response,
+            f'{self.private_collection.get_absolute_url()}?year=2022&brand=Matchbox&duplicates_only=1&sort=quantity_desc&sealed=yes&cracked_blister=no',
+        )
 
     def test_owner_can_batch_delete_selected_variants(self):
         short_card = CollectionItem.objects.create(

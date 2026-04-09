@@ -194,6 +194,33 @@
         <label for="q">Szukaj w kolekcji</label>
         <input id="q" type="search" name="q" value="{{ query }}" placeholder="Nazwa modelu, Toy, numer, seria">
       </div>
+      <div style="flex: 1 1 140px;">
+        <label for="year">Rok</label>
+        <select id="year" name="year">
+          <option value="">Wszystkie lata</option>
+          {% for year in year_options %}
+            <option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="flex: 1 1 200px;">
+        <label for="category">Kategoria</label>
+        <select id="category" name="category">
+          <option value="">Wszystkie kategorie</option>
+          {% for category in category_options %}
+            <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="flex: 1 1 220px;">
+        <label for="series">Seria</label>
+        <select id="series" name="series">
+          <option value="">Wszystkie serie</option>
+          {% for series in series_options %}
+            <option value="{{ series }}" {% if selected_series == series %}selected{% endif %}>{{ series }}</option>
+          {% endfor %}
+        </select>
+      </div>
       <div style="flex: 1 1 220px;">
         <label for="brand">Marka</label>
         <select id="brand" name="brand">
@@ -220,6 +247,20 @@
             <option value="{{ value }}" {% if selected_packaging == value %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
         </select>
+      </div>
+      <div style="flex: 1 1 220px;">
+        <label for="sort">Sortowanie</label>
+        <select id="sort" name="sort">
+          {% for value, label in sort_options %}
+            <option value="{{ value }}" {% if selected_sort == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="display:flex; align-items:flex-end; min-width:170px;">
+        <label class="meta" style="display:flex; align-items:center; gap:8px; margin:0;">
+          <input type="checkbox" name="duplicates_only" value="1" {% if duplicates_only %}checked{% endif %} style="width:auto;">
+          Tylko duplikaty
+        </label>
       </div>
       <div style="flex: 1 1 180px;">
         <label for="sealed">Zafoliowany</label>
@@ -272,11 +313,9 @@
       <div><button type="submit">Szukaj</button></div>
       <div><button type="submit" name="save_filters" value="1" class="secondary">Zapisz filtry</button></div>
       {% if saved_filters %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}?apply_saved_filters=1">Przywróć zapisane</a></div><div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}?clear_saved_filters=1">Usuń zapisane</a></div>{% endif %}
-      {% if query or selected_brand or selected_condition or selected_packaging or selected_sealed or selected_soft_corners or selected_protector or selected_signed or selected_bent_hook or selected_cracked_blister %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Usuń wszystkie filtry</a></div>{% endif %}
+      {% if query or selected_year or selected_category or selected_series or selected_brand or selected_condition or selected_packaging or duplicates_only or selected_sort != 'recent' or selected_sealed or selected_soft_corners or selected_protector or selected_signed or selected_bent_hook or selected_cracked_blister %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Usuń wszystkie filtry</a></div>{% endif %}
     </form>
-    {% if query %}
-      <p class="meta" style="margin:12px 0 0;">Znaleziono {{ filtered_count }} pozycji dla frazy "{{ query }}".</p>
-    {% endif %}
+    <p class="meta" style="margin:12px 0 0;">Wyświetlasz {{ filtered_count }} modeli{% if query %} dla frazy "{{ query }}"{% endif %}{% if duplicates_only %} z duplikatami{% endif %}.</p>
   </div>
   <div class="collection-model-list">
   {% for item in items %}
