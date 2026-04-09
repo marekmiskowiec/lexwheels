@@ -130,15 +130,6 @@
 <section class="panel hero">
   <div class="model-detail-layout">
     <div class="model-gallery">
-      {% if model_obj.has_unassigned_image %}
-        <div class="model-gallery-card">
-          <div class="section-copy">
-            <h3 style="margin:0;">Nieprzypisane zdjęcie</h3>
-            <p class="meta" style="margin:0;">To zdjęcie nie ma jeszcze przypisanego wariantu opakowania.</p>
-          </div>
-          <img class="thumb" src="{{ model_obj.unassigned_image_src }}" alt="{{ model_obj.model_name }} - nieprzypisane zdjęcie">
-        </div>
-      {% endif %}
       {% for panel in model_obj.packaging_image_panels %}
         <div class="model-gallery-card">
           <div class="section-copy">
@@ -206,14 +197,6 @@
             <strong>{{ model_obj.packaging_image_panels|length }}</strong>
           </div>
           <div class="model-kpi">
-            <span class="meta">Nieprzypisane zdjęcia</span>
-            <strong>{% if model_obj.has_unassigned_image %}1{% else %}0{% endif %}</strong>
-          </div>
-          <div class="model-kpi">
-            <span class="meta">Brakujące zdjęcia</span>
-            <strong>{{ model_obj.missing_packaging_image_choices|length }}</strong>
-          </div>
-          <div class="model-kpi">
             <span class="meta">Case'y</span>
             <strong>{{ model_obj.case_code_list|length }}</strong>
           </div>
@@ -262,29 +245,6 @@
           </div>
         {% endif %}
       </div>
-
-      {% if model_obj.missing_packaging_image_choices %}
-        <div class="card-surface">
-          <div class="section-copy">
-            <h3>Brakujące warianty zdjęć</h3>
-            <p class="meta">Dla tego modelu nadal brakuje poniższych ujęć opakowania.</p>
-          </div>
-          <div class="related-link-grid" style="margin-top:12px;">
-            {% for packaging_state, label in model_obj.missing_packaging_image_choices %}
-              <span class="badge">{% if packaging_state == 'loose' %}Luzak{% else %}{{ label }} karta{% endif %}</span>
-            {% endfor %}
-          </div>
-        </div>
-      {% endif %}
-
-      {% if model_obj.has_unassigned_image %}
-        <div class="card-surface">
-          <div class="section-copy">
-            <h3>Nieprzypisane zdjęcie</h3>
-            <p class="meta">Ten model ma jeszcze ogólne zdjęcie, które trzeba ręcznie oznaczyć jako krótka karta, długa karta albo luzak.</p>
-          </div>
-        </div>
-      {% endif %}
 
       {% if related_catalog_links %}
         <div class="card-surface">

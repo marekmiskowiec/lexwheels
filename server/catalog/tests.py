@@ -1373,9 +1373,6 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Hot Wheels')
         self.assertContains(response, '2022')
         self.assertContains(response, 'Mainline')
-        self.assertContains(response, 'Krótka karta')
-        self.assertContains(response, 'Długa karta')
-        self.assertContains(response, 'Luzak')
         self.assertContains(response, "Case'y modelu")
         self.assertContains(response, reverse('catalog:case-mix-detail', args=[2022, 'a']))
         self.assertContains(response, reverse('catalog:case-mix-detail', args=[2022, 'q']))
@@ -1427,14 +1424,12 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Długa karta')
         self.assertContains(response, 'Luzak')
 
-    def test_model_detail_hides_duplicate_packaging_panels_and_shows_missing_slots(self):
+    def test_model_detail_hides_duplicate_packaging_panels(self):
         response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
 
         self.assertEqual([panel['key'] for panel in response.context['model_obj'].packaging_image_panels], [])
-        self.assertContains(response, 'Nieprzypisane zdjęcie')
-        self.assertContains(response, 'Brakujące warianty zdjęć')
-        self.assertContains(response, 'Brakujące zdjęcia')
-        self.assertContains(response, 'Luzak')
+        self.assertNotContains(response, 'Nieprzypisane zdjęcie')
+        self.assertNotContains(response, 'Brakujące warianty zdjęć')
 
     def test_missing_packaging_images_view_lists_models_with_missing_slots(self):
         complete_model = HotWheelsModel.objects.create(
