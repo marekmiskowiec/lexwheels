@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Panel admina | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .admin-dashboard {
+    display: grid;
+    gap: 18px;
+  }
+  .admin-kpis {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+  .admin-kpi {
+    display: grid;
+    gap: 4px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.035);
+  }
+  .admin-kpi strong {
+    color: var(--ink);
+    font-size: 1.3rem;
+  }
+  .admin-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+  .admin-card {
+    display: grid;
+    gap: 10px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%);
+  }
+  .admin-card strong {
+    color: var(--ink);
+  }
+  .admin-summary-list {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .admin-summary-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.035);
+  }
+  .admin-summary-row strong {
+    color: var(--ink);
+  }
+  @media (max-width: 560px) {
+    .admin-summary-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<section class="panel hero admin-dashboard">
+  <div class="hero-copy">
+    <span class="eyebrow">Backoffice</span>
+    <h1>Panel admina</h1>
+    <p>Jedno miejsce do kontroli jakości bazy i pracy nad zdjęciami modeli.</p>
+    {% if user.is_authenticated and selected_scope == 'profile' and scope_summary %}
+      <p class="meta">{{ scope_summary|join:' | ' }}</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="panel admin-dashboard">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">Stan bazy</span>
+      <h2>Najważniejsze liczniki</h2>
+    </div>
+  </div>
+  <div class="admin-kpis">
+    <div class="admin-kpi">
+      <span class="meta">Modele w widoku</span>
+      <strong>{{ admin_stats.model_count }}</strong>
+    </div>
+    <div class="admin-kpi">
+      <span class="meta">Brakujące warianty</span>
+      <strong>{{ admin_stats.missing_model_count }}</strong>
+    </div>
+    <div class="admin-kpi">
+      <span class="meta">Nieprzypisane zdjęcia</span>
+      <strong>{{ admin_stats.unassigned_model_count }}</strong>
+    </div>
+    <div class="admin-kpi">
+      <span class="meta">Komplet zdjęć</span>
+      <strong>{{ admin_stats.complete_model_count }}</strong>
+    </div>
+  </div>
+</section>
+
+<section class="panel admin-dashboard">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">Workflow</span>
+      <h2>Skróty operacyjne</h2>
+    </div>
+  </div>
+  <div class="admin-grid">
+    {% for item in admin_links %}
+      <a class="admin-card" href="{{ item.url }}">
+        <span class="badge">{{ item.count }}</span>
+        <strong>{{ item.title }}</strong>
+        <span class="meta">{{ item.meta }}</span>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+
+{% if category_summary %}
+  <section class="panel admin-dashboard">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Katalog</span>
+        <h2>Modele według kategorii</h2>
+      </div>
+    </div>
+    <ul class="admin-summary-list">
+      {% for category in category_summary %}
+        <li>
+          <a class="admin-summary-row" href="{{ category.url }}">
+            <span>
+              <strong>{{ category.name }}</strong>
+              <span class="meta"> · {{ category.year_count }} {% if category.year_count == 1 %}rocznik{% else %}roczników{% endif %}</span>
+            </span>
+            <span class="coverage-count">{{ category.model_count }} modeli</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endif %}
+{% endblock %}

@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     CaseMixDetailView,
     CaseMixListView,
-    CatalogCoverageView,
+    CatalogAdminDashboardView,
     ModelDetailView,
     ModelListView,
     ModelSearchSuggestionsView,
@@ -21,7 +21,7 @@ urlpatterns = [
     path('suggestions/', ModelSearchSuggestionsView.as_view(), name='model-search-suggestions'),
     path('case-mixy/', CaseMixListView.as_view(), name='case-mix-list'),
     path('case-mixy/<int:year>/<slug:case_code>/', CaseMixDetailView.as_view(), name='case-mix-detail'),
-    path('zakres-bazy/', CatalogCoverageView.as_view(), name='coverage'),
+    path('panel-admina/', CatalogAdminDashboardView.as_view(), name='admin-dashboard'),
     path('brakujace-zdjecia/', MissingPackagingImageListView.as_view(), name='missing-packaging-images'),
     path('nieprzypisane-zdjecia/', UnassignedImageListView.as_view(), name='unassigned-images'),
     path('przypisane-zdjecia/', AssignedImageListView.as_view(), name='assigned-images'),

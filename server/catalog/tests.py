@@ -1287,75 +1287,83 @@ class CatalogViewTests(TestCase):
         apply_response = self.client.get(reverse('catalog:model-list'), {'apply_saved_filters': '1'})
         self.assertRedirects(apply_response, f"{reverse('catalog:model-list')}?brand=Hot+Wheels&sort=name")
 
-    def test_catalog_coverage_summarizes_models_by_category(self):
+    def test_catalog_admin_dashboard_shows_image_quality_stats(self):
+        admin = User.objects.create_user(
+            email='quality-admin@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.client.force_login(admin)
+        self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.photo_url = ''
+        self.model_obj.save(update_fields=['short_card_photo_url', 'long_card_photo_url', 'loose_photo_url', 'photo_url'])
         HotWheelsModel.objects.create(
-            app_id='premium-1',
+            app_id='quality-premium',
             brand='Hot Wheels',
             toy='JBL17',
             number='1/5',
-            model_name='Porsche 935',
+            model_name='Premium Review Car',
             year=2025,
             category='Premium',
             series='Hot Wheels Boulevard - Mix 1',
-            series_number='1/5',
-        )
-        HotWheelsModel.objects.create(
-            app_id='premium-2',
-            brand='Hot Wheels',
-            toy='JBL19',
-            number='1/5',
-            model_name='Porsche 911 Carrera RS 2.7',
-            year=2025,
-            category='Premium',
-            series='Hot Wheels Boulevard - Mix 2',
-            series_number='1/5',
-        )
-        HotWheelsModel.objects.create(
-            app_id='matchbox-1',
-            brand='Matchbox',
-            toy='MBX01',
-            number='1/5',
-            model_name='MBX Road Car',
-            year=2024,
-            category='Collectors',
-            series='MBX Road Trip',
-            series_number='1/5',
+            photo_url='https://example.com/premium-generic.jpg',
+            long_card_photo_url='https://example.com/premium-long.jpg',
         )
 
-        response = self.client.get(reverse('catalog:coverage'))
+        response = self.client.get(reverse('catalog:admin-dashboard'))
 
-        self.assertContains(response, 'Zakres bazy')
+        self.assertContains(response, 'Panel admina')
+        self.assertContains(response, 'Komplet zdjęć')
+        self.assertContains(response, 'Brakujące warianty zdjęć')
+        self.assertContains(response, 'Nieprzypisane zdjęcia')
+        self.assertContains(response, 'Przypisane zdjęcia')
+        self.assertContains(response, 'Modele według kategorii')
         self.assertContains(response, 'Mainline')
         self.assertContains(response, 'Premium')
-        self.assertContains(response, 'Collectors')
-        self.assertContains(response, '2 modeli')
-        self.assertContains(response, f'{reverse("catalog:model-list")}?scope=all&amp;category=Premium')
-        self.assertContains(response, f'{reverse("catalog:model-list")}?scope=all&amp;category=Mainline')
+        self.assertNotContains(response, 'Zakres bazy')
 
-    def test_catalog_coverage_can_use_profile_scope(self):
-        user = User.objects.create_user(email='scope@example.com', password='ComplexPass123')
-        user.catalog_scope_enabled = True
-        user.catalog_scope_categories = ['Mainline']
-        user.save(update_fields=['catalog_scope_enabled', 'catalog_scope_categories'])
-
-        HotWheelsModel.objects.create(
-            app_id='premium-1',
-            brand='Hot Wheels',
-            toy='JBL17',
-            number='1/5',
-            model_name='Porsche 935',
-            year=2025,
-            category='Premium',
-            series='Hot Wheels Boulevard - Mix 1',
-            series_number='1/5',
-        )
-
+    def test_catalog_admin_dashboard_requires_staff(self):
+        user = User.objects.create_user(email='plain@example.com', password='ComplexPass123')
         self.client.force_login(user)
-        response = self.client.get(reverse('catalog:coverage'), {'scope': 'profile'})
 
-        self.assertContains(response, 'Mój zakres')
-        self.assertContains(response, 'Mainline')
-        self.assertNotContains(response, 'Premium')
+        response = self.client.get(reverse('catalog:admin-dashboard'))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_catalog_admin_dashboard_shows_image_workflow_counts(self):
+        admin = User.objects.create_user(
+            email='staff@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
+        self.model_obj.save(update_fields=['short_card_photo_url'])
+        HotWheelsModel.objects.create(
+            app_id='admin-complete',
+            brand='Hot Wheels',
+            toy='HCT20',
+            number='020',
+            model_name='Complete Admin Car',
+            year=2024,
+            category='Premium',
+            photo_url='',
+            long_card_photo_url='https://example.com/long.jpg',
+            loose_photo_url='https://example.com/loose.jpg',
+        )
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse('catalog:admin-dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Panel admina')
+        self.assertContains(response, 'Brakujące warianty')
+        self.assertContains(response, 'Nieprzypisane zdjęcia')
+        self.assertContains(response, 'Modele według kategorii')
+        self.assertContains(response, reverse('catalog:missing-packaging-images'))
+        self.assertContains(response, reverse('catalog:unassigned-images'))
+        self.assertContains(response, reverse('catalog:assigned-images'))
 
     def test_model_detail(self):
         self.model_obj.case_codes = 'A,Q'

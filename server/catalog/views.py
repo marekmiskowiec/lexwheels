@@ -668,36 +668,13 @@ class ModelDetailView(CatalogScopeMixin, DetailView):
         return context
 
 
-class CatalogCoverageView(CatalogScopeMixin, TemplateView):
-    template_name = 'catalog/coverage.html'
+class CatalogImageAdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    def test_func(self):
+        return bool(self.request.user.is_staff or self.request.user.is_superuser)
 
-    @staticmethod
-    def normalize_group_name(category: str, series: str) -> tuple[str, bool]:
-        category = (category or '').strip()
-        series = (series or '').strip()
 
-        if category == 'Mainline':
-            return category, False
-        if series and ' - Mix ' in series:
-            return series.split(' - Mix ', 1)[0], True
-        if series:
-            return series, False
-        return category or 'Bez kategorii', False
-
-    @staticmethod
-    def build_catalog_url(scope_mode: str, category: str, year: int | None, group_name: str, uses_search: bool) -> str:
-        params: dict[str, str | int] = {'scope': scope_mode}
-        if year:
-            params['year'] = year
-        if category:
-            params['category'] = category
-
-        if uses_search:
-            params['q'] = group_name
-        elif category != group_name:
-            params['series'] = group_name
-
-        return f"{reverse('catalog:model-list')}?{urlencode(params)}"
+class CatalogAdminDashboardView(CatalogImageAdminRequiredMixin, CatalogScopeMixin, TemplateView):
+    template_name = 'catalog/admin_dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -708,6 +685,47 @@ class CatalogCoverageView(CatalogScopeMixin, TemplateView):
             .annotate(model_count=Count('id'), year_count=Count('year', distinct=True))
             .order_by('-model_count', 'category')
         )
+        image_quality_fields = (
+            'category',
+            'exclusive_store',
+            'photo_url',
+            'local_photo_path',
+            'short_card_photo_url',
+            'short_card_local_photo_path',
+            'long_card_photo_url',
+            'long_card_local_photo_path',
+            'loose_photo_url',
+            'loose_local_photo_path',
+        )
+        missing_model_count = 0
+        unassigned_model_count = 0
+        assigned_model_count = 0
+        complete_model_count = 0
+        for model in queryset.only(*image_quality_fields):
+            has_assigned = bool(model.packaging_image_panels)
+            has_unassigned = model.has_unassigned_image
+            has_missing = bool(model.missing_packaging_image_states)
+            if has_missing:
+                missing_model_count += 1
+            if has_unassigned:
+                unassigned_model_count += 1
+            if has_assigned:
+                assigned_model_count += 1
+            if not has_unassigned and not has_missing:
+                complete_model_count += 1
+
+        query_suffix = f'?scope=profile' if scope_mode == CATALOG_SCOPE_PROFILE else ''
+        context['selected_scope'] = scope_mode
+        context['scope_summary'] = self.request.user.catalog_scope_summary if (
+            self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
+        ) else []
+        context['admin_stats'] = {
+            'model_count': queryset.count(),
+            'missing_model_count': missing_model_count,
+            'unassigned_model_count': unassigned_model_count,
+            'assigned_model_count': assigned_model_count,
+            'complete_model_count': complete_model_count,
+        }
         context['category_summary'] = [
             {
                 'name': (row['category'] or 'Bez kategorii').strip(),
@@ -719,33 +737,27 @@ class CatalogCoverageView(CatalogScopeMixin, TemplateView):
             }
             for row in category_rows
         ]
-        context['coverage_stats'] = {
-            'category_count': len(context['category_summary']),
-            'year_count': queryset.exclude(year__isnull=True).values('year').distinct().count(),
-            'model_count': queryset.count(),
-            'missing_image_variant_model_count': sum(1 for model in queryset.only(
-                'category',
-                'exclusive_store',
-                'photo_url',
-                'local_photo_path',
-                'short_card_photo_url',
-                'short_card_local_photo_path',
-                'long_card_photo_url',
-                'long_card_local_photo_path',
-                'loose_photo_url',
-                'loose_local_photo_path',
-            ) if model.missing_packaging_image_states),
-        }
-        context['selected_scope'] = scope_mode
-        context['scope_summary'] = self.request.user.catalog_scope_summary if (
-            self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
-        ) else []
+        context['admin_links'] = [
+            {
+                'title': 'Brakujące warianty zdjęć',
+                'meta': 'Modele, którym brakuje co najmniej jednego wariantu zdjęcia.',
+                'count': missing_model_count,
+                'url': f"{reverse('catalog:missing-packaging-images')}{query_suffix}",
+            },
+            {
+                'title': 'Nieprzypisane zdjęcia',
+                'meta': 'Ogólne zdjęcia do ręcznego przypisania jako krótka, długa lub luzak.',
+                'count': unassigned_model_count,
+                'url': f"{reverse('catalog:unassigned-images')}{query_suffix}",
+            },
+            {
+                'title': 'Przypisane zdjęcia',
+                'meta': 'Modele ze zdjęciami wariantów już sklasyfikowanymi w bazie.',
+                'count': assigned_model_count,
+                'url': f"{reverse('catalog:assigned-images')}{query_suffix}",
+            },
+        ]
         return context
-
-
-class CatalogImageAdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
-    def test_func(self):
-        return bool(self.request.user.is_staff or self.request.user.is_superuser)
 
 
 class CatalogImageWorkflowMixin(CatalogScopeMixin):
