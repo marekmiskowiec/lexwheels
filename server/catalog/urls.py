@@ -7,6 +7,7 @@ from .views import (
     ModelDetailView,
     ModelListView,
     ModelSearchSuggestionsView,
+    MissingPackagingImageListView,
 )
 
 app_name = 'catalog'
@@ -17,5 +18,6 @@ urlpatterns = [
     path('case-mixy/', CaseMixListView.as_view(), name='case-mix-list'),
     path('case-mixy/<int:year>/<slug:case_code>/', CaseMixDetailView.as_view(), name='case-mix-detail'),
     path('zakres-bazy/', CatalogCoverageView.as_view(), name='coverage'),
+    path('brakujace-zdjecia/', MissingPackagingImageListView.as_view(), name='missing-packaging-images'),
     path('models/<int:pk>/', ModelDetailView.as_view(), name='model-detail'),
 ]

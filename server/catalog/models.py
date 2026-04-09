@@ -126,10 +126,19 @@ class HotWheelsModel(models.Model):
                 return variant_src
         return self.photo_url
 
-    def image_src_for_packaging(self, packaging_state: str, variant_name: str = 'detail') -> str:
-        if packaging_state not in self.available_packaging_states:
-            return ''
+    def default_packaging_state_for_generic_image(self) -> str:
+        for packaging_state in ('short_card', 'long_card', 'loose'):
+            if packaging_state in self.available_packaging_states:
+                return packaging_state
+        return ''
 
+    def generic_image_reference(self) -> dict[str, str]:
+        return {
+            'local_path': self.local_photo_path,
+            'url': self.photo_url,
+        }
+
+    def packaging_image_reference(self, packaging_state: str) -> dict[str, str]:
         path_attr = {
             'short_card': 'short_card_local_photo_path',
             'long_card': 'long_card_local_photo_path',
@@ -140,14 +149,39 @@ class HotWheelsModel(models.Model):
             'long_card': 'long_card_photo_url',
             'loose': 'loose_photo_url',
         }.get(packaging_state)
+        if not path_attr or not url_attr:
+            return {'local_path': '', 'url': ''}
+        return {
+            'local_path': getattr(self, path_attr, ''),
+            'url': getattr(self, url_attr, ''),
+        }
 
-        if path_attr and self.local_packaging_photo_exists(packaging_state):
-            return self.image_variant_src_for_relative_path(getattr(self, path_attr), variant_name, getattr(self, url_attr) or self.photo_url)
+    @staticmethod
+    def image_reference_signature(reference: dict[str, str]) -> tuple[str, str]:
+        local_path = (reference.get('local_path') or '').strip()
+        url = (reference.get('url') or '').strip()
+        if local_path:
+            return ('local', local_path)
+        if url:
+            return ('url', url)
+        return ('', '')
 
-        if url_attr and getattr(self, url_attr):
-            return getattr(self, url_attr)
+    def image_src_for_reference(self, reference: dict[str, str], variant_name: str = 'detail') -> str:
+        local_path = (reference.get('local_path') or '').strip()
+        url = (reference.get('url') or '').strip()
+        if local_path:
+            variant_src = self.image_variant_src_for_relative_path(local_path, variant_name, url)
+            if variant_src:
+                return variant_src
+        return url
 
-        return self.image_src
+    def image_src_for_packaging(self, packaging_state: str, variant_name: str = 'detail') -> str:
+        if packaging_state not in self.available_packaging_states:
+            return ''
+        reference = self.display_packaging_image_reference(packaging_state)
+        if not reference:
+            return ''
+        return self.image_src_for_reference(reference, variant_name)
 
     @property
     def short_card_image_src(self) -> str:
@@ -162,22 +196,39 @@ class HotWheelsModel(models.Model):
         return self.image_src_for_packaging('loose')
 
     def has_packaging_image(self, packaging_state: str) -> bool:
-        if packaging_state not in self.available_packaging_states:
-            return False
+        return bool(self.display_packaging_image_reference(packaging_state))
 
-        path_attr = {
-            'short_card': 'short_card_local_photo_path',
-            'long_card': 'long_card_local_photo_path',
-            'loose': 'loose_local_photo_path',
-        }.get(packaging_state)
-        url_attr = {
-            'short_card': 'short_card_photo_url',
-            'long_card': 'long_card_photo_url',
-            'loose': 'loose_photo_url',
-        }.get(packaging_state)
-        if not path_attr or not url_attr:
-            return False
-        return bool(getattr(self, path_attr) or getattr(self, url_attr))
+    def display_packaging_image_reference(self, packaging_state: str) -> dict[str, str] | None:
+        if packaging_state not in self.available_packaging_states:
+            return None
+
+        generic_reference = self.generic_image_reference()
+        generic_signature = self.image_reference_signature(generic_reference)
+        packaging_reference = self.packaging_image_reference(packaging_state)
+        packaging_signature = self.image_reference_signature(packaging_reference)
+        default_packaging_state = self.default_packaging_state_for_generic_image()
+
+        if packaging_signature != ('', '') and packaging_signature != generic_signature:
+            return packaging_reference
+        if generic_signature != ('', '') and packaging_state == default_packaging_state:
+            return generic_reference
+        return None
+
+    @property
+    def missing_packaging_image_states(self) -> list[str]:
+        return [
+            packaging_state
+            for packaging_state in self.available_packaging_states
+            if not self.display_packaging_image_reference(packaging_state)
+        ]
+
+    @property
+    def missing_packaging_image_choices(self) -> list[tuple[str, str]]:
+        return [
+            (packaging_state, label)
+            for packaging_state, label in self.available_packaging_choices
+            if packaging_state in self.missing_packaging_image_states
+        ]
 
     @property
     def catalog_image_variants(self) -> list[dict]:
@@ -186,13 +237,14 @@ class HotWheelsModel(models.Model):
     def catalog_image_variants_for_usage(self, variant_name: str = 'detail') -> list[dict]:
         variants = []
         for packaging_state, label in self.available_packaging_choices:
-            if not self.has_packaging_image(packaging_state):
+            reference = self.display_packaging_image_reference(packaging_state)
+            if not reference:
                 continue
             variants.append(
                 {
                     'key': packaging_state,
                     'label': label,
-                    'src': self.image_src_for_packaging(packaging_state, variant_name),
+                    'src': self.image_src_for_reference(reference, variant_name),
                 }
             )
 
@@ -239,8 +291,9 @@ class HotWheelsModel(models.Model):
             {
                 'key': packaging_state,
                 'label': label,
-                'src': self.image_src_for_packaging(packaging_state, variant_name),
+                'src': self.image_src_for_reference(reference, variant_name),
             }
             for packaging_state, label in self.available_packaging_choices
-            if self.image_src_for_packaging(packaging_state, variant_name)
+            for reference in [self.display_packaging_image_reference(packaging_state)]
+            if reference
         ]

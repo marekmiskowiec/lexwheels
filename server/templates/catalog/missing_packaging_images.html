@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Brakujące warianty zdjęć | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .missing-image-list {
+    display: grid;
+    gap: 12px;
+  }
+  .missing-image-row {
+    display: grid;
+    grid-template-columns: 78px minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.035);
+  }
+  .missing-image-thumb {
+    width: 78px;
+    height: 78px;
+    object-fit: contain;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line);
+    padding: 6px;
+  }
+  .missing-image-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+  .missing-image-copy h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
+  .missing-image-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  @media (max-width: 760px) {
+    .missing-image-row {
+      grid-template-columns: 1fr;
+    }
+    .missing-image-badges {
+      justify-content: flex-start;
+    }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<section class="panel hero">
+  <div class="hero-copy">
+    <span class="eyebrow">Uzupełnianie bazy</span>
+    <h1>Brakujące warianty zdjęć</h1>
+    <p>
+      Tutaj widać modele, którym brakuje jeszcze zdjęć dla części wariantów opakowania.
+      Obecnie to {{ missing_image_stats.model_count }} modeli i {{ missing_image_stats.slot_count }} brakujących slotów.
+    </p>
+    {% if user.is_authenticated and selected_scope == 'profile' and scope_summary %}
+      <p class="meta">{{ scope_summary|join:' | ' }}</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="panel">
+  <form method="get" class="filters">
+    {% if selected_scope == 'profile' %}<input type="hidden" name="scope" value="profile">{% endif %}
+    <div style="flex: 1 1 220px;">
+      <label for="category">Kategoria</label>
+      <select id="category" name="category">
+        <option value="">Wszystkie kategorie</option>
+        {% for category in category_options %}
+          <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div><button type="submit">Filtruj</button></div>
+    {% if selected_category or selected_scope == 'profile' %}
+      <div><a class="button secondary" href="{% url 'catalog:missing-packaging-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Wyczyść</a></div>
+    {% endif %}
+  </form>
+</section>
+
+{% if missing_image_models %}
+  <section class="missing-image-list">
+    {% for entry in missing_image_models %}
+      <div class="missing-image-row">
+        {% if entry.primary_image_src %}
+          <a href="{{ entry.model.get_absolute_url }}">
+            <img class="missing-image-thumb" src="{{ entry.primary_image_src }}" alt="{{ entry.model.model_name }}">
+          </a>
+        {% else %}
+          <div class="missing-image-thumb"></div>
+        {% endif %}
+        <div class="missing-image-copy">
+          <h3><a href="{{ entry.model.get_absolute_url }}">{{ entry.model.model_name }}</a></h3>
+          <p class="meta">{{ entry.model.year|default:"-" }} | {{ entry.model.category|default:"-" }}{% if entry.model.series %} | {{ entry.model.series }}{% endif %}</p>
+          <p class="meta">Toy: {{ entry.model.toy|default:"-" }} | Nr: {{ entry.model.number|default:"-" }}</p>
+        </div>
+        <div class="missing-image-badges">
+          {% for packaging_state, label in entry.missing_choices %}
+            <span class="badge">
+              {% if packaging_state == 'short_card' %}
+                Brak krótkiej karty
+              {% elif packaging_state == 'long_card' %}
+                Brak długiej karty
+              {% else %}
+                Brak luzaka
+              {% endif %}
+            </span>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </section>
+{% else %}
+  <section class="panel">
+    <h2>Brak modeli do uzupełnienia</h2>
+    <p class="meta">W tym zakresie wszystkie widoczne modele mają komplet zdjęć dla swoich wariantów.</p>
+  </section>
+{% endif %}
+{% endblock %}

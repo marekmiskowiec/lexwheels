@@ -570,8 +570,91 @@ class CatalogCoverageView(CatalogScopeMixin, TemplateView):
             'category_count': len(context['category_summary']),
             'year_count': queryset.exclude(year__isnull=True).values('year').distinct().count(),
             'model_count': queryset.count(),
+            'missing_image_variant_model_count': sum(1 for model in queryset.only(
+                'category',
+                'exclusive_store',
+                'photo_url',
+                'local_photo_path',
+                'short_card_photo_url',
+                'short_card_local_photo_path',
+                'long_card_photo_url',
+                'long_card_local_photo_path',
+                'loose_photo_url',
+                'loose_local_photo_path',
+            ) if model.missing_packaging_image_states),
         }
         context['selected_scope'] = scope_mode
+        context['scope_summary'] = self.request.user.catalog_scope_summary if (
+            self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
+        ) else []
+        return context
+
+
+class MissingPackagingImageListView(CatalogScopeMixin, TemplateView):
+    template_name = 'catalog/missing_packaging_images.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        scope_mode = self.get_scope_mode()
+        queryset = self.apply_profile_scope(HotWheelsModel.objects.all())
+        selected_category = self.request.GET.get('category', '').strip()
+        if selected_category:
+            queryset = queryset.filter(category=selected_category)
+
+        models_with_missing_images = []
+        for model in queryset.only(
+            'brand',
+            'toy',
+            'number',
+            'model_name',
+            'year',
+            'category',
+            'series',
+            'exclusive_store',
+            'photo_url',
+            'local_photo_path',
+            'short_card_photo_url',
+            'short_card_local_photo_path',
+            'long_card_photo_url',
+            'long_card_local_photo_path',
+            'loose_photo_url',
+            'loose_local_photo_path',
+        ):
+            missing_choices = model.missing_packaging_image_choices
+            if not missing_choices:
+                continue
+            models_with_missing_images.append(
+                {
+                    'model': model,
+                    'missing_choices': missing_choices,
+                    'primary_image_src': model.catalog_primary_thumb_src or model.catalog_primary_image_src,
+                }
+            )
+
+        models_with_missing_images.sort(
+            key=lambda entry: (
+                entry['model'].category or '',
+                -(entry['model'].year or 0),
+                entry['model'].number or '',
+                entry['model'].model_name or '',
+            )
+        )
+
+        category_options = (
+            self.apply_profile_scope(HotWheelsModel.objects.all())
+            .exclude(category='')
+            .values_list('category', flat=True)
+            .distinct()
+            .order_by('category')
+        )
+        context['missing_image_models'] = models_with_missing_images
+        context['missing_image_stats'] = {
+            'model_count': len(models_with_missing_images),
+            'slot_count': sum(len(entry['missing_choices']) for entry in models_with_missing_images),
+        }
+        context['selected_scope'] = scope_mode
+        context['selected_category'] = selected_category
+        context['category_options'] = category_options
         context['scope_summary'] = self.request.user.catalog_scope_summary if (
             self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
         ) else []

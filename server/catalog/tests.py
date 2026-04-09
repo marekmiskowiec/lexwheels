@@ -128,7 +128,7 @@ class ImportModelsCommandTests(TestCase):
 
         self.assertEqual(HotWheelsModel.objects.count(), 1)
 
-    def test_import_backfills_packaging_photos_from_default_photo(self):
+    def test_import_backfills_only_short_card_photo_from_default_photo(self):
         payload = [{
             'Toy': 'ABC',
             'Number': '001',
@@ -146,11 +146,11 @@ class ImportModelsCommandTests(TestCase):
 
         model = HotWheelsModel.objects.get()
         self.assertEqual(model.short_card_photo_url, 'https://example.com/car.jpg')
-        self.assertEqual(model.long_card_photo_url, 'https://example.com/car.jpg')
-        self.assertEqual(model.loose_photo_url, 'https://example.com/car.jpg')
+        self.assertEqual(model.long_card_photo_url, '')
+        self.assertEqual(model.loose_photo_url, '')
         self.assertEqual(model.short_card_local_photo_path, 'images/car.jpg')
-        self.assertEqual(model.long_card_local_photo_path, 'images/car.jpg')
-        self.assertEqual(model.loose_local_photo_path, 'images/car.jpg')
+        self.assertEqual(model.long_card_local_photo_path, '')
+        self.assertEqual(model.loose_local_photo_path, '')
 
     def test_import_does_not_backfill_short_card_for_semi_premium(self):
         payload = [{
@@ -673,6 +673,17 @@ class CatalogViewTests(TestCase):
         self.assertEqual(self.model_obj.catalog_primary_image_src, 'https://example.com/long.jpg')
         self.assertEqual(self.model_obj.catalog_primary_thumb_src, 'https://example.com/long.jpg')
         self.assertEqual(self.model_obj.catalog_primary_preview_src, 'https://example.com/long.jpg')
+
+    def test_catalog_model_hides_duplicate_packaging_images_that_repeat_generic_photo(self):
+        self.model_obj.short_card_photo_url = 'https://example.com/car.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/car.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/car.jpg'
+        self.model_obj.save(update_fields=['short_card_photo_url', 'long_card_photo_url', 'loose_photo_url'])
+
+        variants = self.model_obj.catalog_image_variants
+
+        self.assertEqual([variant['key'] for variant in variants], ['short_card'])
+        self.assertEqual(self.model_obj.missing_packaging_image_states, ['long_card', 'loose'])
 
     def test_build_image_variant_relative_path(self):
         self.assertEqual(
@@ -1364,6 +1375,49 @@ class CatalogViewTests(TestCase):
         self.assertNotContains(response, 'Krótka karta')
         self.assertContains(response, 'Długa karta')
         self.assertContains(response, 'Luzak')
+
+    def test_model_detail_hides_duplicate_packaging_panels_and_shows_missing_slots(self):
+        self.model_obj.short_card_photo_url = 'https://example.com/car.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/car.jpg'
+        self.model_obj.loose_photo_url = ''
+        self.model_obj.save(update_fields=['short_card_photo_url', 'long_card_photo_url', 'loose_photo_url'])
+
+        response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
+
+        self.assertEqual([panel['key'] for panel in response.context['model_obj'].packaging_image_panels], ['short_card'])
+        self.assertContains(response, 'Krótka karta')
+        self.assertContains(response, 'Brakujące warianty zdjęć')
+        self.assertContains(response, 'Brakujące zdjęcia')
+        self.assertContains(response, 'Luzak')
+
+    def test_missing_packaging_images_view_lists_models_with_missing_slots(self):
+        complete_model = HotWheelsModel.objects.create(
+            app_id='def777',
+            brand='Hot Wheels',
+            toy='HCT99',
+            number='099',
+            model_name='Complete Car',
+            year=2024,
+            category='Mainline',
+            series='HW Metro',
+            series_number='1/5',
+            photo_url='https://example.com/complete-short.jpg',
+            short_card_photo_url='https://example.com/complete-short.jpg',
+            long_card_photo_url='https://example.com/complete-long.jpg',
+            loose_photo_url='https://example.com/complete-loose.jpg',
+        )
+        self.model_obj.short_card_photo_url = 'https://example.com/car.jpg'
+        self.model_obj.long_card_photo_url = ''
+        self.model_obj.loose_photo_url = ''
+        self.model_obj.save(update_fields=['short_card_photo_url', 'long_card_photo_url', 'loose_photo_url'])
+
+        response = self.client.get(reverse('catalog:missing-packaging-images'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertContains(response, 'Brak długiej karty', html=False)
+        self.assertContains(response, 'Brak luzaka', html=False)
+        self.assertNotContains(response, complete_model.model_name)
 
     def test_healthcheck(self):
         response = self.client.get(reverse('healthcheck'))

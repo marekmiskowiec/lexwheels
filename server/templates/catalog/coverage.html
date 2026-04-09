@@ -89,6 +89,12 @@
         {% endif %}
       </div>
     {% endif %}
+    <div class="actions-row">
+      <a class="button secondary" href="{% url 'catalog:missing-packaging-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">
+        Brakujące warianty zdjęć
+      </a>
+      <span class="meta">{{ coverage_stats.missing_image_variant_model_count }} modeli wymaga jeszcze uzupełnienia zdjęć.</span>
+    </div>
   </div>
 </section>
 
