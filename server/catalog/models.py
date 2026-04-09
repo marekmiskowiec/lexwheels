@@ -169,6 +169,26 @@ class HotWheelsModel(models.Model):
                 return variant_src
         return url
 
+    def duplicated_packaging_image_signature(self) -> tuple[str, str]:
+        signatures = []
+        for packaging_state in self.available_packaging_states:
+            signature = self.image_reference_signature(self.packaging_image_reference(packaging_state))
+            if signature != ('', ''):
+                signatures.append(signature)
+        if len(signatures) >= 2 and len(set(signatures)) == 1:
+            return signatures[0]
+        return ('', '')
+
+    def duplicated_packaging_image_reference(self) -> dict[str, str] | None:
+        duplicate_signature = self.duplicated_packaging_image_signature()
+        if duplicate_signature == ('', ''):
+            return None
+        for packaging_state in self.available_packaging_states:
+            reference = self.packaging_image_reference(packaging_state)
+            if self.image_reference_signature(reference) == duplicate_signature:
+                return reference
+        return None
+
     def image_src_for_packaging(self, packaging_state: str, variant_name: str = 'detail') -> str:
         if packaging_state not in self.available_packaging_states:
             return ''
@@ -198,15 +218,20 @@ class HotWheelsModel(models.Model):
 
         packaging_reference = self.packaging_image_reference(packaging_state)
         packaging_signature = self.image_reference_signature(packaging_reference)
+        duplicate_signature = self.duplicated_packaging_image_signature()
+        if duplicate_signature != ('', '') and packaging_signature == duplicate_signature:
+            return None
         if packaging_signature != ('', ''):
             return packaging_reference
         return None
 
     @property
     def unassigned_image_reference(self) -> dict[str, str] | None:
+        if not self.missing_packaging_image_states:
+            return None
         generic_reference = self.generic_image_reference()
         if self.image_reference_signature(generic_reference) == ('', ''):
-            return None
+            return self.duplicated_packaging_image_reference()
         return generic_reference
 
     @property

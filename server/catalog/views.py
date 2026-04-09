@@ -667,7 +667,7 @@ class MissingPackagingImageListView(CatalogScopeMixin, TemplateView):
         return context
 
 
-class UnassignedImageListView(CatalogScopeMixin, TemplateView):
+class UnassignedImageListView(CatalogImageAdminRequiredMixin, CatalogScopeMixin, TemplateView):
     template_name = 'catalog/unassigned_images.html'
 
     def get_context_data(self, **kwargs):
@@ -732,6 +732,76 @@ class UnassignedImageListView(CatalogScopeMixin, TemplateView):
         return context
 
 
+class AssignedImageListView(CatalogImageAdminRequiredMixin, CatalogScopeMixin, TemplateView):
+    template_name = 'catalog/assigned_images.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        scope_mode = self.get_scope_mode()
+        queryset = self.apply_profile_scope(HotWheelsModel.objects.all())
+        selected_category = self.request.GET.get('category', '').strip()
+        if selected_category:
+            queryset = queryset.filter(category=selected_category)
+
+        assigned_models = []
+        for model in queryset.only(
+            'brand',
+            'toy',
+            'number',
+            'model_name',
+            'year',
+            'category',
+            'series',
+            'exclusive_store',
+            'photo_url',
+            'local_photo_path',
+            'short_card_photo_url',
+            'short_card_local_photo_path',
+            'long_card_photo_url',
+            'long_card_local_photo_path',
+            'loose_photo_url',
+            'loose_local_photo_path',
+        ):
+            panels = model.packaging_image_panels
+            if not panels:
+                continue
+            assigned_models.append(
+                {
+                    'model': model,
+                    'panels': panels,
+                    'primary_image_src': model.catalog_primary_thumb_src or model.catalog_primary_image_src,
+                }
+            )
+
+        assigned_models.sort(
+            key=lambda entry: (
+                entry['model'].category or '',
+                -(entry['model'].year or 0),
+                entry['model'].number or '',
+                entry['model'].model_name or '',
+            )
+        )
+        category_options = (
+            self.apply_profile_scope(HotWheelsModel.objects.all())
+            .exclude(category='')
+            .values_list('category', flat=True)
+            .distinct()
+            .order_by('category')
+        )
+        context['assigned_models'] = assigned_models
+        context['assigned_stats'] = {
+            'model_count': len(assigned_models),
+            'slot_count': sum(len(entry['panels']) for entry in assigned_models),
+        }
+        context['selected_scope'] = scope_mode
+        context['selected_category'] = selected_category
+        context['category_options'] = category_options
+        context['scope_summary'] = self.request.user.catalog_scope_summary if (
+            self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
+        ) else []
+        return context
+
+
 class AssignGenericImageView(CatalogImageAdminRequiredMixin, View):
     def post(self, request, pk, packaging_state):
         model = HotWheelsModel.objects.filter(pk=pk).first()
@@ -755,6 +825,64 @@ class AssignGenericImageView(CatalogImageAdminRequiredMixin, View):
         model.save(update_fields=[path_attr, url_attr, 'local_photo_path', 'photo_url'])
         messages.success(request, f'Przypisano zdjęcie do wariantu: {model.packaging_labels[packaging_state]}.')
         return redirect(request.POST.get('next') or reverse('catalog:unassigned-images'))
+
+
+class ReassignPackagingImageView(CatalogImageAdminRequiredMixin, View):
+    def post(self, request, pk, source_packaging_state, target_packaging_state):
+        model = HotWheelsModel.objects.filter(pk=pk).first()
+        if not model:
+            raise Http404
+        if source_packaging_state not in dict(HotWheelsModel.PACKAGING_LABELS):
+            raise Http404
+        if source_packaging_state not in model.available_packaging_states:
+            raise Http404
+
+        source_reference = model.packaging_image_reference(source_packaging_state)
+        if model.image_reference_signature(source_reference) == ('', ''):
+            messages.info(request, 'Wybrany wariant nie ma przypisanego zdjęcia.')
+            return redirect(request.POST.get('next') or model.get_absolute_url())
+
+        if target_packaging_state == 'unassigned':
+            model.local_photo_path = source_reference['local_path']
+            model.photo_url = source_reference['url']
+            setattr(model, f'{source_packaging_state}_local_photo_path', '')
+            setattr(model, f'{source_packaging_state}_photo_url', '')
+            model.save(update_fields=[
+                'local_photo_path',
+                'photo_url',
+                f'{source_packaging_state}_local_photo_path',
+                f'{source_packaging_state}_photo_url',
+            ])
+            messages.success(request, 'Cofnięto przypisanie zdjęcia do nieprzypisanego.')
+            return redirect(request.POST.get('next') or model.get_absolute_url())
+
+        if target_packaging_state not in dict(HotWheelsModel.PACKAGING_LABELS):
+            raise Http404
+        if target_packaging_state not in model.available_packaging_states:
+            raise Http404
+        if target_packaging_state == source_packaging_state:
+            return redirect(request.POST.get('next') or model.get_absolute_url())
+
+        target_reference = model.packaging_image_reference(target_packaging_state)
+        if model.image_reference_signature(target_reference) != ('', ''):
+            messages.error(request, f'Wariant {model.packaging_labels[target_packaging_state]} ma już własne zdjęcie.')
+            return redirect(request.POST.get('next') or model.get_absolute_url())
+
+        setattr(model, f'{target_packaging_state}_local_photo_path', source_reference['local_path'])
+        setattr(model, f'{target_packaging_state}_photo_url', source_reference['url'])
+        setattr(model, f'{source_packaging_state}_local_photo_path', '')
+        setattr(model, f'{source_packaging_state}_photo_url', '')
+        model.save(update_fields=[
+            f'{target_packaging_state}_local_photo_path',
+            f'{target_packaging_state}_photo_url',
+            f'{source_packaging_state}_local_photo_path',
+            f'{source_packaging_state}_photo_url',
+        ])
+        messages.success(
+            request,
+            f'Przeniesiono zdjęcie z {model.packaging_labels[source_packaging_state]} do {model.packaging_labels[target_packaging_state]}.',
+        )
+        return redirect(request.POST.get('next') or model.get_absolute_url())
 
 
 def load_case_year_metadata(year: int) -> dict:

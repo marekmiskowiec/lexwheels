@@ -674,7 +674,7 @@ class CatalogViewTests(TestCase):
         self.assertEqual(self.model_obj.catalog_primary_thumb_src, 'https://example.com/long.jpg')
         self.assertEqual(self.model_obj.catalog_primary_preview_src, 'https://example.com/long.jpg')
 
-    def test_catalog_model_hides_duplicate_packaging_images_that_repeat_generic_photo(self):
+    def test_catalog_model_treats_identical_packaging_images_as_one_unassigned_photo(self):
         self.model_obj.short_card_photo_url = 'https://example.com/car.jpg'
         self.model_obj.long_card_photo_url = 'https://example.com/car.jpg'
         self.model_obj.loose_photo_url = 'https://example.com/car.jpg'
@@ -682,8 +682,24 @@ class CatalogViewTests(TestCase):
 
         variants = self.model_obj.catalog_image_variants
 
-        self.assertEqual([variant['key'] for variant in variants], ['short_card', 'long_card', 'loose'])
-        self.assertEqual(self.model_obj.missing_packaging_image_states, [])
+        self.assertEqual([variant['key'] for variant in variants], ['default'])
+        self.assertTrue(self.model_obj.has_unassigned_image)
+        self.assertEqual(self.model_obj.missing_packaging_image_states, ['short_card', 'long_card', 'loose'])
+
+    def test_catalog_model_uses_generic_image_when_packaging_duplicates_match_it(self):
+        self.model_obj.photo_url = 'https://example.com/car.jpg'
+        self.model_obj.short_card_photo_url = 'https://example.com/car.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/car.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/car.jpg'
+        self.model_obj.save(
+            update_fields=['photo_url', 'short_card_photo_url', 'long_card_photo_url', 'loose_photo_url']
+        )
+
+        variants = self.model_obj.catalog_image_variants
+
+        self.assertEqual([variant['key'] for variant in variants], ['default'])
+        self.assertEqual(self.model_obj.unassigned_image_reference['url'], 'https://example.com/car.jpg')
+        self.assertEqual(self.model_obj.missing_packaging_image_states, ['short_card', 'long_card', 'loose'])
 
     def test_catalog_model_treats_generic_image_as_unassigned(self):
         variants = self.model_obj.catalog_image_variants
@@ -713,6 +729,26 @@ class CatalogViewTests(TestCase):
 
         self.assertEqual([variant['key'] for variant in variants], ['long_card', 'loose'])
         self.assertEqual(self.model_obj.short_card_image_src, '')
+
+    def test_semi_premium_model_with_complete_packaging_has_no_unassigned_image(self):
+        self.model_obj.category = 'Semi Premium'
+        self.model_obj.photo_url = 'https://example.com/generic.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.save(update_fields=['category', 'photo_url', 'long_card_photo_url', 'loose_photo_url'])
+
+        self.assertFalse(self.model_obj.has_unassigned_image)
+        self.assertEqual(self.model_obj.missing_packaging_image_states, [])
+
+    def test_premium_model_with_complete_packaging_has_no_unassigned_image(self):
+        self.model_obj.category = 'Premium'
+        self.model_obj.photo_url = 'https://example.com/generic.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.save(update_fields=['category', 'photo_url', 'long_card_photo_url', 'loose_photo_url'])
+
+        self.assertFalse(self.model_obj.has_unassigned_image)
+        self.assertEqual(self.model_obj.missing_packaging_image_states, [])
 
     def test_xl_model_hides_short_card_variant(self):
         self.model_obj.category = 'XL'
@@ -1422,11 +1458,47 @@ class CatalogViewTests(TestCase):
         self.assertNotContains(response, complete_model.model_name)
 
     def test_unassigned_images_view_lists_models_with_generic_images(self):
+        admin = User.objects.create_user(
+            email='admin2@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.client.force_login(admin)
+
         response = self.client.get(reverse('catalog:unassigned-images'))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertContains(response, 'Nieprzypisane zdjęcia')
+
+    def test_unassigned_images_view_excludes_premium_models_with_complete_packaging(self):
+        admin = User.objects.create_user(
+            email='admin6@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.category = 'Premium'
+        self.model_obj.photo_url = 'https://example.com/generic.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.save(update_fields=['category', 'photo_url', 'long_card_photo_url', 'loose_photo_url'])
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse('catalog:unassigned-images'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '1970 Pontiac Firebird')
+
+    def test_non_staff_cannot_open_unassigned_images_view(self):
+        user = User.objects.create_user(
+            email='user@example.com',
+            password='ComplexPass123',
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('catalog:unassigned-images'))
+
+        self.assertEqual(response.status_code, 403)
 
     def test_staff_can_assign_generic_image_to_packaging_state(self):
         admin = User.objects.create_user(
@@ -1447,6 +1519,74 @@ class CatalogViewTests(TestCase):
         self.assertEqual(self.model_obj.local_photo_path, '')
         self.assertEqual(self.model_obj.long_card_photo_url, 'https://example.com/car.jpg')
         self.assertEqual([panel['key'] for panel in self.model_obj.packaging_image_panels], ['long_card'])
+
+    def test_staff_can_reassign_packaging_image_to_other_variant(self):
+        admin = User.objects.create_user(
+            email='admin3@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.save(update_fields=['long_card_photo_url'])
+        self.client.force_login(admin)
+
+        response = self.client.post(
+            reverse('catalog:reassign-packaging-image', args=[self.model_obj.pk, 'long_card', 'loose']),
+            {'next': reverse('catalog:model-detail', args=[self.model_obj.pk])},
+        )
+
+        self.assertRedirects(response, reverse('catalog:model-detail', args=[self.model_obj.pk]))
+        self.model_obj.refresh_from_db()
+        self.assertEqual(self.model_obj.long_card_photo_url, '')
+        self.assertEqual(self.model_obj.loose_photo_url, 'https://example.com/long.jpg')
+
+    def test_staff_can_move_packaging_image_back_to_unassigned(self):
+        admin = User.objects.create_user(
+            email='admin4@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.photo_url = ''
+        self.model_obj.save(update_fields=['long_card_photo_url', 'photo_url'])
+        self.client.force_login(admin)
+
+        response = self.client.post(
+            reverse('catalog:reassign-packaging-image', args=[self.model_obj.pk, 'long_card', 'unassigned']),
+            {'next': reverse('catalog:model-detail', args=[self.model_obj.pk])},
+        )
+
+        self.assertRedirects(response, reverse('catalog:model-detail', args=[self.model_obj.pk]))
+        self.model_obj.refresh_from_db()
+        self.assertEqual(self.model_obj.long_card_photo_url, '')
+        self.assertEqual(self.model_obj.photo_url, 'https://example.com/long.jpg')
+
+    def test_staff_can_open_assigned_images_view(self):
+        admin = User.objects.create_user(
+            email='admin5@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.save(update_fields=['long_card_photo_url'])
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse('catalog:assigned-images'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Przypisane zdjęcia')
+        self.assertContains(response, '1970 Pontiac Firebird')
+
+    def test_non_staff_cannot_open_assigned_images_view(self):
+        user = User.objects.create_user(
+            email='user2@example.com',
+            password='ComplexPass123',
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('catalog:assigned-images'))
+
+        self.assertEqual(response.status_code, 403)
 
     def test_healthcheck(self):
         response = self.client.get(reverse('healthcheck'))

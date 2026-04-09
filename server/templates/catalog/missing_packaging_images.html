@@ -60,6 +60,7 @@
       Obecnie to {{ missing_image_stats.model_count }} modeli i {{ missing_image_stats.slot_count }} brakujących slotów.
     </p>
     <div class="actions-row">
+      <a class="button secondary" href="{% url 'catalog:assigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Przypisane zdjęcia</a>
       <a class="button secondary" href="{% url 'catalog:unassigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Nieprzypisane zdjęcia</a>
     </div>
     {% if user.is_authenticated and selected_scope == 'profile' and scope_summary %}

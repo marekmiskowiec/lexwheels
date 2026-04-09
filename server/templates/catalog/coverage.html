@@ -96,6 +96,9 @@
       <a class="button secondary" href="{% url 'catalog:unassigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">
         Nieprzypisane zdjęcia
       </a>
+      <a class="button secondary" href="{% url 'catalog:assigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">
+        Przypisane zdjęcia
+      </a>
       <span class="meta">{{ coverage_stats.missing_image_variant_model_count }} modeli wymaga jeszcze uzupełnienia zdjęć.</span>
     </div>
   </div>

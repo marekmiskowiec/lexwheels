@@ -96,6 +96,15 @@
     flex-wrap: wrap;
     gap: 8px;
   }
+  .image-admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .image-admin-actions form {
+    margin: 0;
+  }
   @media (max-width: 920px) {
     .model-detail-layout {
       grid-template-columns: 1fr;
@@ -123,6 +132,24 @@
             <p class="meta" style="margin:0;">Wariant zdjęcia dla tego modelu.</p>
           </div>
           <img class="thumb" src="{{ panel.src }}" alt="{{ model_obj.model_name }} - {{ panel.label|lower }}">
+          {% if user.is_authenticated and user.is_staff or user.is_superuser %}
+            <div class="image-admin-actions">
+              {% for packaging_state, label in model_obj.available_packaging_choices %}
+                {% if packaging_state != panel.key %}
+                  <form method="post" action="{% url 'catalog:reassign-packaging-image' model_obj.pk panel.key packaging_state %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="button secondary">{% if packaging_state == 'loose' %}Przypisz jako luzak{% else %}Przenieś do {{ label|lower }}{% endif %}</button>
+                  </form>
+                {% endif %}
+              {% endfor %}
+              <form method="post" action="{% url 'catalog:reassign-packaging-image' model_obj.pk panel.key 'unassigned' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="button secondary">Cofnij do nieprzypisanego</button>
+              </form>
+            </div>
+          {% endif %}
         </div>
       {% endfor %}
     </div>

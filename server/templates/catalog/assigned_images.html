@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Nieprzypisane zdjęcia | LexWheels{% endblock %}
+{% block title %}Przypisane zdjęcia | LexWheels{% endblock %}
 {% block extra_styles %}
 <style>
-  .unassigned-image-list {
+  .assigned-image-list {
     display: grid;
     gap: 12px;
   }
-  .unassigned-image-row {
+  .assigned-image-row {
     display: grid;
     grid-template-columns: 110px minmax(0, 1fr) auto;
     gap: 14px;
@@ -16,7 +16,7 @@
     border-radius: 18px;
     background: rgba(255,255,255,0.035);
   }
-  .unassigned-image-thumb {
+  .assigned-image-thumb {
     width: 110px;
     height: 110px;
     object-fit: contain;
@@ -25,29 +25,26 @@
     border: 1px solid var(--line);
     padding: 6px;
   }
-  .unassigned-image-copy {
+  .assigned-image-copy {
     display: grid;
     gap: 4px;
     min-width: 0;
   }
-  .unassigned-image-copy h3 {
+  .assigned-image-copy h3 {
     margin: 0;
     font-size: 1rem;
   }
-  .unassigned-image-actions {
+  .assigned-image-badges {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     justify-content: flex-end;
   }
-  .unassigned-image-actions form {
-    margin: 0;
-  }
   @media (max-width: 900px) {
-    .unassigned-image-row {
+    .assigned-image-row {
       grid-template-columns: 1fr;
     }
-    .unassigned-image-actions {
+    .assigned-image-badges {
       justify-content: flex-start;
     }
   }
@@ -57,13 +54,13 @@
 <section class="panel hero">
   <div class="hero-copy">
     <span class="eyebrow">Uzupełnianie bazy</span>
-    <h1>Nieprzypisane zdjęcia</h1>
+    <h1>Przypisane zdjęcia</h1>
     <p>
-      To są modele, które mają tylko ogólne zdjęcie bez przypisania do wariantu opakowania.
-      Obecnie to {{ unassigned_stats.model_count }} modeli.
+      Tu widać modele, które mają już sklasyfikowane zdjęcia wariantów opakowania.
+      Obecnie to {{ assigned_stats.model_count }} modeli i {{ assigned_stats.slot_count }} przypisanych slotów.
     </p>
     <div class="actions-row">
-      <a class="button secondary" href="{% url 'catalog:assigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Przypisane zdjęcia</a>
+      <a class="button secondary" href="{% url 'catalog:unassigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Nieprzypisane zdjęcia</a>
       <a class="button secondary" href="{% url 'catalog:missing-packaging-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Brakujące warianty zdjęć</a>
     </div>
     {% if user.is_authenticated and selected_scope == 'profile' and scope_summary %}
@@ -86,43 +83,39 @@
     </div>
     <div><button type="submit">Filtruj</button></div>
     {% if selected_category or selected_scope == 'profile' %}
-      <div><a class="button secondary" href="{% url 'catalog:unassigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Wyczyść</a></div>
+      <div><a class="button secondary" href="{% url 'catalog:assigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Wyczyść</a></div>
     {% endif %}
   </form>
 </section>
 
-{% if unassigned_models %}
-  <section class="unassigned-image-list">
-    {% for entry in unassigned_models %}
-      <div class="unassigned-image-row">
-        <a href="{{ entry.model.get_absolute_url }}">
-          <img class="unassigned-image-thumb" src="{{ entry.image_src }}" alt="{{ entry.model.model_name }}">
-        </a>
-        <div class="unassigned-image-copy">
+{% if assigned_models %}
+  <section class="assigned-image-list">
+    {% for entry in assigned_models %}
+      <div class="assigned-image-row">
+        {% if entry.primary_image_src %}
+          <a href="{{ entry.model.get_absolute_url }}">
+            <img class="assigned-image-thumb" src="{{ entry.primary_image_src }}" alt="{{ entry.model.model_name }}">
+          </a>
+        {% else %}
+          <div class="assigned-image-thumb"></div>
+        {% endif %}
+        <div class="assigned-image-copy">
           <h3><a href="{{ entry.model.get_absolute_url }}">{{ entry.model.model_name }}</a></h3>
           <p class="meta">{{ entry.model.year|default:"-" }} | {{ entry.model.category|default:"-" }}{% if entry.model.series %} | {{ entry.model.series }}{% endif %}</p>
           <p class="meta">Toy: {{ entry.model.toy|default:"-" }} | Nr: {{ entry.model.number|default:"-" }}</p>
         </div>
-        <div class="unassigned-image-actions">
-          {% if user.is_authenticated and user.is_staff or user.is_superuser %}
-            {% for packaging_state, label in entry.model.available_packaging_choices %}
-              <form method="post" action="{% url 'catalog:assign-generic-image' entry.model.pk packaging_state %}">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="button secondary">{% if packaging_state == 'loose' %}Przypisz jako luzak{% else %}Przypisz jako {{ label|lower }}{% endif %}</button>
-              </form>
-            {% endfor %}
-          {% else %}
-            <span class="meta">Klasyfikacja wymaga konta staff.</span>
-          {% endif %}
+        <div class="assigned-image-badges">
+          {% for panel in entry.panels %}
+            <span class="badge">{% if panel.key == 'loose' %}Luzak{% else %}{{ panel.label }} karta{% endif %}</span>
+          {% endfor %}
         </div>
       </div>
     {% endfor %}
   </section>
 {% else %}
   <section class="panel">
-    <h2>Brak nieprzypisanych zdjęć</h2>
-    <p class="meta">W tym zakresie wszystkie ogólne zdjęcia zostały już sklasyfikowane.</p>
+    <h2>Brak przypisanych zdjęć</h2>
+    <p class="meta">W tym zakresie nie ma jeszcze modeli ze sklasyfikowanymi zdjęciami opakowań.</p>
   </section>
 {% endif %}
 {% endblock %}
