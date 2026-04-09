@@ -1381,6 +1381,37 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, reverse('catalog:case-mix-detail', args=[2022, 'a']))
         self.assertContains(response, reverse('catalog:case-mix-detail', args=[2022, 'q']))
 
+    def test_model_detail_shows_similar_models(self):
+        same_series_same_year = HotWheelsModel.objects.create(
+            app_id='sim-1',
+            brand='Hot Wheels',
+            toy='HCT06',
+            number='002',
+            model_name='Custom Mustang',
+            year=2022,
+            category='Mainline',
+            series='HW Dream Garage',
+            photo_url='https://example.com/mustang.jpg',
+        )
+        same_category_same_year = HotWheelsModel.objects.create(
+            app_id='sim-2',
+            brand='Hot Wheels',
+            toy='HCT07',
+            number='003',
+            model_name='Mazda RX-7',
+            year=2022,
+            category='Mainline',
+            series='HW Drift',
+            photo_url='https://example.com/rx7.jpg',
+        )
+
+        response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
+
+        self.assertContains(response, 'Podobne modele')
+        self.assertContains(response, same_series_same_year.model_name)
+        self.assertContains(response, same_category_same_year.model_name)
+        self.assertContains(response, reverse('catalog:model-detail', args=[same_series_same_year.pk]))
+
     def test_authenticated_model_detail_shows_owned_and_wanted_state(self):
         user = User.objects.create_user(email='collector@example.com', password='ComplexPass123')
         collection = Collection.objects.create(owner=user, name='Główna', kind=Collection.KIND_OWNED)

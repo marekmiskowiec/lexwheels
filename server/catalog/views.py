@@ -603,6 +603,39 @@ class ModelDetailView(CatalogScopeMixin, DetailView):
             } if next_entry else None,
         }
 
+    def get_similar_models(self, model_obj, limit: int = 6):
+        base_queryset = self.apply_profile_scope(HotWheelsModel.objects.exclude(pk=model_obj.pk))
+        similar_models = []
+        seen_ids = set()
+
+        candidate_querysets = []
+        if model_obj.series and model_obj.year:
+            candidate_querysets.append(
+                base_queryset.filter(series=model_obj.series, year=model_obj.year).order_by('number', 'model_name')
+            )
+        if model_obj.series:
+            candidate_querysets.append(
+                base_queryset.filter(series=model_obj.series).exclude(year=model_obj.year).order_by('-year', 'number', 'model_name')
+            )
+        if model_obj.category and model_obj.year:
+            candidate_querysets.append(
+                base_queryset.filter(category=model_obj.category, year=model_obj.year).order_by('number', 'model_name')
+            )
+        if model_obj.category:
+            candidate_querysets.append(
+                base_queryset.filter(category=model_obj.category).exclude(year=model_obj.year).order_by('-year', 'number', 'model_name')
+            )
+
+        for queryset in candidate_querysets:
+            for candidate in queryset[:limit * 2]:
+                if candidate.pk in seen_ids:
+                    continue
+                seen_ids.add(candidate.pk)
+                similar_models.append(candidate)
+                if len(similar_models) >= limit:
+                    return similar_models
+        return similar_models
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         model_obj = context['model_obj']
@@ -659,6 +692,7 @@ class ModelDetailView(CatalogScopeMixin, DetailView):
                     'url': f"{reverse('catalog:model-list')}?{urlencode({'exclusive_store': model_obj.exclusive_store})}",
                 }
             )
+        context['similar_models'] = self.get_similar_models(model_obj)
 
         if self.request.user.is_authenticated:
             owned_items = list(

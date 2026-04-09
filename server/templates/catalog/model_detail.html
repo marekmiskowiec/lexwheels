@@ -83,6 +83,26 @@
     flex-wrap: wrap;
     gap: 8px;
   }
+  .similar-model-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+  .similar-model-card {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.03);
+  }
+  .similar-model-card .thumb {
+    height: 120px;
+  }
+  .similar-model-card h4 {
+    margin: 0;
+    font-size: .98rem;
+  }
   .owned-item-list,
   .wanted-item-list {
     display: grid;
@@ -406,4 +426,30 @@
     </div>
   </div>
 </section>
+{% if similar_models %}
+  <section class="panel">
+    <div class="section-copy">
+      <h2>Podobne modele</h2>
+      <p class="meta">Najbliższe trafienia według tej samej serii, rocznika i kategorii.</p>
+    </div>
+    <div class="similar-model-grid" style="margin-top:16px;">
+      {% for similar_model in similar_models %}
+        <a class="similar-model-card" href="{{ similar_model.get_absolute_url }}">
+          {% if similar_model.catalog_primary_thumb_src %}
+            <img class="thumb" src="{{ similar_model.catalog_primary_thumb_src }}" alt="{{ similar_model.model_name }}">
+          {% else %}
+            <div class="thumb"></div>
+          {% endif %}
+          <div>
+            <h4>{{ similar_model.model_name }}</h4>
+            <p class="meta" style="margin:4px 0 0;">{{ similar_model.year|default:"-" }} | {{ similar_model.category|default:"-" }}</p>
+            {% if similar_model.series %}
+              <p class="meta" style="margin:2px 0 0;">{{ similar_model.series }}</p>
+            {% endif %}
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+{% endif %}
 {% endblock %}
