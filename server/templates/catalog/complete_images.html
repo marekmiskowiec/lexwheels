@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Przypisane zdjęcia | LexWheels{% endblock %}
+{% block title %}Komplet zdjęć | LexWheels{% endblock %}
 {% block extra_styles %}
 <style>
-  .assigned-image-list {
+  .complete-image-list {
     display: grid;
     gap: 12px;
   }
-  .assigned-image-row {
+  .complete-image-row {
     display: grid;
     grid-template-columns: 110px minmax(0, 1fr) auto;
     gap: 14px;
@@ -16,7 +16,7 @@
     border-radius: 18px;
     background: rgba(255,255,255,0.035);
   }
-  .assigned-image-thumb {
+  .complete-image-thumb {
     width: 110px;
     height: 110px;
     object-fit: contain;
@@ -25,26 +25,26 @@
     border: 1px solid var(--line);
     padding: 6px;
   }
-  .assigned-image-copy {
+  .complete-image-copy {
     display: grid;
     gap: 4px;
     min-width: 0;
   }
-  .assigned-image-copy h3 {
+  .complete-image-copy h3 {
     margin: 0;
     font-size: 1rem;
   }
-  .assigned-image-badges {
+  .complete-image-badges {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     justify-content: flex-end;
   }
   @media (max-width: 900px) {
-    .assigned-image-row {
+    .complete-image-row {
       grid-template-columns: 1fr;
     }
-    .assigned-image-badges {
+    .complete-image-badges {
       justify-content: flex-start;
     }
   }
@@ -54,13 +54,13 @@
 <section class="panel hero">
   <div class="hero-copy">
     <span class="eyebrow">Uzupełnianie bazy</span>
-    <h1>Przypisane zdjęcia</h1>
+    <h1>Komplet zdjęć</h1>
     <p>
-      Tu widać modele, które mają już sklasyfikowane zdjęcia wariantów opakowania.
-      Obecnie to {{ assigned_stats.model_count }} modeli.
+      Tu są modele, które mają komplet wariantów zdjęć. Obecnie to {{ complete_stats.model_count }} modeli,
+      z czego {{ complete_stats.verified_model_count }} są już zweryfikowane.
     </p>
     <div class="actions-row">
-      <a class="button secondary" href="{% url 'catalog:complete-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Komplet zdjęć</a>
+      <a class="button secondary" href="{% url 'catalog:assigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Przypisane zdjęcia</a>
       <a class="button secondary" href="{% url 'catalog:unassigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Nieprzypisane zdjęcia</a>
       <a class="button secondary" href="{% url 'catalog:missing-packaging-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Brakujące warianty zdjęć</a>
     </div>
@@ -100,6 +100,14 @@
         {% endfor %}
       </select>
     </div>
+    <div style="flex: 0 1 220px;">
+      <label for="verified">Weryfikacja</label>
+      <select id="verified" name="verified">
+        {% for value, label in verified_options %}
+          <option value="{{ value }}" {% if selected_verified == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
     <div style="flex: 0 1 200px;">
       <label for="sort">Sortowanie</label>
       <select id="sort" name="sort">
@@ -109,8 +117,8 @@
       </select>
     </div>
     <div><button type="submit">Filtruj</button></div>
-    {% if selected_category or selected_year or selected_series or selected_sort != 'workflow' or selected_scope == 'profile' %}
-      <div><a class="button secondary" href="{% url 'catalog:assigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Wyczyść</a></div>
+    {% if selected_category or selected_year or selected_series or selected_verified or selected_sort != 'workflow' or selected_scope == 'profile' %}
+      <div><a class="button secondary" href="{% url 'catalog:complete-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Wyczyść</a></div>
     {% endif %}
   </form>
 </section>
@@ -123,23 +131,28 @@
   </div>
 {% endif %}
 
-{% if assigned_models %}
-  <section class="assigned-image-list">
-    {% for entry in assigned_models %}
-      <div class="assigned-image-row">
+{% if complete_models %}
+  <section class="complete-image-list">
+    {% for entry in complete_models %}
+      <div class="complete-image-row">
         {% if entry.primary_image_src %}
           <a href="{{ entry.detail_url }}">
-            <img class="assigned-image-thumb" src="{{ entry.primary_image_src }}" alt="{{ entry.model.model_name }}">
+            <img class="complete-image-thumb" src="{{ entry.primary_image_src }}" alt="{{ entry.model.model_name }}">
           </a>
         {% else %}
-          <div class="assigned-image-thumb"></div>
+          <div class="complete-image-thumb"></div>
         {% endif %}
-        <div class="assigned-image-copy">
+        <div class="complete-image-copy">
           <h3><a href="{{ entry.detail_url }}">{{ entry.model.model_name }}</a></h3>
           <p class="meta">{{ entry.model.year|default:"-" }} | {{ entry.model.category|default:"-" }}{% if entry.model.series %} | {{ entry.model.series }}{% endif %}</p>
           <p class="meta">Toy: {{ entry.model.toy|default:"-" }} | Nr: {{ entry.model.number|default:"-" }}</p>
         </div>
-        <div class="assigned-image-badges">
+        <div class="complete-image-badges">
+          {% if entry.is_verified %}
+            <span class="badge">Verified</span>
+          {% else %}
+            <span class="badge">Do weryfikacji</span>
+          {% endif %}
           {% for panel in entry.panels %}
             <span class="badge">{% if panel.key == 'loose' %}Luzak{% else %}{{ panel.label }} karta{% endif %}</span>
           {% endfor %}
@@ -149,8 +162,8 @@
   </section>
 {% else %}
   <section class="panel">
-    <h2>Brak przypisanych zdjęć</h2>
-    <p class="meta">W tym zakresie nie ma jeszcze modeli ze sklasyfikowanymi zdjęciami opakowań.</p>
+    <h2>Brak kompletnych modeli</h2>
+    <p class="meta">W tym zakresie nie ma jeszcze modeli z kompletem wariantów zdjęć dla wybranych filtrów.</p>
   </section>
 {% endif %}
 {% if is_paginated %}

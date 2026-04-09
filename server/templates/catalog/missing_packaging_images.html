@@ -67,6 +67,7 @@
       Obecnie to {{ missing_image_stats.model_count }} modeli.
     </p>
     <div class="actions-row">
+      <a class="button secondary" href="{% url 'catalog:complete-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Komplet zdjęć</a>
       <a class="button secondary" href="{% url 'catalog:assigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Przypisane zdjęcia</a>
       <a class="button secondary" href="{% url 'catalog:unassigned-images' %}{% if selected_scope == 'profile' %}?scope=profile{% endif %}">Nieprzypisane zdjęcia</a>
     </div>

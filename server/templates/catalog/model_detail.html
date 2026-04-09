@@ -207,6 +207,18 @@
             <span class="meta">Warianty zdjęć</span>
             <strong>{% if model_obj.has_unassigned_image %}{{ model_obj.packaging_image_panels|length|add:"1" }}{% else %}{{ model_obj.packaging_image_panels|length }}{% endif %}</strong>
           </div>
+          {% if user.is_authenticated and user.is_staff or user.is_superuser %}
+            <div class="model-kpi">
+              <span class="meta">Status kompletu</span>
+              <strong>
+                {% if model_obj.has_complete_packaging_images %}
+                  {% if model_obj.images_verified %}Verified{% else %}Do weryfikacji{% endif %}
+                {% else %}
+                  Niekompletne
+                {% endif %}
+              </strong>
+            </div>
+          {% endif %}
           <div class="model-kpi">
             <span class="meta">Case'y</span>
             <strong>{{ model_obj.case_code_list|length }}</strong>
@@ -222,6 +234,24 @@
             </div>
           {% endif %}
         </div>
+        {% if user.is_authenticated and user.is_staff or user.is_superuser %}
+          <div class="model-actions">
+            {% if model_obj.has_complete_packaging_images %}
+              <form method="post" action="{% url 'catalog:toggle-image-verification' model_obj.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="button secondary">
+                  {% if model_obj.images_verified %}Cofnij verified{% else %}Oznacz jako verified{% endif %}
+                </button>
+              </form>
+              {% if model_obj.images_verified_at %}
+                <span class="meta">Potwierdzone {{ model_obj.images_verified_at|date:"Y-m-d H:i" }}{% if model_obj.images_verified_by %} przez {{ model_obj.images_verified_by.email }}{% endif %}</span>
+              {% endif %}
+            {% else %}
+              <span class="meta">Verified jest dostępne dopiero po uzupełnieniu kompletu zdjęć.</span>
+            {% endif %}
+          </div>
+        {% endif %}
       </div>
 
       <div class="model-meta-grid">

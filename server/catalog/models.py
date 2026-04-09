@@ -31,6 +31,14 @@ class HotWheelsModel(models.Model):
     long_card_local_photo_path = models.CharField(max_length=512, blank=True)
     loose_photo_url = models.URLField(blank=True)
     loose_local_photo_path = models.CharField(max_length=512, blank=True)
+    images_verified_at = models.DateTimeField(blank=True, null=True)
+    images_verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='verified_catalog_models',
+    )
 
     class Meta:
         ordering = ('number', 'model_name')
@@ -243,6 +251,14 @@ class HotWheelsModel(models.Model):
     @property
     def has_unassigned_image(self) -> bool:
         return bool(self.unassigned_image_reference)
+
+    @property
+    def has_complete_packaging_images(self) -> bool:
+        return not self.has_unassigned_image and not self.missing_packaging_image_states
+
+    @property
+    def images_verified(self) -> bool:
+        return bool(self.images_verified_at)
 
     @property
     def missing_packaging_image_states(self) -> list[str]:

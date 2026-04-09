@@ -5,6 +5,7 @@ from tempfile import TemporaryDirectory
 from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from accounts.models import User
 from collections_app.models import Collection, CollectionItem, WantedItem
@@ -1360,10 +1361,12 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Panel admina')
         self.assertContains(response, 'Brakujące warianty')
         self.assertContains(response, 'Nieprzypisane zdjęcia')
+        self.assertContains(response, 'Komplet zdjęć')
         self.assertContains(response, 'Modele według kategorii')
         self.assertContains(response, reverse('catalog:missing-packaging-images'))
         self.assertContains(response, reverse('catalog:unassigned-images'))
         self.assertContains(response, reverse('catalog:assigned-images'))
+        self.assertContains(response, reverse('catalog:complete-images'))
 
     def test_model_detail(self):
         self.model_obj.case_codes = 'A,Q'
@@ -1442,6 +1445,24 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Długa karta')
         self.assertContains(response, 'https://example.com/car.jpg')
         self.assertContains(response, 'https://example.com/long.jpg')
+
+    def test_staff_model_detail_shows_verified_controls_for_complete_images(self):
+        admin = User.objects.create_user(
+            email='staff-verify@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.photo_url = ''
+        self.model_obj.save(update_fields=['short_card_photo_url', 'long_card_photo_url', 'loose_photo_url', 'photo_url'])
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
+
+        self.assertContains(response, 'Oznacz jako verified')
+        self.assertContains(response, 'Do weryfikacji')
 
     def test_missing_packaging_images_view_lists_models_with_missing_slots(self):
         complete_model = HotWheelsModel.objects.create(
@@ -1688,6 +1709,91 @@ class CatalogViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Przypisane zdjęcia')
         self.assertContains(response, '1970 Pontiac Firebird')
+
+    def test_staff_can_open_complete_images_view(self):
+        admin = User.objects.create_user(
+            email='admin-complete@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.photo_url = ''
+        self.model_obj.save(update_fields=['short_card_photo_url', 'long_card_photo_url', 'loose_photo_url', 'photo_url'])
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse('catalog:complete-images'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Komplet zdjęć')
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertContains(response, 'Do weryfikacji')
+
+    def test_complete_images_view_supports_verified_filter(self):
+        admin = User.objects.create_user(
+            email='admin-complete-filter@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.photo_url = ''
+        self.model_obj.images_verified_at = timezone.now()
+        self.model_obj.images_verified_by = admin
+        self.model_obj.save(
+            update_fields=[
+                'short_card_photo_url',
+                'long_card_photo_url',
+                'loose_photo_url',
+                'photo_url',
+                'images_verified_at',
+                'images_verified_by',
+            ]
+        )
+        other = HotWheelsModel.objects.create(
+            app_id='complete-filter-other',
+            brand='Hot Wheels',
+            toy='HCT88',
+            number='088',
+            model_name='Unverified Complete Car',
+            year=2024,
+            category='Mainline',
+            photo_url='',
+            short_card_photo_url='https://example.com/short-2.jpg',
+            long_card_photo_url='https://example.com/long-2.jpg',
+            loose_photo_url='https://example.com/loose-2.jpg',
+        )
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse('catalog:complete-images'), {'verified': 'unverified'})
+
+        self.assertContains(response, other.model_name)
+        self.assertNotContains(response, self.model_obj.model_name)
+
+    def test_staff_can_toggle_image_verification(self):
+        admin = User.objects.create_user(
+            email='admin-toggle-verify@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.photo_url = ''
+        self.model_obj.save(update_fields=['short_card_photo_url', 'long_card_photo_url', 'loose_photo_url', 'photo_url'])
+        self.client.force_login(admin)
+
+        response = self.client.post(
+            reverse('catalog:toggle-image-verification', args=[self.model_obj.pk]),
+            {'next': reverse('catalog:model-detail', args=[self.model_obj.pk])},
+        )
+
+        self.assertRedirects(response, reverse('catalog:model-detail', args=[self.model_obj.pk]))
+        self.model_obj.refresh_from_db()
+        self.assertIsNotNone(self.model_obj.images_verified_at)
+        self.assertEqual(self.model_obj.images_verified_by, admin)
 
     def test_assigned_images_view_supports_year_series_and_sort_filters(self):
         admin = User.objects.create_user(

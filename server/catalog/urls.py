@@ -12,6 +12,8 @@ from .views import (
     UnassignedImageListView,
     ReassignPackagingImageView,
     AssignedImageListView,
+    CompleteImageListView,
+    ToggleImageVerificationView,
 )
 
 app_name = 'catalog'
@@ -25,7 +27,9 @@ urlpatterns = [
     path('brakujace-zdjecia/', MissingPackagingImageListView.as_view(), name='missing-packaging-images'),
     path('nieprzypisane-zdjecia/', UnassignedImageListView.as_view(), name='unassigned-images'),
     path('przypisane-zdjecia/', AssignedImageListView.as_view(), name='assigned-images'),
+    path('komplet-zdjec/', CompleteImageListView.as_view(), name='complete-images'),
     path('nieprzypisane-zdjecia/<int:pk>/<slug:packaging_state>/', AssignGenericImageView.as_view(), name='assign-generic-image'),
     path('zdjecia/<int:pk>/<slug:source_packaging_state>/<slug:target_packaging_state>/', ReassignPackagingImageView.as_view(), name='reassign-packaging-image'),
+    path('zdjecia/<int:pk>/verified/', ToggleImageVerificationView.as_view(), name='toggle-image-verification'),
     path('models/<int:pk>/', ModelDetailView.as_view(), name='model-detail'),
 ]

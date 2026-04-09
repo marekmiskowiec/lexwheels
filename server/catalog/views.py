@@ -11,6 +11,7 @@ from django.db.models import Count, Q, Sum
 from django.http import Http404
 from django.http import JsonResponse
 from django.shortcuts import redirect
+from django.utils import timezone
 from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
@@ -42,6 +43,8 @@ IMAGE_WORKFLOW_ALLOWED_FIELDS = (
     'long_card_local_photo_path',
     'loose_photo_url',
     'loose_local_photo_path',
+    'images_verified_at',
+    'images_verified_by',
 )
 IMAGE_WORKFLOW_SORT_OPTIONS = (
     ('workflow', 'Domyślnie'),
@@ -50,7 +53,7 @@ IMAGE_WORKFLOW_SORT_OPTIONS = (
     ('name', 'Nazwa A-Z'),
     ('number', 'Numer / Toy'),
 )
-IMAGE_WORKFLOW_NAMES = {'missing', 'unassigned', 'assigned'}
+IMAGE_WORKFLOW_NAMES = {'missing', 'unassigned', 'assigned', 'complete'}
 IMAGE_WORKFLOW_PAGE_SIZE = 100
 
 
@@ -465,6 +468,7 @@ class ModelDetailView(CatalogScopeMixin, DetailView):
             'category': self.request.GET.get('category', '').strip(),
             'series': self.request.GET.get('series', '').strip(),
             'year': self.request.GET.get('year', '').strip(),
+            'verified': self.request.GET.get('verified', '').strip(),
             'sort': self.request.GET.get('sort', 'workflow').strip() or 'workflow',
         }
 
@@ -507,6 +511,8 @@ class ModelDetailView(CatalogScopeMixin, DetailView):
             params['series'] = filters['series']
         if filters['year']:
             params['year'] = filters['year']
+        if workflow == 'complete' and filters.get('verified') in {'verified', 'unverified'}:
+            params['verified'] = filters['verified']
         if filters['sort'] and filters['sort'] != 'workflow':
             params['sort'] = filters['sort']
         return f"{model.get_absolute_url()}?{urlencode(params)}"
@@ -528,6 +534,15 @@ class ModelDetailView(CatalogScopeMixin, DetailView):
                 if not panels:
                     continue
                 entries.append({'model': model, 'panels': panels})
+            elif workflow == 'complete':
+                panels = model.packaging_image_panels
+                if not model.has_complete_packaging_images:
+                    continue
+                if filters.get('verified') == 'verified' and not model.images_verified:
+                    continue
+                if filters.get('verified') == 'unverified' and model.images_verified:
+                    continue
+                entries.append({'model': model, 'panels': panels, 'is_verified': model.images_verified})
         return self.sort_workflow_entries(entries, filters['sort'])
 
     def build_workflow_detail_navigation(self, current_model):
@@ -549,6 +564,7 @@ class ModelDetailView(CatalogScopeMixin, DetailView):
             'missing': 'catalog:missing-packaging-images',
             'unassigned': 'catalog:unassigned-images',
             'assigned': 'catalog:assigned-images',
+            'complete': 'catalog:complete-images',
         }[workflow]
         params = {}
         if filters['scope'] == CATALOG_SCOPE_PROFILE:
@@ -559,6 +575,8 @@ class ModelDetailView(CatalogScopeMixin, DetailView):
             params['series'] = filters['series']
         if filters['year']:
             params['year'] = filters['year']
+        if workflow == 'complete' and filters['verified'] in {'verified', 'unverified'}:
+            params['verified'] = filters['verified']
         if filters['sort'] and filters['sort'] != 'workflow':
             params['sort'] = filters['sort']
         list_url = reverse(list_url_name)
@@ -570,6 +588,7 @@ class ModelDetailView(CatalogScopeMixin, DetailView):
                 'missing': 'Brakujące warianty zdjęć',
                 'unassigned': 'Nieprzypisane zdjęcia',
                 'assigned': 'Przypisane zdjęcia',
+                'complete': 'Komplet zdjęć',
             }[workflow],
             'index': current_index + 1,
             'total': len(entries),
@@ -703,6 +722,8 @@ class CatalogAdminDashboardView(CatalogImageAdminRequiredMixin, CatalogScopeMixi
         unassigned_model_count = 0
         assigned_model_count = 0
         complete_model_count = 0
+        verified_model_count = 0
+        complete_unverified_model_count = 0
         for model in queryset.only(*image_quality_fields):
             has_assigned = bool(model.packaging_image_panels)
             has_unassigned = model.has_unassigned_image
@@ -713,8 +734,12 @@ class CatalogAdminDashboardView(CatalogImageAdminRequiredMixin, CatalogScopeMixi
                 unassigned_model_count += 1
             if has_assigned:
                 assigned_model_count += 1
-            if not has_unassigned and not has_missing:
+            if model.has_complete_packaging_images:
                 complete_model_count += 1
+                if model.images_verified:
+                    verified_model_count += 1
+                else:
+                    complete_unverified_model_count += 1
 
         query_suffix = f'?scope=profile' if scope_mode == CATALOG_SCOPE_PROFILE else ''
         context['selected_scope'] = scope_mode
@@ -727,6 +752,8 @@ class CatalogAdminDashboardView(CatalogImageAdminRequiredMixin, CatalogScopeMixi
             'unassigned_model_count': unassigned_model_count,
             'assigned_model_count': assigned_model_count,
             'complete_model_count': complete_model_count,
+            'verified_model_count': verified_model_count,
+            'complete_unverified_model_count': complete_unverified_model_count,
         }
         context['category_summary'] = [
             {
@@ -758,6 +785,12 @@ class CatalogAdminDashboardView(CatalogImageAdminRequiredMixin, CatalogScopeMixi
                 'count': assigned_model_count,
                 'url': f"{reverse('catalog:assigned-images')}{query_suffix}",
             },
+            {
+                'title': 'Komplet zdjęć',
+                'meta': 'Modele z kompletem zdjęć, gotowe do potwierdzenia jakości.',
+                'count': complete_model_count,
+                'url': f"{reverse('catalog:complete-images')}{query_suffix}",
+            },
         ]
         return context
 
@@ -783,6 +816,7 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
             'category': self.request.GET.get('category', '').strip(),
             'series': self.request.GET.get('series', '').strip(),
             'year': self.request.GET.get('year', '').strip(),
+            'verified': self.request.GET.get('verified', '').strip(),
             'sort': self.request.GET.get('sort', 'workflow').strip() or 'workflow',
         }
 
@@ -793,6 +827,11 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
             queryset = queryset.filter(series=filters['series'])
         if filters['year'].isdigit():
             queryset = queryset.filter(year=int(filters['year']))
+        if self.workflow_name == 'complete':
+            if filters.get('verified') == 'verified':
+                queryset = queryset.filter(images_verified_at__isnull=False)
+            elif filters.get('verified') == 'unverified':
+                queryset = queryset.filter(images_verified_at__isnull=True)
         return queryset
 
     def workflow_sort_key(self, entry: dict, sort_name: str):
@@ -850,6 +889,8 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
                 (excluded_short_q & (long_present | loose_present))
                 | (~excluded_short_q & (short_present | long_present | loose_present))
             )
+        elif self.workflow_name == 'complete':
+            queryset = queryset.exclude(relevant_missing_q).filter(photo_url='', local_photo_path='')
         return queryset.order_by(*self.workflow_queryset_order(filters['sort']))
 
     def paginate_workflow_queryset(self, queryset):
@@ -867,6 +908,8 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
             params['category'] = filters['category']
         if filters['series']:
             params['series'] = filters['series']
+        if self.workflow_name == 'complete' and filters.get('verified') in {'verified', 'unverified'}:
+            params['verified'] = filters['verified']
         if filters['sort'] and filters['sort'] != 'workflow':
             params['sort'] = filters['sort']
         return urlencode(params)
@@ -881,6 +924,8 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
             params['series'] = filters['series']
         if filters['year']:
             params['year'] = filters['year']
+        if self.workflow_name == 'complete' and filters.get('verified') in {'verified', 'unverified'}:
+            params['verified'] = filters['verified']
         if filters['sort'] and filters['sort'] != 'workflow':
             params['sort'] = filters['sort']
         query = urlencode(params)
@@ -919,10 +964,16 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
             'selected_series': filters['series'],
             'selected_year': filters['year'],
             'selected_sort': filters['sort'],
+            'selected_verified': filters.get('verified', ''),
             'category_options': category_options,
             'series_options': series_options,
             'year_options': year_options,
             'sort_options': IMAGE_WORKFLOW_SORT_OPTIONS,
+            'verified_options': (
+                ('', 'Wszystkie'),
+                ('unverified', 'Tylko niezweryfikowane'),
+                ('verified', 'Tylko zweryfikowane'),
+            ),
         }
 
     def build_workflow_detail_navigation(self, current_model):
@@ -944,6 +995,7 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
             'missing': 'catalog:missing-packaging-images',
             'unassigned': 'catalog:unassigned-images',
             'assigned': 'catalog:assigned-images',
+            'complete': 'catalog:complete-images',
         }[workflow]
         params = {}
         if filters['scope'] == CATALOG_SCOPE_PROFILE:
@@ -954,6 +1006,8 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
             params['series'] = filters['series']
         if filters['year']:
             params['year'] = filters['year']
+        if workflow == 'complete' and filters.get('verified') in {'verified', 'unverified'}:
+            params['verified'] = filters['verified']
         if filters['sort'] and filters['sort'] != 'workflow':
             params['sort'] = filters['sort']
         list_url = reverse(list_url_name)
@@ -965,6 +1019,7 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
                 'missing': 'Brakujące warianty zdjęć',
                 'unassigned': 'Nieprzypisane zdjęcia',
                 'assigned': 'Przypisane zdjęcia',
+                'complete': 'Komplet zdjęć',
             }[workflow],
             'index': current_index + 1,
             'total': len(entries),
@@ -1100,6 +1155,71 @@ class AssignedImageListView(CatalogImageAdminRequiredMixin, CatalogImageWorkflow
             self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
         ) else []
         return context
+
+
+class CompleteImageListView(CatalogImageAdminRequiredMixin, CatalogImageWorkflowMixin, TemplateView):
+    template_name = 'catalog/complete_images.html'
+    workflow_name = 'complete'
+
+    def get_workflow_entries(self, queryset, filters: dict[str, str]) -> list[dict]:
+        complete_models = []
+        for model in queryset.only(*IMAGE_WORKFLOW_ALLOWED_FIELDS, 'images_verified_at', 'images_verified_by'):
+            if not model.has_complete_packaging_images:
+                continue
+            complete_models.append(
+                {
+                    'model': model,
+                    'panels': model.packaging_image_panels,
+                    'primary_image_src': model.catalog_primary_thumb_src or model.catalog_primary_image_src,
+                    'detail_url': self.build_detail_url(model, filters),
+                    'is_verified': model.images_verified,
+                }
+            )
+        return self.sort_workflow_entries(complete_models, filters['sort'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        scope_mode = self.get_scope_mode()
+        filters = self.get_workflow_filters()
+        queryset = self.workflow_entry_queryset(self.apply_profile_scope(HotWheelsModel.objects.all()), filters)
+        page_obj = self.paginate_workflow_queryset(queryset)
+        complete_models = self.get_workflow_entries(page_obj.object_list, filters)
+        context['complete_models'] = complete_models
+        context['complete_stats'] = {
+            'model_count': queryset.count(),
+            'verified_model_count': queryset.filter(images_verified_at__isnull=False).count(),
+        }
+        context.update(self.workflow_options_context(scope_mode, queryset, filters))
+        context['page_obj'] = page_obj
+        context['paginator'] = page_obj.paginator
+        context['is_paginated'] = page_obj.has_other_pages()
+        context['workflow_querystring'] = self.workflow_querystring(filters)
+        context['scope_summary'] = self.request.user.catalog_scope_summary if (
+            self.request.user.is_authenticated and scope_mode == CATALOG_SCOPE_PROFILE
+        ) else []
+        return context
+
+
+class ToggleImageVerificationView(CatalogImageAdminRequiredMixin, View):
+    def post(self, request, pk):
+        model = HotWheelsModel.objects.filter(pk=pk).first()
+        if not model:
+            raise Http404
+        if not model.has_complete_packaging_images:
+            messages.error(request, 'Można potwierdzać tylko modele z kompletem zdjęć.')
+            return redirect(request.POST.get('next') or model.get_absolute_url())
+
+        if model.images_verified:
+            model.images_verified_at = None
+            model.images_verified_by = None
+            model.save(update_fields=['images_verified_at', 'images_verified_by'])
+            messages.success(request, 'Cofnięto potwierdzenie kompletu zdjęć.')
+        else:
+            model.images_verified_at = timezone.now()
+            model.images_verified_by = request.user
+            model.save(update_fields=['images_verified_at', 'images_verified_by'])
+            messages.success(request, 'Potwierdzono komplet zdjęć.')
+        return redirect(request.POST.get('next') or model.get_absolute_url())
 
 
 class AssignGenericImageView(CatalogImageAdminRequiredMixin, View):
