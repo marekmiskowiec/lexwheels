@@ -130,33 +130,44 @@
 <section class="panel hero">
   <div class="model-detail-layout">
     <div class="model-gallery">
-      {% for panel in model_obj.packaging_image_panels %}
+      {% if model_obj.has_unassigned_image %}
         <div class="model-gallery-card">
           <div class="section-copy">
-            <h3 style="margin:0;">{% if panel.key == 'loose' %}Luzak{% else %}{{ panel.label }} karta{% endif %}</h3>
-            <p class="meta" style="margin:0;">Wariant zdjęcia dla tego modelu.</p>
+            <h3 style="margin:0;">Zdjęcie modelu</h3>
+            <p class="meta" style="margin:0;">Zdjęcie ogólne, jeszcze nieprzypisane do konkretnego wariantu.</p>
           </div>
-          <img class="thumb" src="{{ panel.src }}" alt="{{ model_obj.model_name }} - {{ panel.label|lower }}">
-          {% if user.is_authenticated and user.is_staff or user.is_superuser %}
-            <div class="image-admin-actions">
-              {% for packaging_state, label in model_obj.available_packaging_choices %}
-                {% if packaging_state != panel.key %}
-                  <form method="post" action="{% url 'catalog:reassign-packaging-image' model_obj.pk panel.key packaging_state %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <button type="submit" class="button secondary">{% if packaging_state == 'loose' %}Przypisz jako luzak{% else %}Przenieś do {{ label|lower }}{% endif %}</button>
-                  </form>
-                {% endif %}
-              {% endfor %}
-              <form method="post" action="{% url 'catalog:reassign-packaging-image' model_obj.pk panel.key 'unassigned' %}">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="button secondary">Cofnij do nieprzypisanego</button>
-              </form>
-            </div>
-          {% endif %}
+          <img class="thumb" src="{{ model_obj.unassigned_image_src }}" alt="{{ model_obj.model_name }}">
         </div>
-      {% endfor %}
+      {% endif %}
+      {% if model_obj.packaging_image_panels %}
+        {% for panel in model_obj.packaging_image_panels %}
+          <div class="model-gallery-card">
+            <div class="section-copy">
+              <h3 style="margin:0;">{% if panel.key == 'loose' %}Luzak{% else %}{{ panel.label }} karta{% endif %}</h3>
+              <p class="meta" style="margin:0;">Wariant zdjęcia dla tego modelu.</p>
+            </div>
+            <img class="thumb" src="{{ panel.src }}" alt="{{ model_obj.model_name }} - {{ panel.label|lower }}">
+            {% if user.is_authenticated and user.is_staff or user.is_superuser %}
+              <div class="image-admin-actions">
+                {% for packaging_state, label in model_obj.available_packaging_choices %}
+                  {% if packaging_state != panel.key %}
+                    <form method="post" action="{% url 'catalog:reassign-packaging-image' model_obj.pk panel.key packaging_state %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                      <button type="submit" class="button secondary">{% if packaging_state == 'loose' %}Przypisz jako luzak{% else %}Przenieś do {{ label|lower }}{% endif %}</button>
+                    </form>
+                  {% endif %}
+                {% endfor %}
+                <form method="post" action="{% url 'catalog:reassign-packaging-image' model_obj.pk panel.key 'unassigned' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="button secondary">Cofnij do nieprzypisanego</button>
+                </form>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% endif %}
     </div>
     <div class="model-summary">
       {% if image_workflow_nav %}
@@ -194,7 +205,7 @@
         <div class="model-kpis">
           <div class="model-kpi">
             <span class="meta">Warianty zdjęć</span>
-            <strong>{{ model_obj.packaging_image_panels|length }}</strong>
+            <strong>{% if model_obj.has_unassigned_image %}{{ model_obj.packaging_image_panels|length|add:"1" }}{% else %}{{ model_obj.packaging_image_panels|length }}{% endif %}</strong>
           </div>
           <div class="model-kpi">
             <span class="meta">Case'y</span>

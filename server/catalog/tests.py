@@ -1428,8 +1428,20 @@ class CatalogViewTests(TestCase):
         response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
 
         self.assertEqual([panel['key'] for panel in response.context['model_obj'].packaging_image_panels], [])
+        self.assertContains(response, 'Zdjęcie modelu')
         self.assertNotContains(response, 'Nieprzypisane zdjęcie')
         self.assertNotContains(response, 'Brakujące warianty zdjęć')
+
+    def test_model_detail_shows_generic_and_assigned_images_together(self):
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.save(update_fields=['long_card_photo_url'])
+
+        response = self.client.get(reverse('catalog:model-detail', args=[self.model_obj.pk]))
+
+        self.assertContains(response, 'Zdjęcie modelu')
+        self.assertContains(response, 'Długa karta')
+        self.assertContains(response, 'https://example.com/car.jpg')
+        self.assertContains(response, 'https://example.com/long.jpg')
 
     def test_missing_packaging_images_view_lists_models_with_missing_slots(self):
         complete_model = HotWheelsModel.objects.create(
@@ -1637,6 +1649,29 @@ class CatalogViewTests(TestCase):
         self.model_obj.refresh_from_db()
         self.assertEqual(self.model_obj.long_card_photo_url, '')
         self.assertEqual(self.model_obj.photo_url, 'https://example.com/long.jpg')
+
+    def test_staff_cannot_overwrite_existing_unassigned_image_when_moving_back(self):
+        admin = User.objects.create_user(
+            email='admin4b@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.photo_url = 'https://example.com/generic.jpg'
+        self.model_obj.save(update_fields=['long_card_photo_url', 'photo_url'])
+        self.client.force_login(admin)
+
+        response = self.client.post(
+            reverse('catalog:reassign-packaging-image', args=[self.model_obj.pk, 'long_card', 'unassigned']),
+            {'next': reverse('catalog:model-detail', args=[self.model_obj.pk])},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.model_obj.refresh_from_db()
+        self.assertEqual(self.model_obj.long_card_photo_url, 'https://example.com/long.jpg')
+        self.assertEqual(self.model_obj.photo_url, 'https://example.com/generic.jpg')
+        self.assertContains(response, 'Model ma już nieprzypisane zdjęcie.')
 
     def test_staff_can_open_assigned_images_view(self):
         admin = User.objects.create_user(

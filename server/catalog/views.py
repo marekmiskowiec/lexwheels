@@ -1143,6 +1143,15 @@ class ReassignPackagingImageView(CatalogImageAdminRequiredMixin, View):
             return redirect(request.POST.get('next') or model.get_absolute_url())
 
         if target_packaging_state == 'unassigned':
+            generic_reference = model.generic_image_reference()
+            generic_signature = model.image_reference_signature(generic_reference)
+            source_signature = model.image_reference_signature(source_reference)
+            if generic_signature != ('', '') and generic_signature != source_signature:
+                messages.error(
+                    request,
+                    'Model ma już nieprzypisane zdjęcie. Najpierw przypisz lub popraw istniejące zdjęcie ogólne.',
+                )
+                return redirect(request.POST.get('next') or model.get_absolute_url())
             model.local_photo_path = source_reference['local_path']
             model.photo_url = source_reference['url']
             setattr(model, f'{source_packaging_state}_local_photo_path', '')
