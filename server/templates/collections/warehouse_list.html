@@ -90,6 +90,49 @@
   </article>
 </section>
 
+<section class="panel">
+  <form method="get" class="form-layout">
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="warehouse-query">Szukaj miejsca</label>
+        <input id="warehouse-query" type="search" name="q" value="{{ warehouse_query }}" placeholder="Np. karton, ściana, Ferrari">
+      </div>
+      <div class="form-field">
+        <label for="warehouse-type">Typ miejsca</label>
+        <select id="warehouse-type" name="location_type">
+          <option value="">Wszystkie typy</option>
+          {% for value, label in location_type_options %}
+            <option value="{{ value }}"{% if selected_location_type == value %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="warehouse-activity">Aktywność</label>
+        <select id="warehouse-activity" name="activity">
+          <option value="">Wszystkie</option>
+          <option value="active"{% if selected_activity == 'active' %} selected{% endif %}>Aktywne</option>
+          <option value="inactive"{% if selected_activity == 'inactive' %} selected{% endif %}>Nieaktywne</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="warehouse-fill">Zapełnienie</label>
+        <select id="warehouse-fill" name="fill">
+          <option value="">Dowolne</option>
+          {% for value, label in fill_options %}
+            <option value="{{ value }}"{% if selected_fill == value %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="actions-row">
+      <button type="submit">Filtruj miejsca</button>
+      {% if warehouse_query or selected_location_type or selected_activity or selected_fill %}
+        <a class="button secondary" href="{% url 'collections:warehouse-list' %}">Wyczyść</a>
+      {% endif %}
+    </div>
+  </form>
+</section>
+
 <section class="list">
   {% if locations %}
     {% for row in locations %}
@@ -109,12 +152,18 @@
           </div>
         </div>
         <p class="meta">Warianty: {{ row.item_count }} | Sztuk: {{ row.total_quantity }}{% if row.remaining_capacity != None %} | Wolne miejsca: {{ row.remaining_capacity }}{% endif %}</p>
+        <p class="meta">
+          {% if row.fill_state == 'empty' %}Status: puste{% endif %}
+          {% if row.fill_state == 'partial' %}Status: częściowo zajęte{% endif %}
+          {% if row.fill_state == 'full' %}Status: pełne{% endif %}
+          {% if row.fill_state == 'assigned' %}Status: z przypisanymi modelami{% endif %}
+        </p>
       </article>
     {% endfor %}
   {% else %}
     <div class="panel empty-panel">
       <h2>Brak miejsc w magazynie</h2>
-      <p>Dodaj pierwszy karton, ścianę albo półkę i zacznij przypisywać do nich modele.</p>
+      <p>Brak miejsc pasujących do aktualnych filtrów albo magazyn jest jeszcze pusty.</p>
     </div>
   {% endif %}
 </section>

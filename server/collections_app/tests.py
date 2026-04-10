@@ -557,6 +557,43 @@ class CollectionTests(TestCase):
         self.assertContains(response, 'Układ: 8 x 3 | Pojemność: 24 szt.')
         self.assertContains(response, 'Wolne miejsca: 22')
 
+    def test_staff_can_filter_warehouse_list_by_type_and_fill(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        display = WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Ekspozytor 1',
+            location_type=WarehouseLocation.TYPE_DISPLAY,
+            row_count=2,
+            column_count=2,
+        )
+        WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Karton A3',
+            location_type=WarehouseLocation.TYPE_BOX,
+        )
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            storage_location=display.name,
+            storage_row=1,
+            storage_column=1,
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.get(
+            reverse('collections:warehouse-list'),
+            {'location_type': WarehouseLocation.TYPE_DISPLAY, 'fill': 'partial'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ekspozytor 1')
+        self.assertNotContains(response, 'Karton A3')
+        self.assertContains(response, 'Status: częściowo zajęte')
+
     def test_non_staff_cannot_open_warehouse_list(self):
         self.client.force_login(self.owner)
 

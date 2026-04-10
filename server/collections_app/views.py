@@ -1084,21 +1084,57 @@ class WarehouseLocationListView(StaffWarehouseRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        query = self.request.GET.get('q', '').strip()
+        selected_type = self.request.GET.get('location_type', '').strip()
+        selected_activity = self.request.GET.get('activity', '').strip()
+        selected_fill = self.request.GET.get('fill', '').strip()
+
+        location_queryset = WarehouseLocation.objects.filter(owner=self.request.user)
+        if query:
+            location_queryset = location_queryset.filter(
+                Q(name__icontains=query) | Q(description__icontains=query)
+            )
+        if selected_type in {value for value, _ in WarehouseLocation.TYPE_CHOICES}:
+            location_queryset = location_queryset.filter(location_type=selected_type)
+        if selected_activity == 'active':
+            location_queryset = location_queryset.filter(is_active=True)
+        elif selected_activity == 'inactive':
+            location_queryset = location_queryset.filter(is_active=False)
+
         locations = []
-        for location in WarehouseLocation.objects.filter(owner=self.request.user).order_by('name'):
+        for location in location_queryset.order_by('name'):
             items = CollectionItem.objects.filter(collection__owner=self.request.user, storage_location=location.name).select_related('model')
             occupied_slots = items.exclude(storage_row__isnull=True, storage_column__isnull=True).count()
             total_quantity = items.aggregate(total=Sum('quantity'))['total'] or 0
             used_capacity = occupied_slots or total_quantity
+            remaining_capacity = max(location.slot_capacity - used_capacity, 0) if location.has_grid_layout else None
+            if location.has_grid_layout:
+                if used_capacity <= 0:
+                    fill_state = 'empty'
+                elif remaining_capacity == 0:
+                    fill_state = 'full'
+                else:
+                    fill_state = 'partial'
+            else:
+                fill_state = 'assigned' if total_quantity > 0 else 'empty'
+
+            if selected_fill == 'empty' and fill_state != 'empty':
+                continue
+            if selected_fill == 'partial' and fill_state != 'partial':
+                continue
+            if selected_fill == 'full' and fill_state != 'full':
+                continue
+            if selected_fill == 'assigned' and total_quantity <= 0:
+                continue
+
             locations.append(
                 {
                     'location': location,
                     'item_count': items.count(),
                     'total_quantity': total_quantity,
                     'occupied_slots': occupied_slots,
-                    'remaining_capacity': max(location.slot_capacity - used_capacity, 0)
-                    if location.has_grid_layout
-                    else None,
+                    'remaining_capacity': remaining_capacity,
+                    'fill_state': fill_state,
                 }
             )
         context['locations'] = locations
@@ -1108,6 +1144,17 @@ class WarehouseLocationListView(StaffWarehouseRequiredMixin, TemplateView):
             'assigned_item_count': sum(row['item_count'] for row in locations),
             'assigned_quantity': sum(row['total_quantity'] for row in locations),
         }
+        context['warehouse_query'] = query
+        context['selected_location_type'] = selected_type
+        context['selected_activity'] = selected_activity
+        context['selected_fill'] = selected_fill
+        context['location_type_options'] = WarehouseLocation.TYPE_CHOICES
+        context['fill_options'] = (
+            ('empty', 'Puste'),
+            ('partial', 'Częściowo zajęte'),
+            ('full', 'Pełne'),
+            ('assigned', 'Z przypisanymi modelami'),
+        )
         return context
 
 
