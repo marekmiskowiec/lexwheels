@@ -916,10 +916,12 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
         short_missing = self.packaging_state_empty_q('short_card')
         long_missing = self.packaging_state_empty_q('long_card')
         loose_missing = self.packaging_state_empty_q('loose')
-        excluded_short_q = Q(category__in=['Premium', 'Semi Premium', 'XL', 'RLC', '5 Pack']) | ~Q(exclusive_store='')
+        xl_q = Q(category='XL')
+        excluded_short_q = Q(category__in=['Premium', 'Semi Premium', 'RLC', '5 Pack']) | ~Q(exclusive_store='')
         return (
-            (excluded_short_q & (long_missing | loose_missing))
-            | (~excluded_short_q & (short_missing | long_missing | loose_missing))
+            (xl_q & (short_missing | loose_missing))
+            | (excluded_short_q & (long_missing | loose_missing))
+            | (~(xl_q | excluded_short_q) & (short_missing | long_missing | loose_missing))
         )
 
     def workflow_entry_queryset(self, queryset, filters: dict[str, str]):
@@ -933,11 +935,13 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
             short_present = self.packaging_state_present_q('short_card')
             long_present = self.packaging_state_present_q('long_card')
             loose_present = self.packaging_state_present_q('loose')
-            excluded_short_q = Q(category__in=['Premium', 'Semi Premium', 'XL', 'RLC', '5 Pack']) | ~Q(exclusive_store='')
+            xl_q = Q(category='XL')
+            excluded_short_q = Q(category__in=['Premium', 'Semi Premium', 'RLC', '5 Pack']) | ~Q(exclusive_store='')
             queryset = queryset.filter(
-                (excluded_short_q & (long_present | loose_present))
-                | (~excluded_short_q & (short_present | long_present | loose_present))
-            )
+                (xl_q & (short_present | loose_present))
+                | (excluded_short_q & (long_present | loose_present))
+                | (~(xl_q | excluded_short_q) & (short_present | long_present | loose_present))
+            ).filter(relevant_missing_q | self.generic_image_present_q())
         elif self.workflow_name == 'complete':
             queryset = queryset.exclude(relevant_missing_q)
         return queryset.order_by(*self.workflow_queryset_order(filters['sort']))

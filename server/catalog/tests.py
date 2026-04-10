@@ -189,7 +189,7 @@ class ImportModelsCommandTests(TestCase):
         self.assertEqual(model.long_card_photo_url, 'https://example.com/carded.jpg')
         self.assertEqual(model.loose_photo_url, 'https://example.com/loose.jpg')
 
-    def test_import_does_not_backfill_short_card_for_xl(self):
+    def test_import_backfills_short_card_for_xl(self):
         payload = [{
             'Brand': 'Hot Wheels',
             'Category': 'XL',
@@ -216,8 +216,8 @@ class ImportModelsCommandTests(TestCase):
             call_command('import_models', path=str(path))
 
         model = HotWheelsModel.objects.get()
-        self.assertEqual(model.short_card_photo_url, '')
-        self.assertEqual(model.short_card_local_photo_path, '')
+        self.assertEqual(model.short_card_photo_url, 'https://example.com/carded.jpg')
+        self.assertEqual(model.short_card_local_photo_path, 'images/carded.jpg')
         self.assertEqual(model.long_card_photo_url, 'https://example.com/carded.jpg')
         self.assertEqual(model.loose_photo_url, 'https://example.com/open.jpg')
 
@@ -755,7 +755,7 @@ class CatalogViewTests(TestCase):
         self.assertFalse(self.model_obj.has_unassigned_image)
         self.assertEqual(self.model_obj.missing_packaging_image_states, [])
 
-    def test_xl_model_hides_short_card_variant(self):
+    def test_xl_model_hides_long_card_variant(self):
         self.model_obj.category = 'XL'
         self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
         self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
@@ -764,8 +764,8 @@ class CatalogViewTests(TestCase):
 
         variants = self.model_obj.catalog_image_variants
 
-        self.assertEqual([variant['key'] for variant in variants], ['long_card', 'loose'])
-        self.assertEqual(self.model_obj.short_card_image_src, '')
+        self.assertEqual([variant['key'] for variant in variants], ['short_card', 'loose'])
+        self.assertEqual(self.model_obj.long_card_image_src, '')
 
     def test_premium_model_hides_short_card_variant(self):
         self.model_obj.category = 'Premium'
@@ -1746,6 +1746,66 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, 'Przypisane zdjęcia')
         self.assertContains(response, '1970 Pontiac Firebird')
 
+    def test_assigned_images_view_excludes_complete_and_verified_models(self):
+        admin = User.objects.create_user(
+            email='admin5-complete@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.short_card_photo_url = 'https://example.com/short.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/long.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose.jpg'
+        self.model_obj.photo_url = ''
+        self.model_obj.images_verified_at = timezone.now()
+        self.model_obj.images_verified_by = admin
+        self.model_obj.save(
+            update_fields=[
+                'short_card_photo_url',
+                'long_card_photo_url',
+                'loose_photo_url',
+                'photo_url',
+                'images_verified_at',
+                'images_verified_by',
+            ]
+        )
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse('catalog:assigned-images'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '1970 Pontiac Firebird')
+
+    def test_assigned_images_view_excludes_complete_verified_xl_models(self):
+        admin = User.objects.create_user(
+            email='admin5-xl-complete@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.category = 'XL'
+        self.model_obj.short_card_photo_url = 'https://example.com/short-xl.jpg'
+        self.model_obj.long_card_photo_url = ''
+        self.model_obj.loose_photo_url = 'https://example.com/loose-xl.jpg'
+        self.model_obj.photo_url = ''
+        self.model_obj.images_verified_at = timezone.now()
+        self.model_obj.images_verified_by = admin
+        self.model_obj.save(
+            update_fields=[
+                'category',
+                'short_card_photo_url',
+                'long_card_photo_url',
+                'loose_photo_url',
+                'photo_url',
+                'images_verified_at',
+                'images_verified_by',
+            ]
+        )
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse('catalog:assigned-images'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '1970 Pontiac Firebird')
+
     def test_staff_can_open_complete_images_view(self):
         admin = User.objects.create_user(
             email='admin-complete@example.com',
@@ -1884,13 +1944,16 @@ class CatalogViewTests(TestCase):
                         },
                     )
                 self.model_obj.refresh_from_db()
-                source_path = Path(source_dir) / self.model_obj.long_card_local_photo_path
                 thumb_path = Path(media_dir) / HotWheelsModel.build_image_variant_relative_path(
                     self.model_obj.long_card_local_photo_path,
                     'thumb',
                 )
-                self.assertTrue(source_path.exists())
+                detail_path = Path(media_dir) / HotWheelsModel.build_image_variant_relative_path(
+                    self.model_obj.long_card_local_photo_path,
+                    'detail',
+                )
                 self.assertTrue(thumb_path.exists())
+                self.assertTrue(detail_path.exists())
 
         self.assertRedirects(response, reverse('catalog:model-detail', args=[self.model_obj.pk]))
         self.model_obj.refresh_from_db()
@@ -1924,12 +1987,11 @@ class CatalogViewTests(TestCase):
 
         with TemporaryDirectory() as source_dir, TemporaryDirectory() as media_dir:
             relative_path = 'images/manual/2022/test-long.jpg'
-            source_path = Path(source_dir) / relative_path
-            source_path.parent.mkdir(parents=True, exist_ok=True)
-            source_path.write_bytes(b'test')
             thumb_path = Path(media_dir) / HotWheelsModel.build_image_variant_relative_path(relative_path, 'thumb')
             thumb_path.parent.mkdir(parents=True, exist_ok=True)
             thumb_path.write_bytes(b'variant')
+            detail_path = Path(media_dir) / HotWheelsModel.build_image_variant_relative_path(relative_path, 'detail')
+            detail_path.write_bytes(b'variant')
 
             self.model_obj.long_card_local_photo_path = relative_path
             self.model_obj.long_card_photo_url = ''
@@ -1945,8 +2007,8 @@ class CatalogViewTests(TestCase):
             self.model_obj.refresh_from_db()
             self.assertEqual(self.model_obj.long_card_local_photo_path, '')
             self.assertEqual(self.model_obj.long_card_photo_url, '')
-            self.assertFalse(source_path.exists())
             self.assertFalse(thumb_path.exists())
+            self.assertFalse(detail_path.exists())
 
     def test_staff_can_delete_generic_image(self):
         admin = User.objects.create_user(

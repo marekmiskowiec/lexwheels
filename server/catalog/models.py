@@ -55,7 +55,9 @@ class HotWheelsModel(models.Model):
     @property
     def excluded_packaging_states(self) -> set[str]:
         category = (self.category or '').strip().lower()
-        if category in {'premium', 'semi premium', 'xl', 'rlc', '5 pack'} or self.exclusive_store:
+        if category == 'xl':
+            return {'long_card'}
+        if category in {'premium', 'semi premium', 'rlc', '5 pack'} or self.exclusive_store:
             return {'short_card'}
         return set()
 
@@ -86,7 +88,7 @@ class HotWheelsModel(models.Model):
     def local_photo_exists(self) -> bool:
         if not self.local_photo_path:
             return False
-        return (settings.CATALOG_SOURCE_ROOT / self.local_photo_path).exists()
+        return any(self.image_variant_exists(self.local_photo_path, variant_name) for variant_name in self.IMAGE_VARIANT_NAMES)
 
     @staticmethod
     def build_image_variant_relative_path(relative_path: str, variant_name: str) -> str:
@@ -124,7 +126,7 @@ class HotWheelsModel(models.Model):
         local_path = getattr(self, path_attr, '')
         if not local_path:
             return False
-        return (settings.CATALOG_SOURCE_ROOT / local_path).exists()
+        return any(self.image_variant_exists(local_path, variant_name) for variant_name in self.IMAGE_VARIANT_NAMES)
 
     @property
     def image_src(self) -> str:

@@ -37,11 +37,8 @@ def import_catalog_image_from_url(model_obj: HotWheelsModel, packaging_state: st
 
     payload = download_image_bytes(source_url)
     image = open_downloaded_image(payload)
-    extension = choose_source_extension(image)
-    relative_path = build_manual_image_relative_path(model_obj, packaging_state, extension)
-
-    save_source_image(image, relative_path, extension)
-    generate_image_variants(relative_path)
+    relative_path = build_manual_image_relative_path(model_obj, packaging_state)
+    generate_image_variants_from_image(image, relative_path)
 
     local_attr, url_attr = IMAGE_FIELD_MAP[packaging_state]
     previous_relative_path = (getattr(model_obj, local_attr) or '').strip()
@@ -75,53 +72,29 @@ def open_downloaded_image(payload: bytes) -> Image.Image:
         raise CatalogImageImportError('Podany URL nie zwrócił poprawnego obrazu.') from exc
 
 
-def choose_source_extension(image: Image.Image) -> str:
-    if image.mode in ('RGBA', 'LA') or ('transparency' in image.info):
-        return 'png'
-    return 'jpg'
-
-
-def build_manual_image_relative_path(model_obj: HotWheelsModel, packaging_state: str, extension: str) -> str:
+def build_manual_image_relative_path(model_obj: HotWheelsModel, packaging_state: str) -> str:
     return str(
         Path('images')
         / 'manual'
         / str(model_obj.year or 'unknown')
-        / f'{model_obj.app_id}-{packaging_state}-{uuid.uuid4().hex[:10]}.{extension}'
+        / f'{model_obj.app_id}-{packaging_state}-{uuid.uuid4().hex[:10]}.webp'
     )
 
 
-def save_source_image(image: Image.Image, relative_path: str, extension: str) -> None:
-    destination = settings.CATALOG_SOURCE_ROOT / relative_path
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    if extension == 'png':
-        image.save(destination, format='PNG')
-        return
-    converted = image.convert('RGB')
-    converted.save(destination, format='JPEG', quality=92, optimize=True)
+def generate_image_variants_from_image(source_image: Image.Image, relative_path: str) -> None:
+    for variant_name, width in VARIANT_WIDTHS.items():
+        destination_relative_path = HotWheelsModel.build_image_variant_relative_path(relative_path, variant_name)
+        destination_path = settings.MEDIA_ROOT / destination_relative_path
+        destination_path.parent.mkdir(parents=True, exist_ok=True)
 
-
-def generate_image_variants(relative_path: str) -> None:
-    source_path = settings.CATALOG_SOURCE_ROOT / relative_path
-    if not source_path.exists():
-        raise CatalogImageImportError('Nie znaleziono lokalnego pliku źródłowego po zapisie.')
-
-    with Image.open(source_path) as source_image:
-        for variant_name, width in VARIANT_WIDTHS.items():
-            destination_relative_path = HotWheelsModel.build_image_variant_relative_path(relative_path, variant_name)
-            destination_path = settings.MEDIA_ROOT / destination_relative_path
-            destination_path.parent.mkdir(parents=True, exist_ok=True)
-
-            image = source_image.copy()
-            if image.mode not in ('RGB', 'RGBA'):
-                image = image.convert('RGBA' if 'transparency' in image.info else 'RGB')
-            image.thumbnail((width, width * 10), Image.Resampling.LANCZOS)
-            image.save(destination_path, format='WEBP', quality=82, method=6)
+        image = source_image.copy()
+        if image.mode not in ('RGB', 'RGBA'):
+            image = image.convert('RGBA' if 'transparency' in image.info else 'RGB')
+        image.thumbnail((width, width * 10), Image.Resampling.LANCZOS)
+        image.save(destination_path, format='WEBP', quality=82, method=6)
 
 
 def delete_image_artifacts(relative_path: str) -> None:
-    source_path = settings.CATALOG_SOURCE_ROOT / relative_path
-    if source_path.exists():
-        source_path.unlink()
     for variant_name in HotWheelsModel.IMAGE_VARIANT_NAMES:
         variant_relative_path = HotWheelsModel.build_image_variant_relative_path(relative_path, variant_name)
         variant_path = settings.MEDIA_ROOT / variant_relative_path

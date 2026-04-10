@@ -39,14 +39,18 @@ class Command(BaseCommand):
         skipped = 0
 
         for relative_path in source_paths:
-            source_path = settings.CATALOG_SOURCE_ROOT / relative_path
-            if not source_path.exists():
+            source_path = self.resolve_source_path(relative_path)
+            if not source_path:
                 continue
 
             for variant_name, width in self.VARIANT_WIDTHS.items():
                 destination_relative_path = HotWheelsModel.build_image_variant_relative_path(relative_path, variant_name)
                 destination_path = settings.MEDIA_ROOT / destination_relative_path
                 destination_path.parent.mkdir(parents=True, exist_ok=True)
+
+                if source_path == destination_path:
+                    skipped += 1
+                    continue
 
                 if (
                     destination_path.exists()
@@ -76,6 +80,19 @@ class Command(BaseCommand):
                 f'Image variants complete. Sources: {len(source_paths)}, generated: {generated}, skipped: {skipped}'
             )
         )
+
+    @staticmethod
+    def resolve_source_path(relative_path: str) -> Path | None:
+        source_candidate = settings.CATALOG_SOURCE_ROOT / relative_path
+        if source_candidate.exists():
+            return source_candidate
+
+        detail_relative_path = HotWheelsModel.build_image_variant_relative_path(relative_path, 'detail')
+        detail_candidate = settings.MEDIA_ROOT / detail_relative_path
+        if detail_candidate.exists():
+            return detail_candidate
+
+        return None
 
     @staticmethod
     def collect_source_paths(limit: int | None = None) -> list[str]:
