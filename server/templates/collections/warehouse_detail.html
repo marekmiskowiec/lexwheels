@@ -2,6 +2,10 @@
 {% block title %}{{ warehouse_location.name }} | Magazyn | LexWheels{% endblock %}
 {% block extra_styles %}
 <style>
+  .warehouse-detail-shell {
+    display: grid;
+    gap: 18px;
+  }
   .warehouse-grid {
     display: grid;
     gap: 8px;
@@ -17,10 +21,36 @@
     border: 1px solid var(--line);
     border-radius: 16px;
     background: rgba(255,255,255,0.04);
+    transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+  }
+  .warehouse-grid-cell.is-occupied {
+    background:
+      radial-gradient(circle at top right, rgba(72, 157, 255, 0.12), transparent 44%),
+      rgba(255,255,255,0.05);
+  }
+  .warehouse-grid-cell.is-occupied:hover {
+    transform: translateY(-2px);
+    border-color: rgba(72, 157, 255, 0.32);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.18);
   }
   .warehouse-grid-cell.is-empty {
     background: rgba(255,255,255,0.025);
     color: var(--muted);
+  }
+  .warehouse-grid-cell.is-empty:hover {
+    border-color: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.04);
+  }
+  .warehouse-grid-cell.is-action-target {
+    border-color: rgba(255, 107, 44, 0.5);
+    background:
+      radial-gradient(circle at top left, rgba(255, 107, 44, 0.16), transparent 42%),
+      rgba(255,255,255,0.06);
+    box-shadow: inset 0 0 0 1px rgba(255, 107, 44, 0.24);
+  }
+  .warehouse-grid-cell.is-selected-origin {
+    border-color: rgba(72, 157, 255, 0.48);
+    box-shadow: inset 0 0 0 1px rgba(72, 157, 255, 0.28);
   }
   .warehouse-grid-slot {
     display: block;
@@ -33,11 +63,12 @@
     color: #fff;
     font-weight: 600;
     margin-bottom: 6px;
+    line-height: 1.2;
   }
   .warehouse-grid-thumb {
     display: block;
     width: 100%;
-    height: 72px;
+    height: 82px;
     object-fit: contain;
     margin-bottom: 8px;
     border: 1px solid var(--line);
@@ -50,8 +81,47 @@
     font-size: .88rem;
     color: var(--muted);
   }
+  .warehouse-grid-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 8px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    border: 1px solid var(--line);
+    color: var(--muted);
+  }
+  .warehouse-grid-state.is-occupied {
+    color: #cfe4ff;
+    border-color: rgba(72, 157, 255, 0.24);
+    background: rgba(72, 157, 255, 0.12);
+  }
+  .warehouse-grid-state.is-empty {
+    color: #d5dce7;
+    background: rgba(255,255,255,0.04);
+  }
+  .warehouse-grid-state.is-target {
+    color: #ffe2d4;
+    border-color: rgba(255, 107, 44, 0.3);
+    background: rgba(255, 107, 44, 0.16);
+  }
   .warehouse-quick-attach-panel {
     margin: 18px 0;
+  }
+  .warehouse-operation-banner {
+    display: grid;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 14px 16px;
+    border: 1px solid rgba(255, 107, 44, 0.22);
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at top right, rgba(255, 107, 44, 0.14), transparent 44%),
+      rgba(255,255,255,0.035);
   }
   .warehouse-quick-list {
     display: grid;
@@ -82,9 +152,20 @@
     color: var(--muted);
     font-size: .9rem;
   }
+  .warehouse-loading {
+    opacity: .65;
+    pointer-events: none;
+    transition: opacity .16s ease;
+  }
+  .warehouse-panel-note {
+    margin: 0;
+    color: var(--muted);
+    font-size: .9rem;
+  }
 </style>
 {% endblock %}
 {% block content %}
+<div id="warehouse-detail-root" class="warehouse-detail-shell">
 <section class="panel hero">
   <div class="hero-copy">
     <span class="eyebrow">Magazyn</span>
@@ -128,7 +209,7 @@
       </p>
     </div>
     {% if quick_attach_item %}
-      <a class="button secondary" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?quick_q={{ quick_query|urlencode }}{% if quick_collection_id %}&quick_collection={{ quick_collection_id|urlencode }}{% endif %}">Anuluj wybór wariantu</a>
+      <a class="button secondary warehouse-region-link" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?quick_q={{ quick_query|urlencode }}{% if quick_collection_id %}&quick_collection={{ quick_collection_id|urlencode }}{% endif %}">Anuluj wybór wariantu</a>
     {% endif %}
   </div>
 
@@ -158,7 +239,10 @@
   </form>
 
   {% if quick_attach_item and warehouse_location.has_grid_layout %}
-    <p class="meta" style="margin-top:14px;">Wybrany wariant: <strong>{{ quick_attach_item.model.model_name }}</strong>. Kliknij pusty slot poniżej, aby go przypiąć.</p>
+    <div class="warehouse-operation-banner">
+      <p class="meta" style="margin:0;">Wybrany wariant: <strong>{{ quick_attach_item.model.model_name }}</strong> | {{ quick_attach_item.get_packaging_state_display }} | {{ quick_attach_item.quantity }} szt.</p>
+      <p class="warehouse-panel-note">Kliknij pusty slot poniżej, aby {% if quick_attach_item.storage_location %}przenieść{% else %}przypiąć{% endif %} wariant bez opuszczania tego widoku.</p>
+    </div>
     {% if not operational_stats.free_slots %}
       <p class="meta">Brak wolnych slotów w tym miejscu.</p>
     {% endif %}
@@ -184,7 +268,7 @@
           <div class="warehouse-quick-actions">
             {% if warehouse_location.has_grid_layout %}
               {% if operational_stats.free_slots %}
-                <a class="button secondary" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?attach_item={{ item.pk }}{% if quick_query %}&quick_q={{ quick_query|urlencode }}{% endif %}{% if quick_collection_id %}&quick_collection={{ quick_collection_id|urlencode }}{% endif %}">
+                <a class="button secondary warehouse-region-link" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?attach_item={{ item.pk }}{% if quick_query %}&quick_q={{ quick_query|urlencode }}{% endif %}{% if quick_collection_id %}&quick_collection={{ quick_collection_id|urlencode }}{% endif %}">
                   {% if item.storage_location %}Przenieś do slotu{% else %}Wybierz slot{% endif %}
                 </a>
               {% else %}
@@ -193,7 +277,7 @@
             {% elif item.storage_location == warehouse_location.name and not item.storage_slot_label %}
               <span class="meta">Już przypięty tutaj</span>
             {% else %}
-              <form method="post" action="{% url 'collections:warehouse-quick-attach' warehouse_location.pk item.pk %}">
+              <form method="post" action="{% url 'collections:warehouse-quick-attach' warehouse_location.pk item.pk %}" class="warehouse-region-form">
                 {% csrf_token %}
                 <button type="submit" class="secondary">{% if item.storage_location %}Przenieś tutaj{% else %}Przypnij tutaj{% endif %}</button>
               </form>
@@ -215,19 +299,23 @@
         <p class="meta">Siatka pokazuje zajęte i wolne sloty w obrębie tego miejsca.</p>
       </div>
       {% if move_item %}
-        <a class="button secondary" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}">Anuluj przenoszenie</a>
+        <a class="button secondary warehouse-region-link" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}">Anuluj przenoszenie</a>
       {% endif %}
     </div>
     {% if move_item %}
-      <p class="meta" style="margin-bottom:14px;">Przenosisz: <strong>{{ move_item.model.model_name }}</strong>. Wybierz pusty slot docelowy.</p>
+      <div class="warehouse-operation-banner">
+        <p class="meta" style="margin:0;">Przenosisz: <strong>{{ move_item.model.model_name }}</strong>.</p>
+        <p class="warehouse-panel-note">Wybierz pusty slot docelowy. Zmiana zadziała bez pełnego przeładowania strony.</p>
+      </div>
     {% endif %}
     <div class="warehouse-grid">
       {% for row in grid_rows %}
         <div class="warehouse-grid-row" style="grid-template-columns: repeat({{ warehouse_location.column_count }}, minmax(0, 1fr));">
           {% for cell in row.cells %}
-            <div class="warehouse-grid-cell{% if not cell.item %} is-empty{% endif %}">
+            <div class="warehouse-grid-cell{% if cell.item %} is-occupied{% else %} is-empty{% endif %}{% if quick_attach_item and not cell.item and operational_stats.free_slots %} is-action-target{% endif %}{% if move_item and not cell.item %} is-action-target{% endif %}{% if move_item and cell.item and cell.item.pk == move_item.pk %} is-selected-origin{% endif %}">
               <span class="warehouse-grid-slot">R{{ row.row_number }} / K{{ cell.column_number }}</span>
               {% if cell.item %}
+                <span class="warehouse-grid-state is-occupied">Zajęty</span>
                 {% if cell.item.image_src %}
                   <a href="{% url 'collections:item-update' cell.item.pk %}">
                     <img class="warehouse-grid-thumb" src="{{ cell.item.image_src }}" alt="{{ cell.item.model.model_name }}">
@@ -236,22 +324,25 @@
                 <a class="warehouse-grid-model" href="{% url 'collections:item-update' cell.item.pk %}">{{ cell.item.model.model_name }}</a>
                 <p class="warehouse-grid-meta">{{ cell.item.get_packaging_state_display }} | {{ cell.item.quantity }} szt.</p>
                 <div class="actions-row" style="margin-top:8px;">
-                  <a class="button secondary" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?move_item={{ cell.item.pk }}">Przenieś</a>
+                  <a class="button secondary warehouse-region-link" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?move_item={{ cell.item.pk }}">Przenieś</a>
                   <a class="button secondary" href="{% url 'collections:warehouse-item-relocate' warehouse_location.pk cell.item.pk %}">Zmień miejsce</a>
-                  <form method="post" action="{% url 'collections:warehouse-slot-clear' warehouse_location.pk cell.item.pk %}">
+                  <form method="post" action="{% url 'collections:warehouse-slot-clear' warehouse_location.pk cell.item.pk %}" class="warehouse-region-form">
                     {% csrf_token %}
                     <button type="submit" class="secondary">Wypnij</button>
                   </form>
                 </div>
               {% else %}
+                <span class="warehouse-grid-state {% if quick_attach_item or move_item %}is-target{% else %}is-empty{% endif %}">
+                  {% if quick_attach_item or move_item %}Slot docelowy{% else %}Puste{% endif %}
+                </span>
                 <p class="warehouse-grid-meta">Puste miejsce</p>
                 {% if move_item %}
-                  <form method="post" action="{% url 'collections:warehouse-slot-move' warehouse_location.pk row.row_number cell.column_number move_item.pk %}">
+                  <form method="post" action="{% url 'collections:warehouse-slot-move' warehouse_location.pk row.row_number cell.column_number move_item.pk %}" class="warehouse-region-form">
                     {% csrf_token %}
                     <button type="submit" class="secondary">Przenieś tutaj</button>
                   </form>
                 {% elif quick_attach_item and operational_stats.free_slots %}
-                  <form method="post" action="{% url 'collections:warehouse-quick-slot-attach' warehouse_location.pk row.row_number cell.column_number quick_attach_item.pk %}">
+                  <form method="post" action="{% url 'collections:warehouse-quick-slot-attach' warehouse_location.pk row.row_number cell.column_number quick_attach_item.pk %}" class="warehouse-region-form">
                     {% csrf_token %}
                     <button type="submit" class="secondary">{% if quick_attach_item.storage_location %}Przenieś tutaj{% else %}Przypnij tutaj{% endif %}</button>
                   </form>
@@ -282,7 +373,7 @@
             <a class="button secondary" href="{% url 'collections:item-update' item.pk %}">Edytuj wariant</a>
             <a class="button secondary" href="{% url 'collections:warehouse-item-relocate' warehouse_location.pk item.pk %}">Zmień miejsce</a>
             {% if item.storage_slot_label %}
-              <form method="post" action="{% url 'collections:warehouse-slot-clear' warehouse_location.pk item.pk %}">
+              <form method="post" action="{% url 'collections:warehouse-slot-clear' warehouse_location.pk item.pk %}" class="warehouse-region-form">
                 {% csrf_token %}
                 <button type="submit" class="secondary">Wypnij ze slotu</button>
               </form>
@@ -298,4 +389,79 @@
     </div>
   {% endif %}
 </section>
+ </div>
+
+<script>
+  (() => {
+    const setLoading = (loading) => {
+      const currentRoot = document.getElementById('warehouse-detail-root');
+      if (currentRoot) {
+        currentRoot.classList.toggle('warehouse-loading', loading);
+      }
+    };
+
+    const replaceWarehouseDetail = (html) => {
+      const parser = new DOMParser();
+      const nextDocument = parser.parseFromString(html, 'text/html');
+      const nextRoot = nextDocument.getElementById('warehouse-detail-root');
+      const nextMessages = nextDocument.querySelector('.messages');
+      const currentRoot = document.getElementById('warehouse-detail-root');
+      const currentMessages = document.querySelector('.messages');
+
+      if (!currentRoot || !nextRoot) {
+        window.location.reload();
+        return;
+      }
+
+      currentRoot.replaceWith(nextRoot);
+      if (currentMessages) {
+        if (nextMessages) {
+          currentMessages.replaceWith(nextMessages);
+        } else {
+          currentMessages.remove();
+        }
+      } else if (nextMessages) {
+        const main = document.querySelector('main.content-stack');
+        if (main) {
+          main.parentNode.insertBefore(nextMessages, main);
+        }
+      }
+      nextRoot.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    document.addEventListener('submit', async (event) => {
+      const form = event.target.closest('.warehouse-region-form');
+      if (!form) {
+        return;
+      }
+      event.preventDefault();
+      setLoading(true);
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          credentials: 'same-origin',
+        });
+        replaceWarehouseDetail(await response.text());
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    document.addEventListener('click', async (event) => {
+      const link = event.target.closest('.warehouse-region-link');
+      if (!link) {
+        return;
+      }
+      event.preventDefault();
+      setLoading(true);
+      try {
+        const response = await fetch(link.href, { credentials: 'same-origin' });
+        replaceWarehouseDetail(await response.text());
+      } finally {
+        setLoading(false);
+      }
+    });
+  })();
+</script>
 {% endblock %}
