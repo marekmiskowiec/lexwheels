@@ -139,6 +139,10 @@
   .image-admin-actions form {
     margin: 0;
   }
+  .image-import-form {
+    display: grid;
+    gap: 10px;
+  }
   @media (max-width: 920px) {
     .model-detail-layout {
       grid-template-columns: 1fr;
@@ -157,6 +161,22 @@
             <p class="meta" style="margin:0;">Zdjęcie ogólne, jeszcze nieprzypisane do konkretnego wariantu.</p>
           </div>
           <img class="thumb" src="{{ model_obj.unassigned_image_src }}" alt="{{ model_obj.model_name }}">
+          {% if user.is_authenticated and user.is_staff or user.is_superuser %}
+            <div class="image-admin-actions">
+              {% for packaging_state, label in model_obj.available_packaging_choices %}
+                <form method="post" action="{% url 'catalog:assign-generic-image' model_obj.pk packaging_state %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="button secondary">{% if packaging_state == 'loose' %}Przypisz jako luzak{% else %}Przypisz jako {{ label|lower }}{% endif %}</button>
+                </form>
+              {% endfor %}
+              <form method="post" action="{% url 'catalog:delete-image' model_obj.pk 'generic' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="button secondary">Usuń zdjęcie</button>
+              </form>
+            </div>
+          {% endif %}
         </div>
       {% endif %}
       {% if model_obj.packaging_image_panels %}
@@ -182,6 +202,11 @@
                   {% csrf_token %}
                   <input type="hidden" name="next" value="{{ request.get_full_path }}">
                   <button type="submit" class="button secondary">Cofnij do nieprzypisanego</button>
+                </form>
+                <form method="post" action="{% url 'catalog:delete-image' model_obj.pk panel.key %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="button secondary">Usuń zdjęcie</button>
                 </form>
               </div>
             {% endif %}
@@ -318,6 +343,30 @@
               <a class="button secondary" href="{{ entry.url }}">{{ entry.label }}</a>
             {% endfor %}
           </div>
+        </div>
+      {% endif %}
+
+      {% if image_import_form %}
+        <div class="card-surface">
+          <div class="section-copy">
+            <h3>Import zdjęcia z URL</h3>
+            <p class="meta">Staff może wkleić link do zdjęcia, a system pobierze plik lokalnie i wygeneruje warianty webowe.</p>
+          </div>
+          <form method="post" action="{% url 'catalog:import-image-from-url' model_obj.pk %}" class="image-import-form" style="margin-top:12px;">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <div>
+              {{ image_import_form.packaging_state.label_tag }}
+              {{ image_import_form.packaging_state }}
+            </div>
+            <div>
+              {{ image_import_form.source_url.label_tag }}
+              {{ image_import_form.source_url }}
+            </div>
+            <div>
+              <button type="submit">Pobierz i zapisz lokalnie</button>
+            </div>
+          </form>
         </div>
       {% endif %}
 

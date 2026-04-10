@@ -1,11 +1,15 @@
 import json
+import io
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.core.management import call_command
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image
 
 from accounts.models import User
 from collections_app.models import Collection, CollectionItem, WantedItem
@@ -1844,6 +1848,160 @@ class CatalogViewTests(TestCase):
         self.model_obj.refresh_from_db()
         self.assertIsNotNone(self.model_obj.images_verified_at)
         self.assertEqual(self.model_obj.images_verified_by, admin)
+
+    def test_staff_can_import_packaging_image_from_url_to_local_storage(self):
+        admin = User.objects.create_user(
+            email='admin-import-image@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.client.force_login(admin)
+
+        image = Image.new('RGB', (1600, 900), color=(220, 40, 40))
+        image_bytes = io.BytesIO()
+        image.save(image_bytes, format='JPEG')
+        payload = image_bytes.getvalue()
+
+        class DummyResponse:
+            def __enter__(self_inner):
+                return self_inner
+
+            def __exit__(self_inner, exc_type, exc, tb):
+                return False
+
+            def read(self_inner):
+                return payload
+
+        with TemporaryDirectory() as source_dir, TemporaryDirectory() as media_dir:
+            with override_settings(CATALOG_SOURCE_ROOT=Path(source_dir), MEDIA_ROOT=Path(media_dir)):
+                with patch('catalog.services.urlopen', return_value=DummyResponse()):
+                    response = self.client.post(
+                        reverse('catalog:import-image-from-url', args=[self.model_obj.pk]),
+                        {
+                            'packaging_state': 'long_card',
+                            'source_url': 'https://example.com/f40-long.jpg',
+                            'next': reverse('catalog:model-detail', args=[self.model_obj.pk]),
+                        },
+                    )
+                self.model_obj.refresh_from_db()
+                source_path = Path(source_dir) / self.model_obj.long_card_local_photo_path
+                thumb_path = Path(media_dir) / HotWheelsModel.build_image_variant_relative_path(
+                    self.model_obj.long_card_local_photo_path,
+                    'thumb',
+                )
+                self.assertTrue(source_path.exists())
+                self.assertTrue(thumb_path.exists())
+
+        self.assertRedirects(response, reverse('catalog:model-detail', args=[self.model_obj.pk]))
+        self.model_obj.refresh_from_db()
+        self.assertTrue(self.model_obj.long_card_local_photo_path.startswith('images/manual/'))
+        self.assertEqual(self.model_obj.long_card_photo_url, '')
+
+    def test_non_staff_cannot_import_packaging_image_from_url(self):
+        user = User.objects.create_user(
+            email='plain-import@example.com',
+            password='ComplexPass123',
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse('catalog:import-image-from-url', args=[self.model_obj.pk]),
+            {
+                'packaging_state': 'long_card',
+                'source_url': 'https://example.com/f40-long.jpg',
+            },
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_staff_can_delete_packaging_image_and_local_variants(self):
+        admin = User.objects.create_user(
+            email='admin-delete-image@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.client.force_login(admin)
+
+        with TemporaryDirectory() as source_dir, TemporaryDirectory() as media_dir:
+            relative_path = 'images/manual/2022/test-long.jpg'
+            source_path = Path(source_dir) / relative_path
+            source_path.parent.mkdir(parents=True, exist_ok=True)
+            source_path.write_bytes(b'test')
+            thumb_path = Path(media_dir) / HotWheelsModel.build_image_variant_relative_path(relative_path, 'thumb')
+            thumb_path.parent.mkdir(parents=True, exist_ok=True)
+            thumb_path.write_bytes(b'variant')
+
+            self.model_obj.long_card_local_photo_path = relative_path
+            self.model_obj.long_card_photo_url = ''
+            self.model_obj.save(update_fields=['long_card_local_photo_path', 'long_card_photo_url'])
+
+            with override_settings(CATALOG_SOURCE_ROOT=Path(source_dir), MEDIA_ROOT=Path(media_dir)):
+                response = self.client.post(
+                    reverse('catalog:delete-image', args=[self.model_obj.pk, 'long_card']),
+                    {'next': reverse('catalog:model-detail', args=[self.model_obj.pk])},
+                )
+
+            self.assertRedirects(response, reverse('catalog:model-detail', args=[self.model_obj.pk]))
+            self.model_obj.refresh_from_db()
+            self.assertEqual(self.model_obj.long_card_local_photo_path, '')
+            self.assertEqual(self.model_obj.long_card_photo_url, '')
+            self.assertFalse(source_path.exists())
+            self.assertFalse(thumb_path.exists())
+
+    def test_staff_can_delete_generic_image(self):
+        admin = User.objects.create_user(
+            email='admin-delete-generic@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.client.force_login(admin)
+        self.model_obj.photo_url = 'https://example.com/generic.jpg'
+        self.model_obj.save(update_fields=['photo_url'])
+
+        response = self.client.post(
+            reverse('catalog:delete-image', args=[self.model_obj.pk, 'generic']),
+            {'next': reverse('catalog:model-detail', args=[self.model_obj.pk])},
+        )
+
+        self.assertRedirects(response, reverse('catalog:model-detail', args=[self.model_obj.pk]))
+        self.model_obj.refresh_from_db()
+        self.assertEqual(self.model_obj.photo_url, '')
+
+    def test_deleting_packaging_image_clears_matching_generic_image(self):
+        admin = User.objects.create_user(
+            email='admin-delete-matching-generic@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.client.force_login(admin)
+        self.model_obj.long_card_photo_url = 'https://example.com/shared.jpg'
+        self.model_obj.photo_url = 'https://example.com/shared.jpg'
+        self.model_obj.save(update_fields=['long_card_photo_url', 'photo_url'])
+
+        response = self.client.post(
+            reverse('catalog:delete-image', args=[self.model_obj.pk, 'long_card']),
+            {'next': reverse('catalog:model-detail', args=[self.model_obj.pk])},
+        )
+
+        self.assertRedirects(response, reverse('catalog:model-detail', args=[self.model_obj.pk]))
+        self.model_obj.refresh_from_db()
+        self.assertEqual(self.model_obj.long_card_photo_url, '')
+        self.assertEqual(self.model_obj.photo_url, '')
+        self.assertFalse(self.model_obj.has_unassigned_image)
+
+    def test_non_staff_cannot_delete_catalog_image(self):
+        user = User.objects.create_user(
+            email='plain-delete@example.com',
+            password='ComplexPass123',
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse('catalog:delete-image', args=[self.model_obj.pk, 'generic']),
+            {'next': reverse('catalog:model-detail', args=[self.model_obj.pk])},
+        )
+
+        self.assertEqual(response.status_code, 403)
 
     def test_assigned_images_view_supports_year_series_and_sort_filters(self):
         admin = User.objects.create_user(

@@ -19,7 +19,9 @@ from django.views.generic import DetailView, ListView, TemplateView
 from collections_app.forms import CollectionBatchAddForm
 from collections_app.models import Collection, CollectionItem, WantedItem
 
+from .forms import CatalogImageImportForm
 from .models import HotWheelsModel
+from .services import CatalogImageImportError, clear_catalog_image, import_catalog_image_from_url
 
 
 CATALOG_FILTER_SESSION_KEY = 'catalog_filters'
@@ -693,6 +695,9 @@ class ModelDetailView(CatalogScopeMixin, DetailView):
                 }
             )
         context['similar_models'] = self.get_similar_models(model_obj)
+        context['image_import_form'] = CatalogImageImportForm(model_obj=model_obj) if (
+            self.request.user.is_authenticated and (self.request.user.is_staff or self.request.user.is_superuser)
+        ) else None
 
         if self.request.user.is_authenticated:
             owned_items = list(
@@ -1258,6 +1263,49 @@ class ToggleImageVerificationView(CatalogImageAdminRequiredMixin, View):
             model.save(update_fields=['images_verified_at', 'images_verified_by'])
             messages.success(request, 'Potwierdzono komplet zdjęć.')
         return redirect(request.POST.get('next') or model.get_absolute_url())
+
+
+class ImportCatalogImageView(CatalogImageAdminRequiredMixin, View):
+    def post(self, request, pk):
+        model_obj = HotWheelsModel.objects.filter(pk=pk).first()
+        if not model_obj:
+            raise Http404
+
+        form = CatalogImageImportForm(request.POST, model_obj=model_obj)
+        if not form.is_valid():
+            for field_errors in form.errors.values():
+                for error in field_errors:
+                    messages.error(request, error)
+            return redirect(request.POST.get('next') or model_obj.get_absolute_url())
+
+        packaging_state = form.cleaned_data['packaging_state']
+        source_url = form.cleaned_data['source_url']
+        try:
+            import_catalog_image_from_url(model_obj, packaging_state, source_url)
+        except CatalogImageImportError as exc:
+            messages.error(request, str(exc))
+            return redirect(request.POST.get('next') or model_obj.get_absolute_url())
+
+        state_label = 'Ogólne / nieprzypisane' if packaging_state == 'generic' else model_obj.packaging_labels[packaging_state]
+        messages.success(request, f'Pobrano i zapisano lokalnie zdjęcie dla wariantu: {state_label}.')
+        return redirect(request.POST.get('next') or model_obj.get_absolute_url())
+
+
+class DeleteCatalogImageView(CatalogImageAdminRequiredMixin, View):
+    def post(self, request, pk, packaging_state):
+        model_obj = HotWheelsModel.objects.filter(pk=pk).first()
+        if not model_obj:
+            raise Http404
+
+        try:
+            clear_catalog_image(model_obj, packaging_state)
+        except CatalogImageImportError as exc:
+            messages.error(request, str(exc))
+            return redirect(request.POST.get('next') or model_obj.get_absolute_url())
+
+        state_label = 'Ogólne / nieprzypisane' if packaging_state == 'generic' else model_obj.packaging_labels[packaging_state]
+        messages.success(request, f'Usunięto zdjęcie dla wariantu: {state_label}.')
+        return redirect(request.POST.get('next') or model_obj.get_absolute_url())
 
 
 class AssignGenericImageView(CatalogImageAdminRequiredMixin, View):
