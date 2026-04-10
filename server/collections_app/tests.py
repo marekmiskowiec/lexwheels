@@ -389,6 +389,93 @@ class CollectionTests(TestCase):
         self.assertContains(response, 'Ten slot w magazynie jest już zajęty przez inny wariant.')
         self.assertFalse(CollectionItem.objects.filter(collection=self.private_collection, model=second_model).exists())
 
+    def test_owner_can_move_item_from_grid_location_to_box_without_clearing_slot_manually(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Ekspozytor 1',
+            location_type=WarehouseLocation.TYPE_DISPLAY,
+            row_count=8,
+            column_count=3,
+        )
+        WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Karton A3',
+            location_type=WarehouseLocation.TYPE_BOX,
+        )
+        item = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            storage_location='Ekspozytor 1',
+            storage_row=2,
+            storage_column=3,
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-update', args=[item.pk]),
+            {
+                'model': self.model_obj.pk,
+                'quantity': 1,
+                'condition': 'mint',
+                'packaging_state': 'short_card',
+                'is_sealed': '',
+                'has_soft_corners': '',
+                'has_protector': '',
+                'is_signed': '',
+                'has_bent_hook': '',
+                'has_cracked_blister': '',
+                'acquired_at': '',
+                'storage_location': 'Karton A3',
+                'storage_row': 2,
+                'storage_column': 3,
+                'notes': '',
+            },
+        )
+
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        item.refresh_from_db()
+        self.assertEqual(item.storage_location, 'Karton A3')
+        self.assertIsNone(item.storage_row)
+        self.assertIsNone(item.storage_column)
+
+    def test_item_edit_form_shows_all_warehouse_locations_for_owner(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Ekspozytor 1',
+            location_type=WarehouseLocation.TYPE_DISPLAY,
+            row_count=8,
+            column_count=3,
+        )
+        WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Karton A3',
+            location_type=WarehouseLocation.TYPE_BOX,
+        )
+        item = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            storage_location='Ekspozytor 1',
+            storage_row=2,
+            storage_column=3,
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse('collections:item-update', args=[item.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<option value="Ekspozytor 1" selected>', html=False)
+        self.assertContains(response, '<option value="Karton A3">', html=False)
+
     def test_collection_detail_can_filter_by_storage_location(self):
         CollectionItem.objects.create(
             collection=self.private_collection,
@@ -580,6 +667,90 @@ class CollectionTests(TestCase):
         item.refresh_from_db()
         self.assertEqual(item.storage_row, 1)
         self.assertEqual(item.storage_column, 1)
+
+    def test_staff_can_relocate_variant_from_display_to_box_from_warehouse_view(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        display = WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Ekspozytor 1',
+            location_type=WarehouseLocation.TYPE_DISPLAY,
+            row_count=8,
+            column_count=3,
+        )
+        WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Karton A3',
+            location_type=WarehouseLocation.TYPE_BOX,
+        )
+        item = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            storage_location='Ekspozytor 1',
+            storage_row=2,
+            storage_column=3,
+        )
+        self.client.force_login(self.owner)
+
+        form_response = self.client.get(reverse('collections:warehouse-item-relocate', args=[display.pk, item.pk]))
+        self.assertEqual(form_response.status_code, 200)
+        self.assertContains(form_response, 'Przenieś wariant do innego miejsca')
+        self.assertContains(form_response, 'Karton A3')
+
+        response = self.client.post(
+            reverse('collections:warehouse-item-relocate', args=[display.pk, item.pk]),
+            {
+                'storage_location': 'Karton A3',
+                'storage_row': '',
+                'storage_column': '',
+            },
+        )
+
+        target_location = WarehouseLocation.objects.get(owner=self.owner, name='Karton A3')
+        self.assertRedirects(response, reverse('collections:warehouse-detail', args=[target_location.pk]))
+        item.refresh_from_db()
+        self.assertEqual(item.storage_location, 'Karton A3')
+        self.assertIsNone(item.storage_row)
+        self.assertIsNone(item.storage_column)
+
+    def test_staff_can_clear_variant_slot_from_grid(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        location = WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Ekspozytor 1',
+            location_type=WarehouseLocation.TYPE_DISPLAY,
+            row_count=8,
+            column_count=3,
+        )
+        item = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            storage_location='Ekspozytor 1',
+            storage_row=2,
+            storage_column=3,
+        )
+        self.client.force_login(self.owner)
+
+        detail_response = self.client.get(reverse('collections:warehouse-detail', args=[location.pk]))
+        self.assertContains(detail_response, reverse('collections:warehouse-slot-clear', args=[location.pk, item.pk]))
+        self.assertContains(detail_response, 'Wypnij')
+
+        response = self.client.post(
+            reverse('collections:warehouse-slot-clear', args=[location.pk, item.pk]),
+        )
+
+        self.assertRedirects(response, reverse('collections:warehouse-detail', args=[location.pk]))
+        item.refresh_from_db()
+        self.assertEqual(item.storage_location, 'Ekspozytor 1')
+        self.assertIsNone(item.storage_row)
+        self.assertIsNone(item.storage_column)
 
     def test_renaming_warehouse_location_updates_assigned_collection_items(self):
         self.owner.is_staff = True

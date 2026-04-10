@@ -28,6 +28,7 @@ from .forms import (
     CollectionImportForm,
     CollectionItemForm,
     CollectionItemMultiVariantForm,
+    WarehouseItemRelocateForm,
     WarehouseSlotAssignForm,
     WarehouseLocationForm,
     WantedItemForm,
@@ -1214,6 +1215,59 @@ class WarehouseSlotAssignView(StaffWarehouseRequiredMixin, FormView):
         return context
 
 
+class WarehouseItemRelocateView(StaffWarehouseRequiredMixin, FormView):
+    form_class = WarehouseItemRelocateForm
+    template_name = 'collections/warehouse_item_relocate.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.warehouse_location = get_object_or_404(
+            WarehouseLocation.objects.filter(owner=request.user),
+            pk=self.kwargs['pk'],
+        )
+        self.item = get_object_or_404(
+            CollectionItem.objects.select_related('collection', 'model'),
+            pk=self.kwargs['item_pk'],
+            collection__owner=request.user,
+            storage_location=self.warehouse_location.name,
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['owner'] = self.request.user
+        kwargs['item'] = self.item
+        return kwargs
+
+    def form_valid(self, form):
+        item = form.save()
+        if item.storage_row and item.storage_column:
+            messages.success(
+                self.request,
+                f'Przeniesiono wariant "{item.model.model_name}" do {item.storage_location} (R{item.storage_row} / K{item.storage_column}).',
+            )
+        else:
+            messages.success(
+                self.request,
+                f'Przeniesiono wariant "{item.model.model_name}" do miejsca {item.storage_location}.',
+            )
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        target_location = WarehouseLocation.objects.filter(
+            owner=self.request.user,
+            name=self.item.storage_location,
+        ).first()
+        if target_location:
+            return reverse('collections:warehouse-detail', args=[target_location.pk])
+        return reverse('collections:warehouse-list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['warehouse_location'] = self.warehouse_location
+        context['item'] = self.item
+        return context
+
+
 class WarehouseSlotMoveView(StaffWarehouseRequiredMixin, View):
     def post(self, request, pk, item_pk, row, column):
         warehouse_location = get_object_or_404(WarehouseLocation.objects.filter(owner=request.user), pk=pk)
@@ -1241,6 +1295,22 @@ class WarehouseSlotMoveView(StaffWarehouseRequiredMixin, View):
         item.storage_column = column
         item.save(update_fields=['storage_row', 'storage_column'])
         messages.success(request, f'Przeniesiono wariant "{item.model.model_name}" do slotu R{row} / K{column}.')
+        return redirect(reverse('collections:warehouse-detail', args=[warehouse_location.pk]))
+
+
+class WarehouseSlotClearView(StaffWarehouseRequiredMixin, View):
+    def post(self, request, pk, item_pk):
+        warehouse_location = get_object_or_404(WarehouseLocation.objects.filter(owner=request.user), pk=pk)
+        item = get_object_or_404(
+            CollectionItem.objects.select_related('collection', 'model'),
+            pk=item_pk,
+            collection__owner=request.user,
+            storage_location=warehouse_location.name,
+        )
+        item.storage_row = None
+        item.storage_column = None
+        item.save(update_fields=['storage_row', 'storage_column'])
+        messages.success(request, f'Wypięto wariant "{item.model.model_name}" ze slotu.')
         return redirect(reverse('collections:warehouse-detail', args=[warehouse_location.pk]))
 
 

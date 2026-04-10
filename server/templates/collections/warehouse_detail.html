@@ -34,6 +34,17 @@
     font-weight: 600;
     margin-bottom: 6px;
   }
+  .warehouse-grid-thumb {
+    display: block;
+    width: 100%;
+    height: 72px;
+    object-fit: contain;
+    margin-bottom: 8px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    padding: 6px;
+  }
   .warehouse-grid-meta {
     margin: 0;
     font-size: .88rem;
@@ -92,9 +103,21 @@
             <div class="warehouse-grid-cell{% if not cell.item %} is-empty{% endif %}">
               <span class="warehouse-grid-slot">R{{ row.row_number }} / K{{ cell.column_number }}</span>
               {% if cell.item %}
+                {% if cell.item.image_src %}
+                  <a href="{% url 'collections:item-update' cell.item.pk %}">
+                    <img class="warehouse-grid-thumb" src="{{ cell.item.image_src }}" alt="{{ cell.item.model.model_name }}">
+                  </a>
+                {% endif %}
                 <a class="warehouse-grid-model" href="{% url 'collections:item-update' cell.item.pk %}">{{ cell.item.model.model_name }}</a>
                 <p class="warehouse-grid-meta">{{ cell.item.get_packaging_state_display }} | {{ cell.item.quantity }} szt.</p>
-                <a class="button secondary" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?move_item={{ cell.item.pk }}">Przenieś</a>
+                <div class="actions-row" style="margin-top:8px;">
+                  <a class="button secondary" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?move_item={{ cell.item.pk }}">Przenieś</a>
+                  <a class="button secondary" href="{% url 'collections:warehouse-item-relocate' warehouse_location.pk cell.item.pk %}">Zmień miejsce</a>
+                  <form method="post" action="{% url 'collections:warehouse-slot-clear' warehouse_location.pk cell.item.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="secondary">Wypnij</button>
+                  </form>
+                </div>
               {% else %}
                 <p class="warehouse-grid-meta">Puste miejsce</p>
                 {% if move_item %}
@@ -127,6 +150,13 @@
           </div>
           <div class="actions-row">
             <a class="button secondary" href="{% url 'collections:item-update' item.pk %}">Edytuj wariant</a>
+            <a class="button secondary" href="{% url 'collections:warehouse-item-relocate' warehouse_location.pk item.pk %}">Zmień miejsce</a>
+            {% if item.storage_slot_label %}
+              <form method="post" action="{% url 'collections:warehouse-slot-clear' warehouse_location.pk item.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="secondary">Wypnij ze slotu</button>
+              </form>
+            {% endif %}
           </div>
         </div>
       </article>

@@ -9,20 +9,18 @@ from .models import Collection, CollectionItem, WantedItem, WarehouseLocation
 def validate_storage_slot(owner, storage_location, row, column, *, instance=None):
     storage_location = (storage_location or '').strip()
     if not storage_location:
-        if row or column:
-            raise forms.ValidationError('Najpierw wybierz miejsce w pokoju, aby ustawić wiersz i kolumnę.')
-        return
+        return None, None
 
     if bool(row) != bool(column):
         raise forms.ValidationError('Podaj jednocześnie wiersz i kolumnę albo zostaw oba pola puste.')
 
     location_obj = WarehouseLocation.objects.filter(owner=owner, name=storage_location).first()
     if not location_obj:
-        return
+        return row, column
 
     if row or column:
         if not location_obj.has_grid_layout:
-            raise forms.ValidationError('To miejsce nie ma układu siatki, więc nie możesz wskazać konkretnego slotu.')
+            return None, None
         if row < 1 or row > location_obj.row_count or column < 1 or column > location_obj.column_count:
             raise forms.ValidationError(
                 f'Ten slot nie mieści się w układzie miejsca {location_obj.name} ({location_obj.row_count} x {location_obj.column_count}).'
@@ -37,6 +35,7 @@ def validate_storage_slot(owner, storage_location, row, column, *, instance=None
             slot_queryset = slot_queryset.exclude(pk=instance.pk)
         if slot_queryset.exists():
             raise forms.ValidationError('Ten slot w magazynie jest już zajęty przez inny wariant.')
+    return row, column
 
 
 class CatalogModelChoiceField(forms.ModelChoiceField):
@@ -99,6 +98,49 @@ class WarehouseSlotAssignForm(forms.Form):
         item.storage_column = self.column
         item.save(update_fields=['storage_location', 'storage_row', 'storage_column'])
         return item
+
+
+class WarehouseItemRelocateForm(forms.Form):
+    storage_location = forms.ChoiceField(label='Nowe miejsce')
+    storage_row = forms.IntegerField(required=False, min_value=1, label='Wiersz')
+    storage_column = forms.IntegerField(required=False, min_value=1, label='Kolumna')
+
+    def __init__(self, *args, **kwargs):
+        owner = kwargs.pop('owner')
+        item = kwargs.pop('item')
+        super().__init__(*args, **kwargs)
+        self.owner = owner
+        self.item = item
+        self.location_options = list(
+            WarehouseLocation.objects.filter(owner=owner).values_list('name', flat=True).order_by('name')
+        )
+        if item.storage_location and item.storage_location not in self.location_options:
+            self.location_options.append(item.storage_location)
+            self.location_options.sort()
+        self.fields['storage_location'].choices = [(name, name) for name in self.location_options]
+        self.fields['storage_location'].initial = item.storage_location
+        self.fields['storage_row'].initial = item.storage_row
+        self.fields['storage_column'].initial = item.storage_column
+
+    def clean(self):
+        cleaned_data = super().clean()
+        storage_row, storage_column = validate_storage_slot(
+            self.owner,
+            cleaned_data.get('storage_location'),
+            cleaned_data.get('storage_row'),
+            cleaned_data.get('storage_column'),
+            instance=self.item,
+        )
+        cleaned_data['storage_row'] = storage_row
+        cleaned_data['storage_column'] = storage_column
+        return cleaned_data
+
+    def save(self):
+        self.item.storage_location = (self.cleaned_data.get('storage_location') or '').strip()
+        self.item.storage_row = self.cleaned_data.get('storage_row')
+        self.item.storage_column = self.cleaned_data.get('storage_column')
+        self.item.save(update_fields=['storage_location', 'storage_row', 'storage_column'])
+        return self.item
 
 
 class WarehouseLocationForm(forms.ModelForm):
@@ -333,8 +375,21 @@ class CollectionItemForm(VariantSectionsMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.storage_location_datalist_id = 'storage-location-options'
-        if 'storage_location' in self.fields:
-            self.fields['storage_location'].widget.attrs['list'] = self.storage_location_datalist_id
+        collection = getattr(self.instance, 'collection', None) or getattr(self, 'collection', None)
+        if 'storage_location' in self.fields and collection is not None:
+            location_options = list(
+                WarehouseLocation.objects.filter(owner=collection.owner).values_list('name', flat=True).order_by('name')
+            )
+            current_location = (self.instance.storage_location or '').strip()
+            if current_location and current_location not in location_options:
+                location_options.append(current_location)
+                location_options.sort()
+            self.fields['storage_location'] = forms.ChoiceField(
+                required=False,
+                label='Miejsce w pokoju',
+                choices=[('', 'Bez miejsca')] + [(name, name) for name in location_options],
+                help_text='Wybierz miejsce magazynowe dla tego wariantu.',
+            )
         model = getattr(self.instance, 'model', None) or self.initial.get('model')
         if model and hasattr(model, 'available_packaging_choices'):
             self.fields['packaging_state'].choices = model.available_packaging_choices
@@ -360,13 +415,15 @@ class CollectionItemForm(VariantSectionsMixin, forms.ModelForm):
         if collection is None:
             return cleaned_data
 
-        validate_storage_slot(
+        storage_row, storage_column = validate_storage_slot(
             collection.owner,
             cleaned_data.get('storage_location'),
             cleaned_data.get('storage_row'),
             cleaned_data.get('storage_column'),
             instance=self.instance,
         )
+        cleaned_data['storage_row'] = storage_row
+        cleaned_data['storage_column'] = storage_column
 
         queryset = CollectionItem.objects.filter(
             collection=collection,
@@ -521,6 +578,12 @@ class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
                 except forms.ValidationError as exc:
                     self.add_error(None, exc)
                     continue
+                variant['storage_row'], variant['storage_column'] = validate_storage_slot(
+                    self.collection.owner,
+                    variant['storage_location'],
+                    variant['storage_row'],
+                    variant['storage_column'],
+                )
                 if CollectionItem.objects.filter(
                     collection=self.collection,
                     model=model,
@@ -617,6 +680,12 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
                 except forms.ValidationError as exc:
                     self.add_error(None, exc)
                     continue
+                variant['storage_row'], variant['storage_column'] = validate_storage_slot(
+                    collection.owner,
+                    variant['storage_location'],
+                    variant['storage_row'],
+                    variant['storage_column'],
+                )
                 if CollectionItem.objects.filter(
                     collection=collection,
                     model=model,

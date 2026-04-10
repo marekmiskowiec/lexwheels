@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Przenieś wariant | Magazyn | LexWheels{% endblock %}
+{% block content %}
+<section class="panel hero" style="max-width:780px; margin-inline:auto;">
+  <div class="hero-copy">
+    <span class="eyebrow">Magazyn</span>
+    <h1>Przenieś wariant do innego miejsca</h1>
+    <p class="meta">Aktualnie: {{ warehouse_location.name }}{% if item.storage_slot_label %} | {{ item.storage_slot_label }}{% endif %}</p>
+    <p><strong>{{ item.model.model_name }}</strong> | {{ item.get_packaging_state_display }} | {{ item.quantity }} szt.</p>
+  </div>
+</section>
+
+<section class="panel" style="max-width:780px; margin-inline:auto;">
+  <form method="post" class="stack-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="form-grid">
+      <label>
+        <span>Nowe miejsce</span>
+        {{ form.storage_location }}
+        {{ form.storage_location.errors }}
+      </label>
+      <label>
+        <span>Wiersz</span>
+        {{ form.storage_row }}
+        {{ form.storage_row.errors }}
+      </label>
+      <label>
+        <span>Kolumna</span>
+        {{ form.storage_column }}
+        {{ form.storage_column.errors }}
+      </label>
+    </div>
+    <p class="meta">Dla kartonu albo miejsca bez siatki zostaw pola wiersza i kolumny puste.</p>
+    <div class="actions-row">
+      <button type="submit" class="button">Zapisz nowe miejsce</button>
+      <a class="button secondary" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}">Anuluj</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
