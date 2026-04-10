@@ -50,6 +50,38 @@
     font-size: .88rem;
     color: var(--muted);
   }
+  .warehouse-quick-attach-panel {
+    margin: 18px 0;
+  }
+  .warehouse-quick-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .warehouse-quick-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.03);
+  }
+  .warehouse-quick-item strong {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .warehouse-quick-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .warehouse-quick-current {
+    color: var(--muted);
+    font-size: .9rem;
+  }
 </style>
 {% endblock %}
 {% block content %}
@@ -75,10 +107,103 @@
   <div class="stat-card"><strong>{{ location_stats.variant_count }}</strong><span>Warianty</span></div>
   <div class="stat-card"><strong>{{ location_stats.total_quantity }}</strong><span>Sztuk</span></div>
   <div class="stat-card"><strong>{{ location_stats.collection_count }}</strong><span>Kolekcje</span></div>
+  <div class="stat-card"><strong>{{ operational_stats.without_location }}</strong><span>Bez miejsca</span></div>
+  <div class="stat-card"><strong>{{ operational_stats.in_this_location }}</strong><span>W tym miejscu</span></div>
+  <div class="stat-card"><strong>{{ operational_stats.in_other_location }}</strong><span>W innym miejscu</span></div>
   {% if warehouse_location.has_grid_layout %}
-    <div class="stat-card"><strong>{{ location_stats.slot_capacity }}</strong><span>Pojemność</span></div>
-    <div class="stat-card"><strong>{{ location_stats.occupied_slots }}</strong><span>Zajęte sloty</span></div>
-    <div class="stat-card"><strong>{{ location_stats.remaining_capacity }}</strong><span>Wolne miejsca</span></div>
+    <div class="stat-card"><strong>{{ operational_stats.free_slots }}</strong><span>Wolne sloty</span></div>
+  {% endif %}
+</section>
+
+<section class="panel warehouse-quick-attach-panel">
+  <div class="section-head">
+    <div>
+      <h2>Szybko przypnij model</h2>
+      <p class="meta">
+        {% if warehouse_location.has_grid_layout %}
+          Wybierz wariant poniżej, a potem wskaż pusty slot w siatce.
+        {% else %}
+          Wybierz wariant i przypnij go do tego miejsca jednym kliknięciem.
+        {% endif %}
+      </p>
+    </div>
+    {% if quick_attach_item %}
+      <a class="button secondary" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?quick_q={{ quick_query|urlencode }}{% if quick_collection_id %}&quick_collection={{ quick_collection_id|urlencode }}{% endif %}">Anuluj wybór wariantu</a>
+    {% endif %}
+  </div>
+
+  <form method="get" class="form-layout">
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="quick-attach-query">Szukaj wariantu</label>
+        <input id="quick-attach-query" type="search" name="quick_q" value="{{ quick_query }}" placeholder="Np. Ferrari, HCT06, Karton A3">
+      </div>
+      <div class="form-field">
+        <label for="quick-attach-collection">Kolekcja</label>
+        <select id="quick-attach-collection" name="quick_collection">
+          <option value="">Wszystkie kolekcje</option>
+          {% for collection_id, collection_name in quick_collection_options %}
+            <option value="{{ collection_id }}"{% if quick_collection_id == collection_id|stringformat:'s' %} selected{% endif %}>{{ collection_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="actions-row">
+      <button type="submit">Pokaż warianty</button>
+      {% if quick_query or quick_collection_id or quick_attach_item %}
+        <a class="button secondary" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}">Wyczyść</a>
+      {% endif %}
+    </div>
+    <p class="meta" style="margin-top:10px;">Znalezione warianty: {{ quick_candidate_count }}</p>
+  </form>
+
+  {% if quick_attach_item and warehouse_location.has_grid_layout %}
+    <p class="meta" style="margin-top:14px;">Wybrany wariant: <strong>{{ quick_attach_item.model.model_name }}</strong>. Kliknij pusty slot poniżej, aby go przypiąć.</p>
+    {% if not operational_stats.free_slots %}
+      <p class="meta">Brak wolnych slotów w tym miejscu.</p>
+    {% endif %}
+  {% endif %}
+
+  {% if quick_candidates %}
+    <div class="warehouse-quick-list">
+      {% for item in quick_candidates %}
+        <article class="warehouse-quick-item">
+          <div>
+            <strong>{{ item.model.model_name }}</strong>
+            <p class="meta" style="margin:0 0 4px;">{{ item.collection.name }} | {{ item.get_packaging_state_display }} | {{ item.get_condition_display }} | {{ item.quantity }} szt.</p>
+            <p class="warehouse-quick-current" style="margin:0;">
+              {% if not item.storage_location %}
+                Bez miejsca
+              {% elif item.storage_location == warehouse_location.name %}
+                W tym miejscu{% if item.storage_slot_label %} | {{ item.storage_slot_label }}{% endif %}
+              {% else %}
+                W innym miejscu: {{ item.storage_location }}{% if item.storage_slot_label %} | {{ item.storage_slot_label }}{% endif %}
+              {% endif %}
+            </p>
+          </div>
+          <div class="warehouse-quick-actions">
+            {% if warehouse_location.has_grid_layout %}
+              {% if operational_stats.free_slots %}
+                <a class="button secondary" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?attach_item={{ item.pk }}{% if quick_query %}&quick_q={{ quick_query|urlencode }}{% endif %}{% if quick_collection_id %}&quick_collection={{ quick_collection_id|urlencode }}{% endif %}">
+                  {% if item.storage_location %}Przenieś do slotu{% else %}Wybierz slot{% endif %}
+                </a>
+              {% else %}
+                <span class="meta">Brak wolnych slotów</span>
+              {% endif %}
+            {% elif item.storage_location == warehouse_location.name and not item.storage_slot_label %}
+              <span class="meta">Już przypięty tutaj</span>
+            {% else %}
+              <form method="post" action="{% url 'collections:warehouse-quick-attach' warehouse_location.pk item.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="secondary">{% if item.storage_location %}Przenieś tutaj{% else %}Przypnij tutaj{% endif %}</button>
+              </form>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="meta" style="margin-top:14px;">Brak wariantów pasujących do filtrów.</p>
   {% endif %}
 </section>
 
@@ -124,6 +249,11 @@
                   <form method="post" action="{% url 'collections:warehouse-slot-move' warehouse_location.pk row.row_number cell.column_number move_item.pk %}">
                     {% csrf_token %}
                     <button type="submit" class="secondary">Przenieś tutaj</button>
+                  </form>
+                {% elif quick_attach_item and operational_stats.free_slots %}
+                  <form method="post" action="{% url 'collections:warehouse-quick-slot-attach' warehouse_location.pk row.row_number cell.column_number quick_attach_item.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="secondary">{% if quick_attach_item.storage_location %}Przenieś tutaj{% else %}Przypnij tutaj{% endif %}</button>
                   </form>
                 {% else %}
                   <a class="button secondary" href="{% url 'collections:warehouse-slot-assign' warehouse_location.pk row.row_number cell.column_number %}">Przypisz wariant</a>

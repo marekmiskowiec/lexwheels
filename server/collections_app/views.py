@@ -1168,6 +1168,9 @@ class WarehouseLocationDetailView(StaffWarehouseRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        quick_query = self.request.GET.get('quick_q', '').strip()
+        quick_collection_id = self.request.GET.get('quick_collection', '').strip()
+        attach_item_id = self.request.GET.get('attach_item', '').strip()
         items = (
             CollectionItem.objects.filter(
                 collection__owner=self.request.user,
@@ -1198,24 +1201,120 @@ class WarehouseLocationDetailView(StaffWarehouseRequiredMixin, DetailView):
                         ],
                     }
                 )
+        free_slot_count = max(self.object.slot_capacity - occupied_slots, 0) if self.object.has_grid_layout else 0
         move_item_id = self.request.GET.get('move_item', '').strip()
         move_item = None
         if move_item_id.isdigit():
             move_item = items.filter(pk=int(move_item_id)).first()
+        quick_candidates_queryset = CollectionItem.objects.filter(
+            collection__owner=self.request.user,
+            collection__kind=Collection.KIND_OWNED,
+        ).select_related('collection', 'model')
+        if quick_collection_id.isdigit():
+            quick_candidates_queryset = quick_candidates_queryset.filter(collection_id=int(quick_collection_id))
+        if quick_query:
+            quick_candidates_queryset = quick_candidates_queryset.filter(
+                Q(model__model_name__icontains=quick_query)
+                | Q(model__toy__icontains=quick_query)
+                | Q(model__number__icontains=quick_query)
+                | Q(model__brand__icontains=quick_query)
+                | Q(model__series__icontains=quick_query)
+                | Q(storage_location__icontains=quick_query)
+            )
+        quick_candidates = list(
+            quick_candidates_queryset.order_by(
+                'collection__name', 'model__year', 'model__number', 'model__model_name', 'packaging_state'
+            )[:25]
+        )
+        attach_item = None
+        if attach_item_id.isdigit():
+            attach_item = quick_candidates_queryset.filter(pk=int(attach_item_id)).first()
+        operational_stats = {
+            'without_location': CollectionItem.objects.filter(
+                collection__owner=self.request.user,
+                collection__kind=Collection.KIND_OWNED,
+                storage_location='',
+            ).count(),
+            'in_this_location': CollectionItem.objects.filter(
+                collection__owner=self.request.user,
+                collection__kind=Collection.KIND_OWNED,
+                storage_location=self.object.name,
+            ).count(),
+            'in_other_location': CollectionItem.objects.filter(
+                collection__owner=self.request.user,
+                collection__kind=Collection.KIND_OWNED,
+            ).exclude(storage_location='').exclude(storage_location=self.object.name).count(),
+            'free_slots': free_slot_count,
+        }
         context['stored_items'] = items
         context['grid_rows'] = grid_rows
         context['move_item'] = move_item
+        context['quick_candidates'] = quick_candidates
+        context['quick_query'] = quick_query
+        context['quick_collection_id'] = quick_collection_id
+        context['quick_collection_options'] = (
+            Collection.objects.filter(owner=self.request.user, kind=Collection.KIND_OWNED)
+            .order_by('name')
+            .values_list('id', 'name')
+        )
+        context['quick_candidate_count'] = quick_candidates_queryset.count()
+        context['quick_attach_item'] = attach_item
+        context['operational_stats'] = operational_stats
         context['location_stats'] = {
             'variant_count': items.count(),
             'total_quantity': total_quantity,
             'collection_count': items.values('collection_id').distinct().count(),
             'slot_capacity': self.object.slot_capacity,
             'occupied_slots': occupied_slots,
-            'remaining_capacity': max(self.object.slot_capacity - used_capacity, 0)
-            if self.object.has_grid_layout
-            else 0,
+            'remaining_capacity': free_slot_count if self.object.has_grid_layout else 0,
         }
         return context
+
+
+class WarehouseQuickAttachView(StaffWarehouseRequiredMixin, View):
+    def post(self, request, pk, item_pk):
+        warehouse_location = get_object_or_404(WarehouseLocation.objects.filter(owner=request.user), pk=pk)
+        item = get_object_or_404(
+            CollectionItem.objects.select_related('collection', 'model'),
+            pk=item_pk,
+            collection__owner=request.user,
+        )
+        item.storage_location = warehouse_location.name
+        item.storage_row = None
+        item.storage_column = None
+        item.save(update_fields=['storage_location', 'storage_row', 'storage_column'])
+        messages.success(request, f'Przypięto wariant "{item.model.model_name}" do miejsca {warehouse_location.name}.')
+        return redirect(reverse('collections:warehouse-detail', args=[warehouse_location.pk]))
+
+
+class WarehouseQuickSlotAttachView(StaffWarehouseRequiredMixin, View):
+    def post(self, request, pk, item_pk, row, column):
+        warehouse_location = get_object_or_404(WarehouseLocation.objects.filter(owner=request.user), pk=pk)
+        item = get_object_or_404(
+            CollectionItem.objects.select_related('collection', 'model'),
+            pk=item_pk,
+            collection__owner=request.user,
+        )
+        row = int(row)
+        column = int(column)
+        if not warehouse_location.has_grid_layout:
+            raise Http404
+        if not (1 <= row <= warehouse_location.row_count and 1 <= column <= warehouse_location.column_count):
+            raise Http404
+        try:
+            validate_storage_slot(request.user, warehouse_location.name, row, column, instance=item)
+        except forms.ValidationError as exc:
+            for error in exc.messages:
+                messages.error(request, error)
+            query = urlencode({'attach_item': item.pk})
+            return redirect(f"{reverse('collections:warehouse-detail', args=[warehouse_location.pk])}?{query}")
+
+        item.storage_location = warehouse_location.name
+        item.storage_row = row
+        item.storage_column = column
+        item.save(update_fields=['storage_location', 'storage_row', 'storage_column'])
+        messages.success(request, f'Przypięto wariant "{item.model.model_name}" do slotu R{row} / K{column}.')
+        return redirect(reverse('collections:warehouse-detail', args=[warehouse_location.pk]))
 
 
 class WarehouseSlotAssignView(StaffWarehouseRequiredMixin, FormView):
