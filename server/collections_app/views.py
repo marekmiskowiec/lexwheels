@@ -27,9 +27,10 @@ from .forms import (
     CollectionImportForm,
     CollectionItemForm,
     CollectionItemMultiVariantForm,
+    WarehouseLocationForm,
     WantedItemForm,
 )
-from .models import Collection, CollectionItem, WantedItem
+from .models import Collection, CollectionItem, WantedItem, WarehouseLocation
 from .models import ImportBacklogEntry, ImportBacklogReport
 
 
@@ -52,6 +53,16 @@ def build_chart_rows(rows, label_map=None):
 
 def collection_filter_session_key(collection_id):
     return f'collection_filters_{collection_id}'
+
+
+def storage_location_suggestions_for_user(user):
+    if not user.is_authenticated:
+        return []
+    return list(
+        WarehouseLocation.objects.filter(owner=user, is_active=True)
+        .values_list('name', flat=True)
+        .order_by('sort_order', 'name')
+    )
 
 
 ATTRIBUTE_FILTER_FIELDS = (
@@ -847,6 +858,7 @@ class CollectionDetailView(DetailView):
                     'brand',
                     'condition',
                     'packaging',
+                    'location',
                     'duplicates_only',
                     'favorite_only',
                     'sort',
@@ -889,6 +901,7 @@ class CollectionDetailView(DetailView):
         selected_brand = self.request.GET.get('brand', '').strip()
         selected_condition = self.request.GET.get('condition', '').strip()
         selected_packaging = self.request.GET.get('packaging', '').strip()
+        selected_location = self.request.GET.get('location', '').strip()
         duplicates_only = self.request.GET.get('duplicates_only', '').strip() == '1'
         favorite_only = self.request.GET.get('favorite_only', '').strip() == '1'
         selected_sort = self.request.GET.get('sort', '').strip()
@@ -919,6 +932,8 @@ class CollectionDetailView(DetailView):
             items = items.filter(condition=selected_condition)
         if selected_packaging in dict(CollectionItem.PACKAGING_CHOICES):
             items = items.filter(packaging_state=selected_packaging)
+        if selected_location:
+            items = items.filter(storage_location=selected_location)
         if favorite_only:
             items = items.filter(is_favorite=True)
         for query_key, model_field in ATTRIBUTE_FILTER_FIELDS:
@@ -934,6 +949,7 @@ class CollectionDetailView(DetailView):
                 {
                     'model': variants[0].model,
                     'variants': variants,
+                    'storage_locations': sorted({item.storage_location for item in variants if item.storage_location}),
                     'total_quantity': sum(item.quantity for item in variants),
                     'favorite_count': sum(1 for item in variants if item.is_favorite),
                     'latest_variant_pk': max(item.pk for item in variants),
@@ -997,6 +1013,7 @@ class CollectionDetailView(DetailView):
         context['selected_brand'] = selected_brand
         context['selected_condition'] = selected_condition
         context['selected_packaging'] = selected_packaging
+        context['selected_location'] = selected_location
         context['duplicates_only'] = duplicates_only
         context['favorite_only'] = favorite_only
         context['selected_sort'] = selected_sort
@@ -1032,6 +1049,12 @@ class CollectionDetailView(DetailView):
         )
         context['condition_options'] = CollectionItem.CONDITION_CHOICES
         context['packaging_options'] = CollectionItem.PACKAGING_CHOICES
+        context['location_options'] = (
+            self.object.items.exclude(storage_location='')
+            .values_list('storage_location', flat=True)
+            .distinct()
+            .order_by('storage_location')
+        )
         context['sort_options'] = self.SORT_OPTIONS
         context['boolean_filter_options'] = (
             ('', 'Wszystkie'),
@@ -1053,6 +1076,100 @@ class OwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         if isinstance(obj, WantedItem):
             return obj.owner == self.request.user
         return obj.collection.owner == self.request.user
+
+
+class StaffWarehouseRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
+
+
+class WarehouseLocationListView(StaffWarehouseRequiredMixin, TemplateView):
+    template_name = 'collections/warehouse_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        locations = []
+        for location in WarehouseLocation.objects.filter(owner=self.request.user).order_by('sort_order', 'name'):
+            items = CollectionItem.objects.filter(collection__owner=self.request.user, storage_location=location.name).select_related('model')
+            locations.append(
+                {
+                    'location': location,
+                    'item_count': items.count(),
+                    'total_quantity': items.aggregate(total=Sum('quantity'))['total'] or 0,
+                    'favorite_count': items.filter(is_favorite=True).count(),
+                }
+            )
+        context['locations'] = locations
+        context['warehouse_stats'] = {
+            'location_count': len(locations),
+            'active_count': sum(1 for row in locations if row['location'].is_active),
+            'assigned_item_count': sum(row['item_count'] for row in locations),
+            'assigned_quantity': sum(row['total_quantity'] for row in locations),
+        }
+        return context
+
+
+class WarehouseLocationDetailView(StaffWarehouseRequiredMixin, DetailView):
+    model = WarehouseLocation
+    template_name = 'collections/warehouse_detail.html'
+    context_object_name = 'warehouse_location'
+
+    def get_queryset(self):
+        return WarehouseLocation.objects.filter(owner=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        items = (
+            CollectionItem.objects.filter(
+                collection__owner=self.request.user,
+                storage_location=self.object.name,
+            )
+            .select_related('collection', 'model')
+            .order_by('collection__name', 'model__year', 'model__number', 'model__model_name', 'packaging_state')
+        )
+        context['stored_items'] = items
+        context['location_stats'] = {
+            'variant_count': items.count(),
+            'total_quantity': items.aggregate(total=Sum('quantity'))['total'] or 0,
+            'collection_count': items.values('collection_id').distinct().count(),
+        }
+        return context
+
+
+class WarehouseLocationCreateView(StaffWarehouseRequiredMixin, CreateView):
+    model = WarehouseLocation
+    form_class = WarehouseLocationForm
+    template_name = 'collections/warehouse_form.html'
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        messages.success(self.request, 'Dodano miejsce do magazynu.')
+        return super().form_valid(form)
+
+
+class WarehouseLocationUpdateView(StaffWarehouseRequiredMixin, UpdateView):
+    model = WarehouseLocation
+    form_class = WarehouseLocationForm
+    template_name = 'collections/warehouse_form.html'
+
+    def get_queryset(self):
+        return WarehouseLocation.objects.filter(owner=self.request.user)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Zapisano zmiany w magazynie.')
+        return super().form_valid(form)
+
+
+class WarehouseLocationDeleteView(StaffWarehouseRequiredMixin, DeleteView):
+    model = WarehouseLocation
+    template_name = 'collections/warehouse_confirm_delete.html'
+
+    def get_queryset(self):
+        return WarehouseLocation.objects.filter(owner=self.request.user)
+
+    def get_success_url(self):
+        messages.success(self.request, 'Usunięto miejsce z magazynu.')
+        return reverse('collections:warehouse-list')
 
 
 class CollectionUpdateView(OwnerRequiredMixin, UpdateView):
@@ -1341,6 +1458,7 @@ class CollectionItemCreateView(LoginRequiredMixin, FormView):
         kwargs['collection'] = self.collection
         kwargs['model_query'] = model_query
         kwargs['selected_model_id'] = selected_model_id
+        kwargs['storage_location_suggestions'] = storage_location_suggestions_for_user(self.request.user)
         return kwargs
 
     def get_initial(self):
@@ -1372,6 +1490,7 @@ class CollectionItemCreateView(LoginRequiredMixin, FormView):
         context['model_query'] = self.request.GET.get('q', '').strip() or self.request.POST.get('_model_query', '').strip()
         context['model_results_count'] = context['form'].fields['model'].queryset.count()
         context['selected_model_for_variant_add'] = fixed_model
+        context['storage_location_options'] = storage_location_suggestions_for_user(self.request.user)
         return context
 
 
@@ -1382,6 +1501,7 @@ class CatalogQuickAddView(LoginRequiredMixin, FormView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['owner'] = self.request.user
+        kwargs['storage_location_suggestions'] = storage_location_suggestions_for_user(self.request.user)
         return kwargs
 
     def form_valid(self, form):
@@ -1417,6 +1537,7 @@ class CollectionItemUpdateView(OwnerRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context['is_multi_variant_form'] = False
         context['collection_obj'] = self.object.collection
+        context['storage_location_options'] = storage_location_suggestions_for_user(self.request.user)
         return context
 
 

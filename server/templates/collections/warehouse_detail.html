@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ warehouse_location.name }} | Magazyn | LexWheels{% endblock %}
+{% block content %}
+<section class="panel hero">
+  <div class="hero-copy">
+    <span class="eyebrow">Magazyn</span>
+    <h1>{{ warehouse_location.name }}</h1>
+    <p class="meta">{{ warehouse_location.get_location_type_display }}{% if not warehouse_location.is_active %} | nieaktywne{% endif %}</p>
+    {% if warehouse_location.description %}<p>{{ warehouse_location.description }}</p>{% endif %}
+    <div class="actions-row">
+      <a class="button" href="{% url 'collections:warehouse-create' %}">Dodaj kolejne miejsce</a>
+      <a class="button secondary" href="{% url 'collections:warehouse-list' %}">Wróć do magazynu</a>
+      <a class="button secondary" href="{% url 'collections:warehouse-update' warehouse_location.pk %}">Edytuj miejsce</a>
+      <a class="button secondary" href="{% url 'collections:warehouse-delete' warehouse_location.pk %}">Usuń miejsce</a>
+    </div>
+  </div>
+</section>
+
+<section class="stats-strip">
+  <div class="stat-card"><strong>{{ location_stats.variant_count }}</strong><span>Warianty</span></div>
+  <div class="stat-card"><strong>{{ location_stats.total_quantity }}</strong><span>Sztuk</span></div>
+  <div class="stat-card"><strong>{{ location_stats.collection_count }}</strong><span>Kolekcje</span></div>
+</section>
+
+<section class="list">
+  {% if stored_items %}
+    {% for item in stored_items %}
+      <article class="panel list-item">
+        <div class="section-head">
+          <div>
+            <h2 style="margin-bottom:6px;"><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h2>
+            <p class="meta">{{ item.collection.name }} | {{ item.get_packaging_state_display }} | {{ item.get_condition_display }} | {{ item.quantity }} szt.</p>
+            <p class="meta">Toy: {{ item.model.toy|default:"-" }} | Nr: {{ item.model.number|default:"-" }}{% if item.model.year %} | {{ item.model.year }}{% endif %}</p>
+          </div>
+          <div class="actions-row">
+            <a class="button secondary" href="{% url 'collections:item-update' item.pk %}">Edytuj wariant</a>
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+  {% else %}
+    <div class="panel empty-panel">
+      <h2>Brak modeli w tym miejscu</h2>
+      <p>To miejsce istnieje w magazynie, ale żaden wariant nie ma jeszcze przypisanego tego pola lokalizacji.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

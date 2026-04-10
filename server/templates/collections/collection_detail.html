@@ -278,6 +278,17 @@
           {% endfor %}
         </select>
       </div>
+      {% if user == collection_obj.owner %}
+        <div style="flex: 1 1 240px;">
+          <label for="location">Miejsce</label>
+          <select id="location" name="location">
+            <option value="">Wszystkie miejsca</option>
+            {% for location in location_options %}
+              <option value="{{ location }}" {% if selected_location == location %}selected{% endif %}>{{ location }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      {% endif %}
       <div style="flex: 1 1 220px;">
         <label for="sort">Sortowanie</label>
         <select id="sort" name="sort">
@@ -349,7 +360,7 @@
       <div><button type="submit">Szukaj</button></div>
       <div><button type="submit" name="save_filters" value="1" class="secondary">Zapisz filtry</button></div>
       {% if saved_filters %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}?apply_saved_filters=1">Przywróć zapisane</a></div><div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}?clear_saved_filters=1">Usuń zapisane</a></div>{% endif %}
-      {% if query or selected_year or selected_category or selected_series or selected_brand or selected_condition or selected_packaging or duplicates_only or favorite_only or selected_sort != 'recent' or selected_sealed or selected_soft_corners or selected_protector or selected_signed or selected_bent_hook or selected_cracked_blister %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Usuń wszystkie filtry</a></div>{% endif %}
+      {% if query or selected_year or selected_category or selected_series or selected_brand or selected_condition or selected_packaging or selected_location or duplicates_only or favorite_only or selected_sort != 'recent' or selected_sealed or selected_soft_corners or selected_protector or selected_signed or selected_bent_hook or selected_cracked_blister %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Usuń wszystkie filtry</a></div>{% endif %}
     </form>
     <p class="meta" style="margin:12px 0 0;">Wyświetlasz {{ filtered_count }} modeli{% if query %} dla frazy "{{ query }}"{% endif %}{% if duplicates_only %} z duplikatami{% endif %}{% if favorite_only %} oznaczonych jako ulubione{% endif %}.</p>
   </div>
@@ -374,6 +385,9 @@
           <h3><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h3>
           <p class="meta">{{ item.model.year|default:"-" }} | {{ item.model.category|default:"-" }}{% if item.model.brand %} | {{ item.model.brand }}{% endif %}</p>
           <p class="meta">Toy: {{ item.model.toy|default:"-" }} | Nr: {{ item.model.number|default:"-" }}</p>
+          {% if user == collection_obj.owner and item.storage_locations %}
+            <p class="meta">Miejsca: {{ item.storage_locations|join:", " }}</p>
+          {% endif %}
           {% if user == collection_obj.owner %}
             <p class="meta" style="margin:2px 0 0;"><a href="{% url 'collections:item-create' collection_obj.pk %}?model={{ item.model.pk }}">Dodaj wariant</a></p>
           {% endif %}
@@ -395,6 +409,9 @@
               {% endif %}
               <div class="collection-variant-body">
                 <p class="meta collection-variant-summary">{{ variant.get_packaging_state_display }} | stan: {{ variant.get_condition_display }} | ilość: {{ variant.quantity }}</p>
+                {% if user == collection_obj.owner and variant.storage_location %}
+                  <p class="meta collection-variant-summary">Miejsce: {{ variant.storage_location }}</p>
+                {% endif %}
                 {% if variant.attribute_badges %}
                   <p class="meta collection-variant-summary">Cechy: {{ variant.attribute_badges|join:", " }}</p>
                 {% endif %}

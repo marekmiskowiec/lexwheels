@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Usuń miejsce | Magazyn | LexWheels{% endblock %}
+{% block content %}
+<section class="panel form-shell">
+  <div class="hero-copy">
+    <span class="eyebrow">Magazyn</span>
+    <h1>Usuń miejsce</h1>
+    <p>Czy na pewno chcesz usunąć miejsce <strong>{{ object.name }}</strong>?</p>
+    <p class="meta">Usunięcie miejsca nie skasuje modeli z kolekcji. Zostanie tylko usunięty wpis w module magazynu.</p>
+  </div>
+  <form method="post" class="form-actions">
+    {% csrf_token %}
+    <button type="submit">Usuń</button>
+    <a class="button secondary" href="{% url 'collections:warehouse-detail' object.pk %}">Anuluj</a>
+  </form>
+</section>
+{% endblock %}

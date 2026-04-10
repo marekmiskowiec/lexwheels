@@ -3,7 +3,7 @@ from django.db.models import Q
 
 from catalog.models import HotWheelsModel
 
-from .models import Collection, CollectionItem, WantedItem
+from .models import Collection, CollectionItem, WantedItem, WarehouseLocation
 
 
 class CatalogModelChoiceField(forms.ModelChoiceField):
@@ -15,6 +15,23 @@ class CollectionForm(forms.ModelForm):
     class Meta:
         model = Collection
         fields = ('name', 'description', 'visibility')
+
+
+class WarehouseLocationForm(forms.ModelForm):
+    class Meta:
+        model = WarehouseLocation
+        fields = ('name', 'location_type', 'description', 'sort_order', 'is_active')
+        labels = {
+            'name': 'Nazwa miejsca',
+            'location_type': 'Typ miejsca',
+            'description': 'Opis',
+            'sort_order': 'Kolejność',
+            'is_active': 'Aktywne',
+        }
+        help_texts = {
+            'name': 'Np. Karton A3, ściana nad biurkiem, regał 2.',
+            'description': 'Opcjonalny opis miejsca w magazynie.',
+        }
 
 
 class CollectionImportForm(forms.Form):
@@ -98,6 +115,7 @@ class VariantSectionsMixin:
             enabled_name = f'enabled_{packaging_value}'
             quantity_name = f'quantity_{packaging_value}'
             condition_name = f'condition_{packaging_value}'
+            location_name = f'storage_location_{packaging_value}'
             sealed_name = f'is_sealed_{packaging_value}'
             soft_corners_name = f'has_soft_corners_{packaging_value}'
             protector_name = f'has_protector_{packaging_value}'
@@ -113,6 +131,9 @@ class VariantSectionsMixin:
                 initial='good',
                 label='Stan',
             )
+            self.fields[location_name] = forms.CharField(required=False, max_length=255, label='Miejsce w pokoju')
+            if getattr(self, 'storage_location_datalist_id', ''):
+                self.fields[location_name].widget.attrs['list'] = self.storage_location_datalist_id
             self.fields[sealed_name] = forms.BooleanField(required=False, label='Zafoliowany')
             self.fields[soft_corners_name] = forms.BooleanField(required=False, label='Miękkie rogi')
             self.fields[protector_name] = forms.BooleanField(required=False, label='Protektor')
@@ -127,6 +148,7 @@ class VariantSectionsMixin:
                     'enabled': self[enabled_name],
                     'quantity': self[quantity_name],
                     'condition': self[condition_name],
+                    'storage_location': self[location_name],
                     'is_sealed': self[sealed_name],
                     'has_soft_corners': self[soft_corners_name],
                     'has_protector': self[protector_name],
@@ -158,6 +180,7 @@ class VariantSectionsMixin:
                         'packaging_value': packaging_value,
                         'quantity': quantity,
                         'condition': condition,
+                        'storage_location': (self.cleaned_data.get(f'storage_location_{packaging_value}', '') or '').strip(),
                         'is_sealed': self.cleaned_data.get(f'is_sealed_{packaging_value}', False),
                         'has_soft_corners': self.cleaned_data.get(f'has_soft_corners_{packaging_value}', False),
                         'has_protector': self.cleaned_data.get(f'has_protector_{packaging_value}', False),
@@ -188,12 +211,22 @@ class CollectionItemForm(VariantSectionsMixin, forms.ModelForm):
             'has_bent_hook',
             'has_cracked_blister',
             'acquired_at',
+            'storage_location',
             'notes',
             'is_favorite',
         )
+        labels = {
+            'storage_location': 'Miejsce w pokoju',
+        }
+        help_texts = {
+            'storage_location': 'Np. Karton A3, ściana nad biurkiem, regał 2.',
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.storage_location_datalist_id = 'storage-location-options'
+        if 'storage_location' in self.fields:
+            self.fields['storage_location'].widget.attrs['list'] = self.storage_location_datalist_id
         model = getattr(self.instance, 'model', None) or self.initial.get('model')
         if model and hasattr(model, 'available_packaging_choices'):
             self.fields['packaging_state'].choices = model.available_packaging_choices
@@ -312,9 +345,12 @@ class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
         collection = kwargs.pop('collection')
         model_query = kwargs.pop('model_query', '')
         selected_model_id = kwargs.pop('selected_model_id', '')
+        storage_location_suggestions = kwargs.pop('storage_location_suggestions', [])
         super().__init__(*args, **kwargs)
         self.collection = collection
         self.model_query = (model_query or '').strip()
+        self.storage_location_suggestions = storage_location_suggestions
+        self.storage_location_datalist_id = 'storage-location-options'
 
         queryset = HotWheelsModel.objects.none()
         selected_model = None
@@ -387,6 +423,7 @@ class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
                     packaging_state=variant['packaging_value'],
                     quantity=variant['quantity'],
                     condition=variant['condition'],
+                    storage_location=variant['storage_location'],
                     is_sealed=variant['is_sealed'],
                     has_soft_corners=variant['has_soft_corners'],
                     has_protector=variant['has_protector'],
@@ -405,6 +442,7 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
 
     def __init__(self, *args, **kwargs):
         owner = kwargs.pop('owner')
+        storage_location_suggestions = kwargs.pop('storage_location_suggestions', [])
         super().__init__(*args, **kwargs)
         self.fields['collection'].queryset = Collection.objects.filter(
             owner=owner,
@@ -412,6 +450,8 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
         ).order_by('name')
         self.fields['model'].queryset = HotWheelsModel.objects.all()
         self.condition_choices = CollectionItem.CONDITION_CHOICES
+        self.storage_location_suggestions = storage_location_suggestions
+        self.storage_location_datalist_id = 'storage-location-options'
         self.build_variant_sections()
 
     def clean(self):
@@ -465,6 +505,7 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
                     packaging_state=variant['packaging_value'],
                     quantity=variant['quantity'],
                     condition=variant['condition'],
+                    storage_location=variant['storage_location'],
                     is_sealed=variant['is_sealed'],
                     has_soft_corners=variant['has_soft_corners'],
                     has_protector=variant['has_protector'],

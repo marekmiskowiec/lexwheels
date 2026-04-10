@@ -9,6 +9,13 @@
 </section>
 
 <section class="panel form-shell">
+  {% if storage_location_options %}
+    <datalist id="storage-location-options">
+      {% for location in storage_location_options %}
+        <option value="{{ location }}"></option>
+      {% endfor %}
+    </datalist>
+  {% endif %}
   {% if is_multi_variant_form %}
     <form method="get" class="filters" style="margin-bottom:16px;">
       <div style="flex:1 1 360px;">

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Magazyn | LexWheels{% endblock %}
+{% block content %}
+<section class="panel hero">
+  <div class="hero-copy">
+    <span class="eyebrow">Magazyn</span>
+    <h1>Wirtualny magazyn modeli</h1>
+    <p class="meta">Prywatne miejsca przechowywania tylko dla staffa. Tu porządkujesz kartony, ściany i inne strefy pokoju.</p>
+    <div class="actions-row">
+      <a class="button" href="{% url 'collections:warehouse-create' %}">Dodaj miejsce</a>
+      <a class="button secondary" href="{% url 'catalog:admin-dashboard' %}">Panel admina</a>
+    </div>
+  </div>
+</section>
+
+<section class="stats-strip">
+  <div class="stat-card"><strong>{{ warehouse_stats.location_count }}</strong><span>Miejsca</span></div>
+  <div class="stat-card"><strong>{{ warehouse_stats.active_count }}</strong><span>Aktywne</span></div>
+  <div class="stat-card"><strong>{{ warehouse_stats.assigned_item_count }}</strong><span>Warianty przypisane</span></div>
+  <div class="stat-card"><strong>{{ warehouse_stats.assigned_quantity }}</strong><span>Sztuk łącznie</span></div>
+</section>
+
+<section class="list">
+  {% if locations %}
+    {% for row in locations %}
+      <article class="panel">
+        <div class="section-head">
+          <div>
+            <h2 style="margin-bottom:6px;"><a href="{{ row.location.get_absolute_url }}">{{ row.location.name }}</a></h2>
+            <p class="meta">{{ row.location.get_location_type_display }}{% if not row.location.is_active %} | nieaktywne{% endif %}</p>
+            {% if row.location.description %}<p>{{ row.location.description }}</p>{% endif %}
+          </div>
+          <div class="actions-row">
+            <a class="button secondary" href="{{ row.location.get_absolute_url }}">Otwórz</a>
+            <a class="button secondary" href="{% url 'collections:warehouse-update' row.location.pk %}">Edytuj</a>
+          </div>
+        </div>
+        <p class="meta">Warianty: {{ row.item_count }} | Sztuk: {{ row.total_quantity }} | Ulubione: {{ row.favorite_count }}</p>
+      </article>
+    {% endfor %}
+  {% else %}
+    <div class="panel empty-panel">
+      <h2>Brak miejsc w magazynie</h2>
+      <p>Dodaj pierwszy karton, ścianę albo półkę i zacznij przypisywać do nich modele.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

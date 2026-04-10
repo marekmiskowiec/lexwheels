@@ -766,13 +766,14 @@
         <div class="nav-auth">
           {% if user.is_authenticated %}
             <details class="nav-user-menu">
-              <summary class="nav-user-summary{% if current_namespace == 'accounts' or current_namespace == 'collections' and current_url_name in 'dashboard collection-detail collection-create collection-update collection-delete item-create item-update item-delete batch-add batch-edit batch-delete import collection-import collection-import-confirm import-backlog quick-add wanted-list' or current_namespace == 'catalog' and current_url_name == 'admin-dashboard' %} is-active{% endif %}">{{ user.login }}</summary>
+              <summary class="nav-user-summary{% if current_namespace == 'accounts' or current_namespace == 'collections' and current_url_name in 'dashboard collection-detail collection-create collection-update collection-delete item-create item-update item-delete batch-add batch-edit batch-delete import collection-import collection-import-confirm import-backlog quick-add wanted-list warehouse-list warehouse-detail warehouse-create warehouse-update warehouse-delete' or current_namespace == 'catalog' and current_url_name == 'admin-dashboard' %} is-active{% endif %}">{{ user.login }}</summary>
               <div class="nav-user-panel">
                 <a class="nav-user-action{% if current_namespace == 'collections' and current_url_name in 'dashboard collection-detail collection-create collection-update collection-delete item-create item-update item-delete batch-add batch-edit batch-delete import collection-import collection-import-confirm import-backlog quick-add' %} is-active{% endif %}" href="{% url 'collections:dashboard' %}">Moje kolekcje</a>
                 <a class="nav-user-action{% if current_namespace == 'accounts' and current_url_name in 'profile profile-edit public-profile' %} is-active{% endif %}" href="{% url 'accounts:profile' %}">Profil</a>
                 <a class="nav-user-action{% if current_namespace == 'collections' and current_url_name == 'wanted-list' %} is-active{% endif %}" href="{% url 'collections:wanted-list' %}">Szukane</a>
                 <a class="nav-user-action{% if current_namespace == 'accounts' and current_url_name == 'catalog-scope' %} is-active{% endif %}" href="{% url 'accounts:catalog-scope' %}">Zakres katalogu</a>
                 {% if user.is_staff or user.is_superuser %}
+                  <a class="nav-user-action{% if current_namespace == 'collections' and current_url_name in 'warehouse-list warehouse-detail warehouse-create warehouse-update warehouse-delete' %} is-active{% endif %}" href="{% url 'collections:warehouse-list' %}">Magazyn</a>
                   <a class="nav-user-action{% if current_namespace == 'catalog' and current_url_name == 'admin-dashboard' %} is-active{% endif %}" href="{% url 'catalog:admin-dashboard' %}">Panel admina</a>
                 {% endif %}
                 <a class="nav-user-action{% if current_namespace == 'collections' and current_url_name == 'stats' %} is-active{% endif %}" href="{% url 'collections:stats' %}">Statystyki</a>

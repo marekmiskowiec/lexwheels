@@ -6,7 +6,7 @@ import json
 from accounts.models import User
 from catalog.models import HotWheelsModel
 
-from .models import Collection, CollectionItem, ImportBacklogEntry, ImportBacklogReport, WantedItem
+from .models import Collection, CollectionItem, ImportBacklogEntry, ImportBacklogReport, WantedItem, WarehouseLocation
 
 
 class CollectionTests(TestCase):
@@ -289,6 +289,132 @@ class CollectionTests(TestCase):
         self.assertRedirects(response, self.private_collection.get_absolute_url())
         self.assertEqual(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj).count(), 3)
         self.assertTrue(CollectionItem.objects.filter(collection=self.private_collection, model=self.model_obj, packaging_state='long_card').exists())
+
+    def test_owner_can_add_item_with_storage_location(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {
+                'model': self.model_obj.pk,
+                'enabled_short_card': 'on',
+                'quantity_short_card': 1,
+                'condition_short_card': 'mint',
+                'storage_location_short_card': 'Karton A3',
+            },
+        )
+
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        item = CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj)
+        self.assertEqual(item.storage_location, 'Karton A3')
+
+    def test_collection_detail_can_filter_by_storage_location(self):
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            storage_location='Ściana A',
+        )
+        other_model = HotWheelsModel.objects.create(
+            app_id='storage-other',
+            toy='HCT99',
+            number='099',
+            model_name='Nissan Skyline',
+            year=2022,
+            category='Mainline',
+            series='HW J-Imports',
+            photo_url='https://example.com/skyline.jpg',
+        )
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=other_model,
+            quantity=1,
+            condition='good',
+            packaging_state='short_card',
+            storage_location='Karton B2',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse('collections:collection-detail', args=[self.private_collection.pk]), {'location': 'Ściana A'})
+
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertNotContains(response, 'Nissan Skyline')
+        self.assertContains(response, 'value="Ściana A" selected')
+
+    def test_storage_location_is_visible_only_to_owner(self):
+        CollectionItem.objects.create(
+            collection=self.public_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            storage_location='Karton A3',
+        )
+
+        self.client.force_login(self.owner)
+        owner_response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
+        self.assertContains(owner_response, 'Karton A3')
+
+        self.client.force_login(self.other)
+        other_response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
+        self.assertNotContains(other_response, 'Karton A3')
+
+    def test_staff_can_open_warehouse_list(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Karton A3',
+            location_type=WarehouseLocation.TYPE_BOX,
+        )
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=2,
+            condition='mint',
+            packaging_state='short_card',
+            storage_location='Karton A3',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse('collections:warehouse-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Karton A3')
+        self.assertContains(response, 'Warianty: 1')
+
+    def test_non_staff_cannot_open_warehouse_list(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse('collections:warehouse-list'))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_staff_can_open_warehouse_detail(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        location = WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Ściana nad biurkiem',
+            location_type=WarehouseLocation.TYPE_WALL,
+        )
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            storage_location='Ściana nad biurkiem',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse('collections:warehouse-detail', args=[location.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertContains(response, 'Ściana nad biurkiem')
 
     def test_semi_premium_item_form_hides_short_card_option(self):
         semi_premium_model = HotWheelsModel.objects.create(
