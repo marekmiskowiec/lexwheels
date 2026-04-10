@@ -416,6 +416,40 @@ class CollectionTests(TestCase):
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertContains(response, 'Ściana nad biurkiem')
 
+    def test_renaming_warehouse_location_updates_assigned_collection_items(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        location = WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Karton A3',
+            location_type=WarehouseLocation.TYPE_BOX,
+        )
+        item = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            storage_location='Karton A3',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:warehouse-update', args=[location.pk]),
+            {
+                'name': 'Karton Ferrari',
+                'location_type': WarehouseLocation.TYPE_BOX,
+                'description': '',
+                'is_active': 'on',
+            },
+        )
+
+        self.assertRedirects(response, reverse('collections:warehouse-detail', args=[location.pk]))
+        item.refresh_from_db()
+        location.refresh_from_db()
+        self.assertEqual(location.name, 'Karton Ferrari')
+        self.assertEqual(item.storage_location, 'Karton Ferrari')
+
     def test_semi_premium_item_form_hides_short_card_option(self):
         semi_premium_model = HotWheelsModel.objects.create(
             app_id='semi123',
@@ -609,7 +643,7 @@ class CollectionTests(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_dashboard_focuses_on_collection_list(self):
-        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=3, is_favorite=True)
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=3)
         self.client.force_login(self.owner)
         response = self.client.get(reverse('collections:dashboard'))
 
@@ -858,7 +892,7 @@ class CollectionTests(TestCase):
         self.assertEqual(entry.reports.count(), 2)
 
     def test_stats_page_shows_charts(self):
-        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=3, is_favorite=True)
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=3)
         self.client.force_login(self.owner)
 
         response = self.client.get(reverse('collections:stats'))
@@ -1202,31 +1236,6 @@ class CollectionTests(TestCase):
         self.assertNotContains(response, 'Custom Mustang')
         self.assertContains(response, 'z duplikatami')
 
-    def test_collection_detail_can_show_only_favorite_models(self):
-        second_model = HotWheelsModel.objects.create(
-            app_id='def456',
-            toy='HCT06',
-            number='002',
-            model_name='Custom Mustang',
-            year=2022,
-            category='Mainline',
-            series='HW Dream Garage',
-            series_number='2/5',
-            photo_url='https://example.com/mustang.jpg',
-        )
-        CollectionItem.objects.create(collection=self.public_collection, model=self.model_obj, is_favorite=True)
-        CollectionItem.objects.create(collection=self.public_collection, model=second_model, is_favorite=False)
-
-        response = self.client.get(
-            reverse('collections:collection-detail', args=[self.public_collection.pk]),
-            {'favorite_only': '1'},
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '1970 Pontiac Firebird')
-        self.assertNotContains(response, 'Custom Mustang')
-        self.assertContains(response, 'oznaczonych jako ulubione')
-
     def test_collection_detail_can_sort_models_by_name(self):
         second_model = HotWheelsModel.objects.create(
             app_id='def456',
@@ -1283,47 +1292,27 @@ class CollectionTests(TestCase):
 
         response = self.client.post(
             reverse('collections:item-adjust-quantity', args=[item.pk]),
-            {'delta': '1', 'next': f'{self.private_collection.get_absolute_url()}?favorite_only=1'},
-        )
-
-        self.assertRedirects(response, f'{self.private_collection.get_absolute_url()}?favorite_only=1')
-        item.refresh_from_db()
-        self.assertEqual(item.quantity, 3)
-
-    def test_owner_can_toggle_favorite_from_collection_detail(self):
-        item = CollectionItem.objects.create(
-            collection=self.private_collection,
-            model=self.model_obj,
-            quantity=1,
-            condition='mint',
-            packaging_state='short_card',
-            is_favorite=False,
-        )
-        self.client.force_login(self.owner)
-
-        response = self.client.post(
-            reverse('collections:item-toggle-favorite', args=[item.pk]),
-            {'next': f'{self.private_collection.get_absolute_url()}?sort=name'},
+            {'delta': '1', 'next': f'{self.private_collection.get_absolute_url()}?sort=name'},
         )
 
         self.assertRedirects(response, f'{self.private_collection.get_absolute_url()}?sort=name')
         item.refresh_from_db()
-        self.assertTrue(item.is_favorite)
+        self.assertEqual(item.quantity, 3)
 
     def test_owner_can_export_collection_as_csv(self):
-        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=2, is_favorite=True)
+        CollectionItem.objects.create(collection=self.private_collection, model=self.model_obj, quantity=2)
         self.client.force_login(self.owner)
         response = self.client.get(reverse('collections:collection-export', args=[self.private_collection.pk, 'csv']))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'text/csv')
         self.assertIn('1970 Pontiac Firebird', response.content.decode())
+        self.assertNotIn('Ulubione', response.content.decode())
 
     def test_owner_can_export_collection_as_json(self):
         CollectionItem.objects.create(
             collection=self.private_collection,
             model=self.model_obj,
             quantity=2,
-            is_favorite=True,
             is_sealed=True,
             has_protector=True,
             has_bent_hook=True,
@@ -1337,6 +1326,7 @@ class CollectionTests(TestCase):
         self.assertTrue(payload['items'][0]['is_sealed'])
         self.assertTrue(payload['items'][0]['has_protector'])
         self.assertTrue(payload['items'][0]['has_bent_hook'])
+        self.assertNotIn('is_favorite', payload['items'][0])
 
     def test_other_user_cannot_export_collection(self):
         self.client.force_login(self.other)

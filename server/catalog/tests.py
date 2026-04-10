@@ -2226,14 +2226,12 @@ class CatalogDedupeCommandTests(TestCase):
             condition='good',
             packaging_state='short_card',
             notes='dupe',
-            is_favorite=True,
         )
 
         call_command('dedupe_catalog_models', brand='Hot Wheels', category='Mainline', year=2023)
 
         item = CollectionItem.objects.get(collection=self.collection, model=canonical, condition='good', packaging_state='short_card')
         self.assertEqual(item.quantity, 3)
-        self.assertTrue(item.is_favorite)
         self.assertIn('canon', item.notes)
         self.assertIn('dupe', item.notes)
         self.assertFalse(CollectionItem.objects.filter(model=duplicate).exists())

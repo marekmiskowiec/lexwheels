@@ -20,12 +20,11 @@ class CollectionForm(forms.ModelForm):
 class WarehouseLocationForm(forms.ModelForm):
     class Meta:
         model = WarehouseLocation
-        fields = ('name', 'location_type', 'description', 'sort_order', 'is_active')
+        fields = ('name', 'location_type', 'description', 'is_active')
         labels = {
             'name': 'Nazwa miejsca',
             'location_type': 'Typ miejsca',
             'description': 'Opis',
-            'sort_order': 'Kolejność',
             'is_active': 'Aktywne',
         }
         help_texts = {
@@ -213,7 +212,6 @@ class CollectionItemForm(VariantSectionsMixin, forms.ModelForm):
             'acquired_at',
             'storage_location',
             'notes',
-            'is_favorite',
         )
         labels = {
             'storage_location': 'Miejsce w pokoju',

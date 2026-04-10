@@ -61,12 +61,11 @@ class WarehouseLocation(models.Model):
     name = models.CharField(max_length=120)
     location_type = models.CharField(max_length=16, choices=TYPE_CHOICES, default=TYPE_OTHER)
     description = models.TextField(blank=True)
-    sort_order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ('sort_order', 'name')
+        ordering = ('name',)
         unique_together = ('owner', 'name')
 
     def __str__(self) -> str:
@@ -102,10 +101,9 @@ class CollectionItem(models.Model):
     acquired_at = models.DateField(blank=True, null=True)
     storage_location = models.CharField(max_length=255, blank=True)
     notes = models.TextField(blank=True)
-    is_favorite = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ('-is_favorite', 'model__number', 'model__model_name', 'packaging_state', 'condition')
+        ordering = ('model__number', 'model__model_name', 'packaging_state', 'condition')
         unique_together = (
             'collection',
             'model',

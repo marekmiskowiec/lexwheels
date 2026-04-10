@@ -61,7 +61,7 @@ def storage_location_suggestions_for_user(user):
     return list(
         WarehouseLocation.objects.filter(owner=user, is_active=True)
         .values_list('name', flat=True)
-        .order_by('sort_order', 'name')
+        .order_by('name')
     )
 
 
@@ -278,7 +278,6 @@ def build_collection_stats_context(items_queryset):
     condition_labels = dict(CollectionItem.CONDITION_CHOICES)
     stats = items_queryset.aggregate(
         total_quantity=Sum('quantity'),
-        favorite_count=Count('id', filter=Q(is_favorite=True)),
         variant_count=Count('id'),
         item_count=Count('model_id', distinct=True),
     )
@@ -306,7 +305,6 @@ def build_collection_stats_context(items_queryset):
             'item_count': stats['item_count'] or 0,
             'variant_count': stats['variant_count'] or 0,
             'total_quantity': stats['total_quantity'] or 0,
-            'favorite_count': stats['favorite_count'] or 0,
         },
         'charts': charts,
     }
@@ -860,7 +858,6 @@ class CollectionDetailView(DetailView):
                     'packaging',
                     'location',
                     'duplicates_only',
-                    'favorite_only',
                     'sort',
                     'sealed',
                     'soft_corners',
@@ -903,7 +900,6 @@ class CollectionDetailView(DetailView):
         selected_packaging = self.request.GET.get('packaging', '').strip()
         selected_location = self.request.GET.get('location', '').strip()
         duplicates_only = self.request.GET.get('duplicates_only', '').strip() == '1'
-        favorite_only = self.request.GET.get('favorite_only', '').strip() == '1'
         selected_sort = self.request.GET.get('sort', '').strip()
         selected_sealed = self.request.GET.get('sealed', '').strip()
         selected_soft_corners = self.request.GET.get('soft_corners', '').strip()
@@ -934,8 +930,6 @@ class CollectionDetailView(DetailView):
             items = items.filter(packaging_state=selected_packaging)
         if selected_location:
             items = items.filter(storage_location=selected_location)
-        if favorite_only:
-            items = items.filter(is_favorite=True)
         for query_key, model_field in ATTRIBUTE_FILTER_FIELDS:
             parsed_value = parse_boolean_filter(self.request.GET.get(query_key, ''))
             if parsed_value is not None:
@@ -951,7 +945,6 @@ class CollectionDetailView(DetailView):
                     'variants': variants,
                     'storage_locations': sorted({item.storage_location for item in variants if item.storage_location}),
                     'total_quantity': sum(item.quantity for item in variants),
-                    'favorite_count': sum(1 for item in variants if item.is_favorite),
                     'latest_variant_pk': max(item.pk for item in variants),
                 }
             )
@@ -1015,7 +1008,6 @@ class CollectionDetailView(DetailView):
         context['selected_packaging'] = selected_packaging
         context['selected_location'] = selected_location
         context['duplicates_only'] = duplicates_only
-        context['favorite_only'] = favorite_only
         context['selected_sort'] = selected_sort
         context['selected_sealed'] = selected_sealed
         context['selected_soft_corners'] = selected_soft_corners
@@ -1089,14 +1081,13 @@ class WarehouseLocationListView(StaffWarehouseRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         locations = []
-        for location in WarehouseLocation.objects.filter(owner=self.request.user).order_by('sort_order', 'name'):
+        for location in WarehouseLocation.objects.filter(owner=self.request.user).order_by('name'):
             items = CollectionItem.objects.filter(collection__owner=self.request.user, storage_location=location.name).select_related('model')
             locations.append(
                 {
                     'location': location,
                     'item_count': items.count(),
                     'total_quantity': items.aggregate(total=Sum('quantity'))['total'] or 0,
-                    'favorite_count': items.filter(is_favorite=True).count(),
                 }
             )
         context['locations'] = locations
@@ -1156,6 +1147,13 @@ class WarehouseLocationUpdateView(StaffWarehouseRequiredMixin, UpdateView):
         return WarehouseLocation.objects.filter(owner=self.request.user)
 
     def form_valid(self, form):
+        previous_name = self.get_object().name
+        new_name = (form.cleaned_data.get('name') or '').strip()
+        if previous_name and new_name and previous_name != new_name:
+            CollectionItem.objects.filter(
+                collection__owner=self.request.user,
+                storage_location=previous_name,
+            ).update(storage_location=new_name)
         messages.success(self.request, 'Zapisano zmiany w magazynie.')
         return super().form_valid(form)
 
@@ -1285,7 +1283,6 @@ class CollectionExportView(LoginRequiredMixin, View):
                 'Zagięty haczyk',
                 'Pęknięty blister',
                 'Data pozyskania',
-                'Ulubione',
                 'Notatki',
             ])
             for item in items:
@@ -1305,7 +1302,6 @@ class CollectionExportView(LoginRequiredMixin, View):
                     item.has_bent_hook,
                     item.has_cracked_blister,
                     item.acquired_at.isoformat() if item.acquired_at else '',
-                    item.is_favorite,
                     item.notes,
                 ])
             return response
@@ -1335,7 +1331,6 @@ class CollectionExportView(LoginRequiredMixin, View):
                         'has_bent_hook': item.has_bent_hook,
                         'has_cracked_blister': item.has_cracked_blister,
                         'acquired_at': item.acquired_at.isoformat() if item.acquired_at else None,
-                        'is_favorite': item.is_favorite,
                         'notes': item.notes,
                     }
                     for item in items
@@ -1563,15 +1558,4 @@ class CollectionItemQuantityAdjustView(LoginRequiredMixin, View):
             item.quantity -= 1
             item.save(update_fields=['quantity'])
 
-        return redirect(request.POST.get('next') or item.collection.get_absolute_url())
-
-
-class CollectionItemFavoriteToggleView(LoginRequiredMixin, View):
-    def post(self, request, pk):
-        item = get_object_or_404(CollectionItem.objects.select_related('collection'), pk=pk)
-        if item.collection.owner != request.user:
-            raise Http404
-
-        item.is_favorite = not item.is_favorite
-        item.save(update_fields=['is_favorite'])
         return redirect(request.POST.get('next') or item.collection.get_absolute_url())

@@ -30,7 +30,6 @@ class CollectionItemAdmin(admin.ModelAdmin):
         'is_signed',
         'has_bent_hook',
         'has_cracked_blister',
-        'is_favorite',
     )
     list_filter = (
         'condition',
@@ -41,7 +40,6 @@ class CollectionItemAdmin(admin.ModelAdmin):
         'is_signed',
         'has_bent_hook',
         'has_cracked_blister',
-        'is_favorite',
     )
     search_fields = ('collection__name', 'collection__owner__email', 'model__model_name')
 

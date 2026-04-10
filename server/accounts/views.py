@@ -1,6 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
@@ -87,7 +87,6 @@ def build_profile_context(user: User, public_only: bool) -> dict:
 
     stats = items.aggregate(
         total_quantity=Sum('quantity'),
-        favorite_count=Count('id', filter=Q(is_favorite=True)),
     )
     return {
         'collections_list': collections.order_by('name'),
@@ -96,7 +95,6 @@ def build_profile_context(user: User, public_only: bool) -> dict:
             'collection_count': collections.count(),
             'item_count': items.count(),
             'total_quantity': stats['total_quantity'] or 0,
-            'favorite_count': stats['favorite_count'] or 0,
             'wanted_count': wanted_items.count(),
         },
     }

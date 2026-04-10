@@ -63,7 +63,6 @@ class HomeView(TemplateView):
                 'wanted_count': wanted_items.filter(is_active=True).count(),
                 'item_count': stats_context['stats']['item_count'],
                 'variant_count': stats_context['stats']['variant_count'],
-                'favorite_count': stats_context['stats']['favorite_count'],
                 'total_quantity': stats_context['stats']['total_quantity'],
             }
             context['completion'] = completion_context['completion']

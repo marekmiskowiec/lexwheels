@@ -1,5 +1,60 @@
 {% extends "base.html" %}
 {% block title %}Magazyn | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .warehouse-stats {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    margin-bottom: 18px;
+  }
+  .warehouse-stat-card {
+    position: relative;
+    overflow: hidden;
+    padding: 18px 18px 20px;
+    border: 1px solid rgba(155, 184, 220, 0.16);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at top right, rgba(72, 157, 255, 0.16), transparent 42%),
+      linear-gradient(180deg, rgba(18, 34, 58, 0.96) 0%, rgba(10, 20, 36, 0.94) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.05),
+      0 18px 40px rgba(0, 0, 0, 0.22);
+  }
+  .warehouse-stat-card::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, rgba(255,107,44,0.9), rgba(72,157,255,0.8));
+    opacity: .9;
+  }
+  .warehouse-stat-label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: .88rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .warehouse-stat-value {
+    display: block;
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    line-height: .95;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .warehouse-stat-note {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    font-size: .9rem;
+    line-height: 1.45;
+  }
+</style>
+{% endblock %}
 {% block content %}
 <section class="panel hero">
   <div class="hero-copy">
@@ -8,16 +63,31 @@
     <p class="meta">Prywatne miejsca przechowywania tylko dla staffa. Tu porządkujesz kartony, ściany i inne strefy pokoju.</p>
     <div class="actions-row">
       <a class="button" href="{% url 'collections:warehouse-create' %}">Dodaj miejsce</a>
-      <a class="button secondary" href="{% url 'catalog:admin-dashboard' %}">Panel admina</a>
     </div>
   </div>
 </section>
 
-<section class="stats-strip">
-  <div class="stat-card"><strong>{{ warehouse_stats.location_count }}</strong><span>Miejsca</span></div>
-  <div class="stat-card"><strong>{{ warehouse_stats.active_count }}</strong><span>Aktywne</span></div>
-  <div class="stat-card"><strong>{{ warehouse_stats.assigned_item_count }}</strong><span>Warianty przypisane</span></div>
-  <div class="stat-card"><strong>{{ warehouse_stats.assigned_quantity }}</strong><span>Sztuk łącznie</span></div>
+<section class="warehouse-stats">
+  <article class="warehouse-stat-card">
+    <span class="warehouse-stat-label">Miejsca</span>
+    <strong class="warehouse-stat-value">{{ warehouse_stats.location_count }}</strong>
+    <p class="warehouse-stat-note">Wszystkie kartony, ściany, półki i inne strefy magazynu.</p>
+  </article>
+  <article class="warehouse-stat-card">
+    <span class="warehouse-stat-label">Aktywne</span>
+    <strong class="warehouse-stat-value">{{ warehouse_stats.active_count }}</strong>
+    <p class="warehouse-stat-note">Miejsca dostępne do bieżącego przypisywania modeli.</p>
+  </article>
+  <article class="warehouse-stat-card">
+    <span class="warehouse-stat-label">Warianty przypisane</span>
+    <strong class="warehouse-stat-value">{{ warehouse_stats.assigned_item_count }}</strong>
+    <p class="warehouse-stat-note">Liczba wariantów modeli, które mają już wskazane miejsce.</p>
+  </article>
+  <article class="warehouse-stat-card">
+    <span class="warehouse-stat-label">Sztuk łącznie</span>
+    <strong class="warehouse-stat-value">{{ warehouse_stats.assigned_quantity }}</strong>
+    <p class="warehouse-stat-note">Łączna liczba aut przypisanych do miejsc w magazynie.</p>
+  </article>
 </section>
 
 <section class="list">
@@ -35,7 +105,7 @@
             <a class="button secondary" href="{% url 'collections:warehouse-update' row.location.pk %}">Edytuj</a>
           </div>
         </div>
-        <p class="meta">Warianty: {{ row.item_count }} | Sztuk: {{ row.total_quantity }} | Ulubione: {{ row.favorite_count }}</p>
+        <p class="meta">Warianty: {{ row.item_count }} | Sztuk: {{ row.total_quantity }}</p>
       </article>
     {% endfor %}
   {% else %}

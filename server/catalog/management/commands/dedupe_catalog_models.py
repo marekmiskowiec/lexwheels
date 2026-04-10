@@ -94,11 +94,10 @@ class Command(BaseCommand):
             ).first()
             if existing:
                 existing.quantity += item.quantity
-                existing.is_favorite = existing.is_favorite or item.is_favorite
                 existing.acquired_at = existing.acquired_at or item.acquired_at
                 if item.notes:
                     existing.notes = '\n'.join(filter(None, [existing.notes, item.notes]))
-                existing.save(update_fields=['quantity', 'is_favorite', 'acquired_at', 'notes'])
+                existing.save(update_fields=['quantity', 'acquired_at', 'notes'])
                 item.delete()
             else:
                 item.model = target

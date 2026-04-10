@@ -185,7 +185,6 @@
       <div class="card"><strong>{{ stats.item_count }}</strong><div class="meta">pozycje</div></div>
       <div class="card"><strong>{{ stats.variant_count }}</strong><div class="meta">warianty</div></div>
       <div class="card"><strong>{{ stats.total_quantity }}</strong><div class="meta">sztuk łącznie</div></div>
-      <div class="card"><strong>{{ stats.favorite_count }}</strong><div class="meta">ulubione</div></div>
     </div>
   </div>
 </section>
@@ -303,12 +302,6 @@
           Tylko duplikaty
         </label>
       </div>
-      <div style="display:flex; align-items:flex-end; min-width:170px;">
-        <label class="meta" style="display:flex; align-items:center; gap:8px; margin:0;">
-          <input type="checkbox" name="favorite_only" value="1" {% if favorite_only %}checked{% endif %} style="width:auto;">
-          Tylko ulubione
-        </label>
-      </div>
       <div style="flex: 1 1 180px;">
         <label for="sealed">Zafoliowany</label>
         <select id="sealed" name="sealed">
@@ -360,9 +353,9 @@
       <div><button type="submit">Szukaj</button></div>
       <div><button type="submit" name="save_filters" value="1" class="secondary">Zapisz filtry</button></div>
       {% if saved_filters %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}?apply_saved_filters=1">Przywróć zapisane</a></div><div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}?clear_saved_filters=1">Usuń zapisane</a></div>{% endif %}
-      {% if query or selected_year or selected_category or selected_series or selected_brand or selected_condition or selected_packaging or selected_location or duplicates_only or favorite_only or selected_sort != 'recent' or selected_sealed or selected_soft_corners or selected_protector or selected_signed or selected_bent_hook or selected_cracked_blister %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Usuń wszystkie filtry</a></div>{% endif %}
+      {% if query or selected_year or selected_category or selected_series or selected_brand or selected_condition or selected_packaging or selected_location or duplicates_only or selected_sort != 'recent' or selected_sealed or selected_soft_corners or selected_protector or selected_signed or selected_bent_hook or selected_cracked_blister %}<div><a class="button secondary" href="{% url 'collections:collection-detail' collection_obj.pk %}">Usuń wszystkie filtry</a></div>{% endif %}
     </form>
-    <p class="meta" style="margin:12px 0 0;">Wyświetlasz {{ filtered_count }} modeli{% if query %} dla frazy "{{ query }}"{% endif %}{% if duplicates_only %} z duplikatami{% endif %}{% if favorite_only %} oznaczonych jako ulubione{% endif %}.</p>
+    <p class="meta" style="margin:12px 0 0;">Wyświetlasz {{ filtered_count }} modeli{% if query %} dla frazy "{{ query }}"{% endif %}{% if duplicates_only %} z duplikatami{% endif %}.</p>
   </div>
   <div class="collection-model-list">
   {% for item in items %}
@@ -421,11 +414,6 @@
             {% if user == collection_obj.owner %}
               <input type="hidden" name="item_ids" value="{{ variant.pk }}" form="batch-edit-form" class="batch-edit-proxy" disabled>
               <div class="collection-variant-actions">
-                <form method="post" action="{% url 'collections:item-toggle-favorite' variant.pk %}">
-                  {% csrf_token %}
-                  <input type="hidden" name="next" value="{{ current_collection_path }}">
-                  <button type="submit" class="collection-inline-button {% if variant.is_favorite %}is-active{% endif %}">{% if variant.is_favorite %}★ Ulubione{% else %}☆ Ulubione{% endif %}</button>
-                </form>
                 <form method="post" action="{% url 'collections:item-adjust-quantity' variant.pk %}">
                   {% csrf_token %}
                   <input type="hidden" name="next" value="{{ current_collection_path }}">
