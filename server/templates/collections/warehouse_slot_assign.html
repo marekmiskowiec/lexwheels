@@ -10,6 +10,31 @@
 </section>
 
 <section class="panel form-shell">
+  <form method="get" class="form-layout" style="margin-bottom:18px;">
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="slot-assign-query">Szukaj wariantu</label>
+        <input id="slot-assign-query" type="search" name="q" value="{{ slot_assign_query }}" placeholder="Np. Ferrari, HCT06, Karton A3">
+      </div>
+      <div class="form-field">
+        <label for="slot-assign-collection">Kolekcja</label>
+        <select id="slot-assign-collection" name="collection">
+          <option value="">Wszystkie kolekcje</option>
+          {% for collection_id, collection_name in slot_assign_collection_options %}
+            <option value="{{ collection_id }}"{% if slot_assign_collection == collection_id|stringformat:'s' %} selected{% endif %}>{{ collection_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit">Filtruj warianty</button>
+      {% if slot_assign_query or slot_assign_collection %}
+        <a class="button secondary" href="{% url 'collections:warehouse-slot-assign' warehouse_location.pk slot_row slot_column %}">Wyczyść</a>
+      {% endif %}
+    </div>
+    <p class="meta" style="margin-top:10px;">Dostępne warianty po filtrowaniu: {{ slot_assign_count }}</p>
+  </form>
+
   <form method="post" class="form-layout">
     {% csrf_token %}
     {% if form.non_field_errors %}

@@ -65,15 +65,37 @@ class WarehouseSlotAssignForm(forms.Form):
         warehouse_location = kwargs.pop('warehouse_location')
         row = kwargs.pop('row')
         column = kwargs.pop('column')
+        query = kwargs.pop('query', '')
+        selected_collection_id = kwargs.pop('selected_collection_id', '')
         super().__init__(*args, **kwargs)
         self.owner = owner
         self.warehouse_location = warehouse_location
         self.row = row
         self.column = column
+        self.query = (query or '').strip()
+        self.selected_collection_id = str(selected_collection_id or '').strip()
+
+        queryset = CollectionItem.objects.filter(collection__owner=owner, collection__kind=Collection.KIND_OWNED)
+        if self.selected_collection_id.isdigit():
+            queryset = queryset.filter(collection_id=int(self.selected_collection_id))
+        if self.query:
+            queryset = queryset.filter(
+                Q(model__model_name__icontains=self.query)
+                | Q(model__toy__icontains=self.query)
+                | Q(model__number__icontains=self.query)
+                | Q(model__brand__icontains=self.query)
+                | Q(model__series__icontains=self.query)
+                | Q(storage_location__icontains=self.query)
+            )
         self.fields['item'].queryset = (
-            CollectionItem.objects.filter(collection__owner=owner, collection__kind=Collection.KIND_OWNED)
+            queryset
             .select_related('collection', 'model')
             .order_by('collection__name', 'model__year', 'model__number', 'model__model_name', 'packaging_state')
+        )
+        self.collection_choices = list(
+            Collection.objects.filter(owner=owner, kind=Collection.KIND_OWNED)
+            .order_by('name')
+            .values_list('id', 'name')
         )
 
     def clean(self):

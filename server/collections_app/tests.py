@@ -633,6 +633,52 @@ class CollectionTests(TestCase):
         self.assertEqual(item.storage_row, 2)
         self.assertEqual(item.storage_column, 3)
 
+    def test_staff_can_filter_variants_on_slot_assign_page(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        location = WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Ekspozytor 1',
+            location_type=WarehouseLocation.TYPE_DISPLAY,
+            row_count=8,
+            column_count=3,
+        )
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        other_model = HotWheelsModel.objects.create(
+            app_id='slot-filter-other',
+            toy='HCT88',
+            number='088',
+            model_name='Toyota Supra',
+            year=2023,
+            category='Mainline',
+            series='HW J-Imports',
+        )
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=other_model,
+            quantity=1,
+            condition='good',
+            packaging_state='short_card',
+            storage_location='Karton A3',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.get(
+            reverse('collections:warehouse-slot-assign', args=[location.pk, 2, 3]),
+            {'q': 'Pontiac'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Dostępne warianty po filtrowaniu: 1')
+        self.assertContains(response, '1970 Pontiac Firebird')
+        self.assertNotContains(response, 'Toyota Supra')
+
     def test_staff_can_move_variant_between_slots_from_grid(self):
         self.owner.is_staff = True
         self.owner.save(update_fields=['is_staff'])

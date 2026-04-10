@@ -1194,6 +1194,8 @@ class WarehouseSlotAssignView(StaffWarehouseRequiredMixin, FormView):
         kwargs['warehouse_location'] = self.warehouse_location
         kwargs['row'] = self.row
         kwargs['column'] = self.column
+        kwargs['query'] = self.request.GET.get('q', '').strip()
+        kwargs['selected_collection_id'] = self.request.GET.get('collection', '').strip()
         return kwargs
 
     def form_valid(self, form):
@@ -1209,9 +1211,14 @@ class WarehouseSlotAssignView(StaffWarehouseRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        form = context['form']
         context['warehouse_location'] = self.warehouse_location
         context['slot_row'] = self.row
         context['slot_column'] = self.column
+        context['slot_assign_query'] = form.query
+        context['slot_assign_collection'] = form.selected_collection_id
+        context['slot_assign_collection_options'] = form.collection_choices
+        context['slot_assign_count'] = form.fields['item'].queryset.count()
         return context
 
 
