@@ -49,17 +49,21 @@ class WarehouseLocation(models.Model):
     TYPE_BOX = 'box'
     TYPE_WALL = 'wall'
     TYPE_SHELF = 'shelf'
+    TYPE_DISPLAY = 'display'
     TYPE_OTHER = 'other'
     TYPE_CHOICES = (
         (TYPE_BOX, 'Karton'),
         (TYPE_WALL, 'Ściana'),
         (TYPE_SHELF, 'Półka'),
+        (TYPE_DISPLAY, 'Ekspozytor'),
         (TYPE_OTHER, 'Inne'),
     )
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='warehouse_locations')
     name = models.CharField(max_length=120)
     location_type = models.CharField(max_length=16, choices=TYPE_CHOICES, default=TYPE_OTHER)
+    row_count = models.PositiveIntegerField(blank=True, null=True)
+    column_count = models.PositiveIntegerField(blank=True, null=True)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -73,6 +77,16 @@ class WarehouseLocation(models.Model):
 
     def get_absolute_url(self):
         return reverse('collections:warehouse-detail', args=[self.pk])
+
+    @property
+    def has_grid_layout(self) -> bool:
+        return bool(self.row_count and self.column_count)
+
+    @property
+    def slot_capacity(self) -> int:
+        if not self.has_grid_layout:
+            return 0
+        return self.row_count * self.column_count
 
 
 class CollectionItem(models.Model):

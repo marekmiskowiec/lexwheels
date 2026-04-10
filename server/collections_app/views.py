@@ -1088,6 +1088,9 @@ class WarehouseLocationListView(StaffWarehouseRequiredMixin, TemplateView):
                     'location': location,
                     'item_count': items.count(),
                     'total_quantity': items.aggregate(total=Sum('quantity'))['total'] or 0,
+                    'remaining_capacity': max(location.slot_capacity - (items.aggregate(total=Sum('quantity'))['total'] or 0), 0)
+                    if location.has_grid_layout
+                    else None,
                 }
             )
         context['locations'] = locations
@@ -1123,6 +1126,10 @@ class WarehouseLocationDetailView(StaffWarehouseRequiredMixin, DetailView):
             'variant_count': items.count(),
             'total_quantity': items.aggregate(total=Sum('quantity'))['total'] or 0,
             'collection_count': items.values('collection_id').distinct().count(),
+            'slot_capacity': self.object.slot_capacity,
+            'remaining_capacity': max(self.object.slot_capacity - (items.aggregate(total=Sum('quantity'))['total'] or 0), 0)
+            if self.object.has_grid_layout
+            else 0,
         }
         return context
 

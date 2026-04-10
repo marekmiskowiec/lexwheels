@@ -98,6 +98,9 @@
           <div>
             <h2 style="margin-bottom:6px;"><a href="{{ row.location.get_absolute_url }}">{{ row.location.name }}</a></h2>
             <p class="meta">{{ row.location.get_location_type_display }}{% if not row.location.is_active %} | nieaktywne{% endif %}</p>
+            {% if row.location.has_grid_layout %}
+              <p class="meta">Układ: {{ row.location.row_count }} x {{ row.location.column_count }} | Pojemność: {{ row.location.slot_capacity }} szt.</p>
+            {% endif %}
             {% if row.location.description %}<p>{{ row.location.description }}</p>{% endif %}
           </div>
           <div class="actions-row">
@@ -105,7 +108,7 @@
             <a class="button secondary" href="{% url 'collections:warehouse-update' row.location.pk %}">Edytuj</a>
           </div>
         </div>
-        <p class="meta">Warianty: {{ row.item_count }} | Sztuk: {{ row.total_quantity }}</p>
+        <p class="meta">Warianty: {{ row.item_count }} | Sztuk: {{ row.total_quantity }}{% if row.remaining_capacity != None %} | Wolne miejsca: {{ row.remaining_capacity }}{% endif %}</p>
       </article>
     {% endfor %}
   {% else %}

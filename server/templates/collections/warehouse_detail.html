@@ -6,6 +6,9 @@
     <span class="eyebrow">Magazyn</span>
     <h1>{{ warehouse_location.name }}</h1>
     <p class="meta">{{ warehouse_location.get_location_type_display }}{% if not warehouse_location.is_active %} | nieaktywne{% endif %}</p>
+    {% if warehouse_location.has_grid_layout %}
+      <p class="meta">Układ: {{ warehouse_location.row_count }} x {{ warehouse_location.column_count }} | Pojemność: {{ warehouse_location.slot_capacity }} szt.</p>
+    {% endif %}
     {% if warehouse_location.description %}<p>{{ warehouse_location.description }}</p>{% endif %}
     <div class="actions-row">
       <a class="button" href="{% url 'collections:warehouse-create' %}">Dodaj kolejne miejsce</a>
@@ -20,6 +23,10 @@
   <div class="stat-card"><strong>{{ location_stats.variant_count }}</strong><span>Warianty</span></div>
   <div class="stat-card"><strong>{{ location_stats.total_quantity }}</strong><span>Sztuk</span></div>
   <div class="stat-card"><strong>{{ location_stats.collection_count }}</strong><span>Kolekcje</span></div>
+  {% if warehouse_location.has_grid_layout %}
+    <div class="stat-card"><strong>{{ location_stats.slot_capacity }}</strong><span>Pojemność</span></div>
+    <div class="stat-card"><strong>{{ location_stats.remaining_capacity }}</strong><span>Wolne miejsca</span></div>
+  {% endif %}
 </section>
 
 <section class="list">

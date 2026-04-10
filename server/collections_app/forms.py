@@ -20,17 +20,29 @@ class CollectionForm(forms.ModelForm):
 class WarehouseLocationForm(forms.ModelForm):
     class Meta:
         model = WarehouseLocation
-        fields = ('name', 'location_type', 'description', 'is_active')
+        fields = ('name', 'location_type', 'row_count', 'column_count', 'description', 'is_active')
         labels = {
             'name': 'Nazwa miejsca',
             'location_type': 'Typ miejsca',
+            'row_count': 'Wiersze',
+            'column_count': 'Kolumny',
             'description': 'Opis',
             'is_active': 'Aktywne',
         }
         help_texts = {
             'name': 'Np. Karton A3, ściana nad biurkiem, regał 2.',
+            'row_count': 'Opcjonalnie. Np. ściana 5 w dół albo ekspozytor 8 rzędów.',
+            'column_count': 'Opcjonalnie. Np. ściana 10 w poprzek albo ekspozytor 3 kolumny.',
             'description': 'Opcjonalny opis miejsca w magazynie.',
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        row_count = cleaned_data.get('row_count')
+        column_count = cleaned_data.get('column_count')
+        if bool(row_count) != bool(column_count):
+            raise forms.ValidationError('Podaj jednocześnie liczbę wierszy i kolumn albo zostaw oba pola puste.')
+        return cleaned_data
 
 
 class CollectionImportForm(forms.Form):

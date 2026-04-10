@@ -368,6 +368,8 @@ class CollectionTests(TestCase):
             owner=self.owner,
             name='Karton A3',
             location_type=WarehouseLocation.TYPE_BOX,
+            row_count=8,
+            column_count=3,
         )
         CollectionItem.objects.create(
             collection=self.private_collection,
@@ -384,6 +386,8 @@ class CollectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Karton A3')
         self.assertContains(response, 'Warianty: 1')
+        self.assertContains(response, 'Układ: 8 x 3 | Pojemność: 24 szt.')
+        self.assertContains(response, 'Wolne miejsca: 22')
 
     def test_non_staff_cannot_open_warehouse_list(self):
         self.client.force_login(self.owner)
@@ -399,6 +403,8 @@ class CollectionTests(TestCase):
             owner=self.owner,
             name='Ściana nad biurkiem',
             location_type=WarehouseLocation.TYPE_WALL,
+            row_count=5,
+            column_count=10,
         )
         CollectionItem.objects.create(
             collection=self.private_collection,
@@ -415,6 +421,8 @@ class CollectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertContains(response, 'Ściana nad biurkiem')
+        self.assertContains(response, 'Układ: 5 x 10 | Pojemność: 50 szt.')
+        self.assertContains(response, '<strong>49</strong><span>Wolne miejsca</span>', html=False)
 
     def test_renaming_warehouse_location_updates_assigned_collection_items(self):
         self.owner.is_staff = True
@@ -439,6 +447,8 @@ class CollectionTests(TestCase):
             {
                 'name': 'Karton Ferrari',
                 'location_type': WarehouseLocation.TYPE_BOX,
+                'row_count': '',
+                'column_count': '',
                 'description': '',
                 'is_active': 'on',
             },
@@ -449,6 +459,50 @@ class CollectionTests(TestCase):
         location.refresh_from_db()
         self.assertEqual(location.name, 'Karton Ferrari')
         self.assertEqual(item.storage_location, 'Karton Ferrari')
+
+    def test_staff_can_create_display_location_with_grid_layout(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:warehouse-create'),
+            {
+                'name': 'Ekspozytor 1',
+                'location_type': WarehouseLocation.TYPE_DISPLAY,
+                'row_count': '8',
+                'column_count': '3',
+                'description': 'Na auta na kartach.',
+                'is_active': 'on',
+            },
+        )
+
+        location = WarehouseLocation.objects.get(name='Ekspozytor 1')
+        self.assertRedirects(response, reverse('collections:warehouse-detail', args=[location.pk]))
+        self.assertEqual(location.row_count, 8)
+        self.assertEqual(location.column_count, 3)
+        self.assertEqual(location.slot_capacity, 24)
+
+    def test_warehouse_location_requires_rows_and_columns_together(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:warehouse-create'),
+            {
+                'name': 'Ściana 1',
+                'location_type': WarehouseLocation.TYPE_WALL,
+                'row_count': '5',
+                'column_count': '',
+                'description': '',
+                'is_active': 'on',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Podaj jednocześnie liczbę wierszy i kolumn albo zostaw oba pola puste.')
+        self.assertFalse(WarehouseLocation.objects.filter(name='Ściana 1').exists())
 
     def test_semi_premium_item_form_hides_short_card_option(self):
         semi_premium_model = HotWheelsModel.objects.create(
