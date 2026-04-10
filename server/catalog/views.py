@@ -941,7 +941,7 @@ class CatalogImageWorkflowMixin(CatalogScopeMixin):
                 (xl_q & (short_present | loose_present))
                 | (excluded_short_q & (long_present | loose_present))
                 | (~(xl_q | excluded_short_q) & (short_present | long_present | loose_present))
-            ).filter(relevant_missing_q | self.generic_image_present_q())
+            ).filter(relevant_missing_q)
         elif self.workflow_name == 'complete':
             queryset = queryset.exclude(relevant_missing_q)
         return queryset.order_by(*self.workflow_queryset_order(filters['sort']))

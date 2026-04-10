@@ -1806,6 +1806,37 @@ class CatalogViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, '1970 Pontiac Firebird')
 
+    def test_assigned_images_view_excludes_complete_premium_models_with_generic_photo_left(self):
+        admin = User.objects.create_user(
+            email='admin5-premium-complete@example.com',
+            password='ComplexPass123',
+            is_staff=True,
+        )
+        self.model_obj.category = 'Premium'
+        self.model_obj.photo_url = 'https://example.com/generic-premium.jpg'
+        self.model_obj.long_card_photo_url = 'https://example.com/generic-premium.jpg'
+        self.model_obj.loose_photo_url = 'https://example.com/loose-premium.jpg'
+        self.model_obj.short_card_photo_url = ''
+        self.model_obj.images_verified_at = timezone.now()
+        self.model_obj.images_verified_by = admin
+        self.model_obj.save(
+            update_fields=[
+                'category',
+                'photo_url',
+                'long_card_photo_url',
+                'loose_photo_url',
+                'short_card_photo_url',
+                'images_verified_at',
+                'images_verified_by',
+            ]
+        )
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse('catalog:assigned-images'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '1970 Pontiac Firebird')
+
     def test_staff_can_open_complete_images_view(self):
         admin = User.objects.create_user(
             email='admin-complete@example.com',
