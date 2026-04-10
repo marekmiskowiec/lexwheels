@@ -546,6 +546,41 @@ class CollectionTests(TestCase):
         self.assertEqual(item.storage_row, 2)
         self.assertEqual(item.storage_column, 3)
 
+    def test_staff_can_move_variant_between_slots_from_grid(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        location = WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Ekspozytor 1',
+            location_type=WarehouseLocation.TYPE_DISPLAY,
+            row_count=8,
+            column_count=3,
+        )
+        item = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            storage_location='Ekspozytor 1',
+            storage_row=2,
+            storage_column=3,
+        )
+        self.client.force_login(self.owner)
+
+        detail_response = self.client.get(reverse('collections:warehouse-detail', args=[location.pk]), {'move_item': str(item.pk)})
+        self.assertContains(detail_response, 'Wybierz pusty slot docelowy.')
+        self.assertContains(detail_response, reverse('collections:warehouse-slot-move', args=[location.pk, 1, 1, item.pk]))
+
+        response = self.client.post(
+            reverse('collections:warehouse-slot-move', args=[location.pk, 1, 1, item.pk]),
+        )
+
+        self.assertRedirects(response, reverse('collections:warehouse-detail', args=[location.pk]))
+        item.refresh_from_db()
+        self.assertEqual(item.storage_row, 1)
+        self.assertEqual(item.storage_column, 1)
+
     def test_renaming_warehouse_location_updates_assigned_collection_items(self):
         self.owner.is_staff = True
         self.owner.save(update_fields=['is_staff'])

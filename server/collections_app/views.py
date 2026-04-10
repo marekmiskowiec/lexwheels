@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django import forms
 from django.core.paginator import Paginator
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -30,6 +31,7 @@ from .forms import (
     WarehouseSlotAssignForm,
     WarehouseLocationForm,
     WantedItemForm,
+    validate_storage_slot,
 )
 from .models import Collection, CollectionItem, WantedItem, WarehouseLocation
 from .models import ImportBacklogEntry, ImportBacklogReport
@@ -1148,8 +1150,13 @@ class WarehouseLocationDetailView(StaffWarehouseRequiredMixin, DetailView):
                         ],
                     }
                 )
+        move_item_id = self.request.GET.get('move_item', '').strip()
+        move_item = None
+        if move_item_id.isdigit():
+            move_item = items.filter(pk=int(move_item_id)).first()
         context['stored_items'] = items
         context['grid_rows'] = grid_rows
+        context['move_item'] = move_item
         context['location_stats'] = {
             'variant_count': items.count(),
             'total_quantity': total_quantity,
@@ -1205,6 +1212,36 @@ class WarehouseSlotAssignView(StaffWarehouseRequiredMixin, FormView):
         context['slot_row'] = self.row
         context['slot_column'] = self.column
         return context
+
+
+class WarehouseSlotMoveView(StaffWarehouseRequiredMixin, View):
+    def post(self, request, pk, item_pk, row, column):
+        warehouse_location = get_object_or_404(WarehouseLocation.objects.filter(owner=request.user), pk=pk)
+        item = get_object_or_404(
+            CollectionItem.objects.select_related('collection', 'model'),
+            pk=item_pk,
+            collection__owner=request.user,
+            storage_location=warehouse_location.name,
+        )
+        row = int(row)
+        column = int(column)
+        if not warehouse_location.has_grid_layout:
+            raise Http404
+        if not (1 <= row <= warehouse_location.row_count and 1 <= column <= warehouse_location.column_count):
+            raise Http404
+
+        try:
+            validate_storage_slot(request.user, warehouse_location.name, row, column, instance=item)
+        except forms.ValidationError as exc:
+            for error in exc.messages:
+                messages.error(request, error)
+            return redirect(f"{reverse('collections:warehouse-detail', args=[warehouse_location.pk])}?move_item={item.pk}")
+
+        item.storage_row = row
+        item.storage_column = column
+        item.save(update_fields=['storage_row', 'storage_column'])
+        messages.success(request, f'Przeniesiono wariant "{item.model.model_name}" do slotu R{row} / K{column}.')
+        return redirect(reverse('collections:warehouse-detail', args=[warehouse_location.pk]))
 
 
 class WarehouseLocationCreateView(StaffWarehouseRequiredMixin, CreateView):

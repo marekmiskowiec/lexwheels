@@ -78,7 +78,13 @@
         <h2>Układ miejsca</h2>
         <p class="meta">Siatka pokazuje zajęte i wolne sloty w obrębie tego miejsca.</p>
       </div>
+      {% if move_item %}
+        <a class="button secondary" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}">Anuluj przenoszenie</a>
+      {% endif %}
     </div>
+    {% if move_item %}
+      <p class="meta" style="margin-bottom:14px;">Przenosisz: <strong>{{ move_item.model.model_name }}</strong>. Wybierz pusty slot docelowy.</p>
+    {% endif %}
     <div class="warehouse-grid">
       {% for row in grid_rows %}
         <div class="warehouse-grid-row" style="grid-template-columns: repeat({{ warehouse_location.column_count }}, minmax(0, 1fr));">
@@ -88,9 +94,17 @@
               {% if cell.item %}
                 <a class="warehouse-grid-model" href="{% url 'collections:item-update' cell.item.pk %}">{{ cell.item.model.model_name }}</a>
                 <p class="warehouse-grid-meta">{{ cell.item.get_packaging_state_display }} | {{ cell.item.quantity }} szt.</p>
+                <a class="button secondary" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?move_item={{ cell.item.pk }}">Przenieś</a>
               {% else %}
                 <p class="warehouse-grid-meta">Puste miejsce</p>
-                <a class="button secondary" href="{% url 'collections:warehouse-slot-assign' warehouse_location.pk row.row_number cell.column_number %}">Przypisz wariant</a>
+                {% if move_item %}
+                  <form method="post" action="{% url 'collections:warehouse-slot-move' warehouse_location.pk row.row_number cell.column_number move_item.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="secondary">Przenieś tutaj</button>
+                  </form>
+                {% else %}
+                  <a class="button secondary" href="{% url 'collections:warehouse-slot-assign' warehouse_location.pk row.row_number cell.column_number %}">Przypisz wariant</a>
+                {% endif %}
               {% endif %}
             </div>
           {% endfor %}
