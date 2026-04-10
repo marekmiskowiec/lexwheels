@@ -27,6 +27,7 @@ from .forms import (
     CollectionImportForm,
     CollectionItemForm,
     CollectionItemMultiVariantForm,
+    WarehouseSlotAssignForm,
     WarehouseLocationForm,
     WantedItemForm,
 )
@@ -1083,12 +1084,16 @@ class WarehouseLocationListView(StaffWarehouseRequiredMixin, TemplateView):
         locations = []
         for location in WarehouseLocation.objects.filter(owner=self.request.user).order_by('name'):
             items = CollectionItem.objects.filter(collection__owner=self.request.user, storage_location=location.name).select_related('model')
+            occupied_slots = items.exclude(storage_row__isnull=True, storage_column__isnull=True).count()
+            total_quantity = items.aggregate(total=Sum('quantity'))['total'] or 0
+            used_capacity = occupied_slots or total_quantity
             locations.append(
                 {
                     'location': location,
                     'item_count': items.count(),
-                    'total_quantity': items.aggregate(total=Sum('quantity'))['total'] or 0,
-                    'remaining_capacity': max(location.slot_capacity - (items.aggregate(total=Sum('quantity'))['total'] or 0), 0)
+                    'total_quantity': total_quantity,
+                    'occupied_slots': occupied_slots,
+                    'remaining_capacity': max(location.slot_capacity - used_capacity, 0)
                     if location.has_grid_layout
                     else None,
                 }
@@ -1121,16 +1126,84 @@ class WarehouseLocationDetailView(StaffWarehouseRequiredMixin, DetailView):
             .select_related('collection', 'model')
             .order_by('collection__name', 'model__year', 'model__number', 'model__model_name', 'packaging_state')
         )
+        occupied_slots = items.exclude(storage_row__isnull=True, storage_column__isnull=True).count()
+        total_quantity = items.aggregate(total=Sum('quantity'))['total'] or 0
+        used_capacity = occupied_slots or total_quantity
+        slot_map = {}
+        if self.object.has_grid_layout:
+            for item in items.exclude(storage_row__isnull=True).exclude(storage_column__isnull=True):
+                slot_map[(item.storage_row, item.storage_column)] = item
+        grid_rows = []
+        if self.object.has_grid_layout:
+            for row_number in range(1, self.object.row_count + 1):
+                grid_rows.append(
+                    {
+                        'row_number': row_number,
+                        'cells': [
+                            {
+                                'column_number': column_number,
+                                'item': slot_map.get((row_number, column_number)),
+                            }
+                            for column_number in range(1, self.object.column_count + 1)
+                        ],
+                    }
+                )
         context['stored_items'] = items
+        context['grid_rows'] = grid_rows
         context['location_stats'] = {
             'variant_count': items.count(),
-            'total_quantity': items.aggregate(total=Sum('quantity'))['total'] or 0,
+            'total_quantity': total_quantity,
             'collection_count': items.values('collection_id').distinct().count(),
             'slot_capacity': self.object.slot_capacity,
-            'remaining_capacity': max(self.object.slot_capacity - (items.aggregate(total=Sum('quantity'))['total'] or 0), 0)
+            'occupied_slots': occupied_slots,
+            'remaining_capacity': max(self.object.slot_capacity - used_capacity, 0)
             if self.object.has_grid_layout
             else 0,
         }
+        return context
+
+
+class WarehouseSlotAssignView(StaffWarehouseRequiredMixin, FormView):
+    form_class = WarehouseSlotAssignForm
+    template_name = 'collections/warehouse_slot_assign.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.warehouse_location = get_object_or_404(
+            WarehouseLocation.objects.filter(owner=request.user),
+            pk=self.kwargs['pk'],
+        )
+        self.row = int(self.kwargs['row'])
+        self.column = int(self.kwargs['column'])
+        if not self.warehouse_location.has_grid_layout:
+            raise Http404
+        if not (1 <= self.row <= self.warehouse_location.row_count and 1 <= self.column <= self.warehouse_location.column_count):
+            raise Http404
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['owner'] = self.request.user
+        kwargs['warehouse_location'] = self.warehouse_location
+        kwargs['row'] = self.row
+        kwargs['column'] = self.column
+        return kwargs
+
+    def form_valid(self, form):
+        item = form.save()
+        messages.success(
+            self.request,
+            f'Przypisano wariant "{item.model.model_name}" do slotu R{self.row} / K{self.column}.',
+        )
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('collections:warehouse-detail', args=[self.warehouse_location.pk])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['warehouse_location'] = self.warehouse_location
+        context['slot_row'] = self.row
+        context['slot_column'] = self.column
         return context
 
 

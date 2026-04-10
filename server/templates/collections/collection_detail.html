@@ -403,7 +403,7 @@
               <div class="collection-variant-body">
                 <p class="meta collection-variant-summary">{{ variant.get_packaging_state_display }} | stan: {{ variant.get_condition_display }} | ilość: {{ variant.quantity }}</p>
                 {% if user == collection_obj.owner and variant.storage_location %}
-                  <p class="meta collection-variant-summary">Miejsce: {{ variant.storage_location }}</p>
+                  <p class="meta collection-variant-summary">Miejsce: {{ variant.storage_location }}{% if variant.storage_slot_label %} | {{ variant.storage_slot_label }}{% endif %}</p>
                 {% endif %}
                 {% if variant.attribute_badges %}
                   <p class="meta collection-variant-summary">Cechy: {{ variant.attribute_badges|join:", " }}</p>

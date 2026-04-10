@@ -6,15 +6,99 @@ from catalog.models import HotWheelsModel
 from .models import Collection, CollectionItem, WantedItem, WarehouseLocation
 
 
+def validate_storage_slot(owner, storage_location, row, column, *, instance=None):
+    storage_location = (storage_location or '').strip()
+    if not storage_location:
+        if row or column:
+            raise forms.ValidationError('Najpierw wybierz miejsce w pokoju, aby ustawić wiersz i kolumnę.')
+        return
+
+    if bool(row) != bool(column):
+        raise forms.ValidationError('Podaj jednocześnie wiersz i kolumnę albo zostaw oba pola puste.')
+
+    location_obj = WarehouseLocation.objects.filter(owner=owner, name=storage_location).first()
+    if not location_obj:
+        return
+
+    if row or column:
+        if not location_obj.has_grid_layout:
+            raise forms.ValidationError('To miejsce nie ma układu siatki, więc nie możesz wskazać konkretnego slotu.')
+        if row < 1 or row > location_obj.row_count or column < 1 or column > location_obj.column_count:
+            raise forms.ValidationError(
+                f'Ten slot nie mieści się w układzie miejsca {location_obj.name} ({location_obj.row_count} x {location_obj.column_count}).'
+            )
+        slot_queryset = CollectionItem.objects.filter(
+            collection__owner=owner,
+            storage_location=storage_location,
+            storage_row=row,
+            storage_column=column,
+        )
+        if instance and instance.pk:
+            slot_queryset = slot_queryset.exclude(pk=instance.pk)
+        if slot_queryset.exists():
+            raise forms.ValidationError('Ten slot w magazynie jest już zajęty przez inny wariant.')
+
+
 class CatalogModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return f'{obj.model_name} | {obj.brand or "-"} | {obj.year or "-"} | Toy: {obj.toy} | Nr: {obj.number}'
+
+
+class CollectionItemChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return (
+            f'{obj.model.model_name} | {obj.collection.name} | {obj.get_packaging_state_display()}'
+            f' | {obj.get_condition_display()} | ilość: {obj.quantity}'
+        )
 
 
 class CollectionForm(forms.ModelForm):
     class Meta:
         model = Collection
         fields = ('name', 'description', 'visibility')
+
+
+class WarehouseSlotAssignForm(forms.Form):
+    item = CollectionItemChoiceField(queryset=CollectionItem.objects.none(), label='Wariant do przypisania')
+
+    def __init__(self, *args, **kwargs):
+        owner = kwargs.pop('owner')
+        warehouse_location = kwargs.pop('warehouse_location')
+        row = kwargs.pop('row')
+        column = kwargs.pop('column')
+        super().__init__(*args, **kwargs)
+        self.owner = owner
+        self.warehouse_location = warehouse_location
+        self.row = row
+        self.column = column
+        self.fields['item'].queryset = (
+            CollectionItem.objects.filter(collection__owner=owner, collection__kind=Collection.KIND_OWNED)
+            .select_related('collection', 'model')
+            .order_by('collection__name', 'model__year', 'model__number', 'model__model_name', 'packaging_state')
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        item = cleaned_data.get('item')
+        if not item:
+            return cleaned_data
+
+        validate_storage_slot(
+            self.owner,
+            self.warehouse_location.name,
+            self.row,
+            self.column,
+            instance=item,
+        )
+        return cleaned_data
+
+    def save(self):
+        item = self.cleaned_data['item']
+        item.storage_location = self.warehouse_location.name
+        item.storage_row = self.row
+        item.storage_column = self.column
+        item.save(update_fields=['storage_location', 'storage_row', 'storage_column'])
+        return item
 
 
 class WarehouseLocationForm(forms.ModelForm):
@@ -127,6 +211,8 @@ class VariantSectionsMixin:
             quantity_name = f'quantity_{packaging_value}'
             condition_name = f'condition_{packaging_value}'
             location_name = f'storage_location_{packaging_value}'
+            row_name = f'storage_row_{packaging_value}'
+            column_name = f'storage_column_{packaging_value}'
             sealed_name = f'is_sealed_{packaging_value}'
             soft_corners_name = f'has_soft_corners_{packaging_value}'
             protector_name = f'has_protector_{packaging_value}'
@@ -145,6 +231,8 @@ class VariantSectionsMixin:
             self.fields[location_name] = forms.CharField(required=False, max_length=255, label='Miejsce w pokoju')
             if getattr(self, 'storage_location_datalist_id', ''):
                 self.fields[location_name].widget.attrs['list'] = self.storage_location_datalist_id
+            self.fields[row_name] = forms.IntegerField(required=False, min_value=1, label='Wiersz')
+            self.fields[column_name] = forms.IntegerField(required=False, min_value=1, label='Kolumna')
             self.fields[sealed_name] = forms.BooleanField(required=False, label='Zafoliowany')
             self.fields[soft_corners_name] = forms.BooleanField(required=False, label='Miękkie rogi')
             self.fields[protector_name] = forms.BooleanField(required=False, label='Protektor')
@@ -160,6 +248,8 @@ class VariantSectionsMixin:
                     'quantity': self[quantity_name],
                     'condition': self[condition_name],
                     'storage_location': self[location_name],
+                    'storage_row': self[row_name],
+                    'storage_column': self[column_name],
                     'is_sealed': self[sealed_name],
                     'has_soft_corners': self[soft_corners_name],
                     'has_protector': self[protector_name],
@@ -192,6 +282,8 @@ class VariantSectionsMixin:
                         'quantity': quantity,
                         'condition': condition,
                         'storage_location': (self.cleaned_data.get(f'storage_location_{packaging_value}', '') or '').strip(),
+                        'storage_row': self.cleaned_data.get(f'storage_row_{packaging_value}'),
+                        'storage_column': self.cleaned_data.get(f'storage_column_{packaging_value}'),
                         'is_sealed': self.cleaned_data.get(f'is_sealed_{packaging_value}', False),
                         'has_soft_corners': self.cleaned_data.get(f'has_soft_corners_{packaging_value}', False),
                         'has_protector': self.cleaned_data.get(f'has_protector_{packaging_value}', False),
@@ -223,13 +315,19 @@ class CollectionItemForm(VariantSectionsMixin, forms.ModelForm):
             'has_cracked_blister',
             'acquired_at',
             'storage_location',
+            'storage_row',
+            'storage_column',
             'notes',
         )
         labels = {
             'storage_location': 'Miejsce w pokoju',
+            'storage_row': 'Wiersz',
+            'storage_column': 'Kolumna',
         }
         help_texts = {
             'storage_location': 'Np. Karton A3, ściana nad biurkiem, regał 2.',
+            'storage_row': 'Opcjonalnie dla miejsc z układem siatki.',
+            'storage_column': 'Opcjonalnie dla miejsc z układem siatki.',
         }
 
     def __init__(self, *args, **kwargs):
@@ -262,6 +360,14 @@ class CollectionItemForm(VariantSectionsMixin, forms.ModelForm):
         if collection is None:
             return cleaned_data
 
+        validate_storage_slot(
+            collection.owner,
+            cleaned_data.get('storage_location'),
+            cleaned_data.get('storage_row'),
+            cleaned_data.get('storage_column'),
+            instance=self.instance,
+        )
+
         queryset = CollectionItem.objects.filter(
             collection=collection,
             model=model,
@@ -273,6 +379,9 @@ class CollectionItemForm(VariantSectionsMixin, forms.ModelForm):
             is_signed=cleaned_data.get('is_signed', False),
             has_bent_hook=cleaned_data.get('has_bent_hook', False),
             has_cracked_blister=cleaned_data.get('has_cracked_blister', False),
+            storage_location=(cleaned_data.get('storage_location') or '').strip(),
+            storage_row=cleaned_data.get('storage_row'),
+            storage_column=cleaned_data.get('storage_column'),
         )
         if self.instance.pk:
             queryset = queryset.exclude(pk=self.instance.pk)
@@ -402,6 +511,16 @@ class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
                 if packaging_value not in model.available_packaging_states:
                     self.add_error(None, 'Ten model nie występuje w wybranym typie opakowania.')
                     continue
+                try:
+                    validate_storage_slot(
+                        self.collection.owner,
+                        variant['storage_location'],
+                        variant['storage_row'],
+                        variant['storage_column'],
+                    )
+                except forms.ValidationError as exc:
+                    self.add_error(None, exc)
+                    continue
                 if CollectionItem.objects.filter(
                     collection=self.collection,
                     model=model,
@@ -413,6 +532,9 @@ class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
                     is_signed=variant['is_signed'],
                     has_bent_hook=variant['has_bent_hook'],
                     has_cracked_blister=variant['has_cracked_blister'],
+                    storage_location=variant['storage_location'],
+                    storage_row=variant['storage_row'],
+                    storage_column=variant['storage_column'],
                 ).exists():
                     self.add_error(
                         None,
@@ -434,6 +556,8 @@ class CollectionItemMultiVariantForm(VariantSectionsMixin, forms.Form):
                     quantity=variant['quantity'],
                     condition=variant['condition'],
                     storage_location=variant['storage_location'],
+                    storage_row=variant['storage_row'],
+                    storage_column=variant['storage_column'],
                     is_sealed=variant['is_sealed'],
                     has_soft_corners=variant['has_soft_corners'],
                     has_protector=variant['has_protector'],
@@ -483,6 +607,16 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
                         f'Model "{model.model_name}" nie występuje w wariancie "{dict(CollectionItem.PACKAGING_CHOICES)[packaging_value]}".',
                     )
                     continue
+                try:
+                    validate_storage_slot(
+                        collection.owner,
+                        variant['storage_location'],
+                        variant['storage_row'],
+                        variant['storage_column'],
+                    )
+                except forms.ValidationError as exc:
+                    self.add_error(None, exc)
+                    continue
                 if CollectionItem.objects.filter(
                     collection=collection,
                     model=model,
@@ -494,6 +628,9 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
                     is_signed=variant['is_signed'],
                     has_bent_hook=variant['has_bent_hook'],
                     has_cracked_blister=variant['has_cracked_blister'],
+                    storage_location=variant['storage_location'],
+                    storage_row=variant['storage_row'],
+                    storage_column=variant['storage_column'],
                 ).exists():
                     self.add_error(
                         None,
@@ -516,6 +653,8 @@ class CatalogQuickAddForm(VariantSectionsMixin, forms.Form):
                     quantity=variant['quantity'],
                     condition=variant['condition'],
                     storage_location=variant['storage_location'],
+                    storage_row=variant['storage_row'],
+                    storage_column=variant['storage_column'],
                     is_sealed=variant['is_sealed'],
                     has_soft_corners=variant['has_soft_corners'],
                     has_protector=variant['has_protector'],

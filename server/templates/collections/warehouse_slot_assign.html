@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Przypisz slot | {{ warehouse_location.name }} | Magazyn | LexWheels{% endblock %}
+{% block content %}
+<section class="panel hero form-shell">
+  <div class="hero-copy">
+    <span class="eyebrow">Magazyn</span>
+    <h1>Przypisz wariant do slotu</h1>
+    <p class="meta">{{ warehouse_location.name }} | R{{ slot_row }} / K{{ slot_column }}</p>
+  </div>
+</section>
+
+<section class="panel form-shell">
+  <form method="post" class="form-layout">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="message">{{ form.non_field_errors|join:', ' }}</div>
+    {% endif %}
+    <div class="form-grid">
+      {% for field in form.visible_fields %}
+        <div class="form-field is-full">
+          {{ field.label_tag }}
+          {{ field }}
+          {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
+          {% if field.errors %}<small class="meta">{{ field.errors|join:', ' }}</small>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="form-actions">
+      <button type="submit">Przypisz do slotu</button>
+      <a class="button secondary" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}">Wróć do miejsca</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

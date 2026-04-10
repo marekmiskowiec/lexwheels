@@ -1,5 +1,46 @@
 {% extends "base.html" %}
 {% block title %}{{ warehouse_location.name }} | Magazyn | LexWheels{% endblock %}
+{% block extra_styles %}
+<style>
+  .warehouse-grid {
+    display: grid;
+    gap: 8px;
+    margin: 18px 0;
+  }
+  .warehouse-grid-row {
+    display: grid;
+    gap: 8px;
+  }
+  .warehouse-grid-cell {
+    min-height: 108px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+  }
+  .warehouse-grid-cell.is-empty {
+    background: rgba(255,255,255,0.025);
+    color: var(--muted);
+  }
+  .warehouse-grid-slot {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: .82rem;
+  }
+  .warehouse-grid-model {
+    display: block;
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .warehouse-grid-meta {
+    margin: 0;
+    font-size: .88rem;
+    color: var(--muted);
+  }
+</style>
+{% endblock %}
 {% block content %}
 <section class="panel hero">
   <div class="hero-copy">
@@ -25,9 +66,39 @@
   <div class="stat-card"><strong>{{ location_stats.collection_count }}</strong><span>Kolekcje</span></div>
   {% if warehouse_location.has_grid_layout %}
     <div class="stat-card"><strong>{{ location_stats.slot_capacity }}</strong><span>Pojemność</span></div>
+    <div class="stat-card"><strong>{{ location_stats.occupied_slots }}</strong><span>Zajęte sloty</span></div>
     <div class="stat-card"><strong>{{ location_stats.remaining_capacity }}</strong><span>Wolne miejsca</span></div>
   {% endif %}
 </section>
+
+{% if warehouse_location.has_grid_layout %}
+  <section class="panel">
+    <div class="section-head">
+      <div>
+        <h2>Układ miejsca</h2>
+        <p class="meta">Siatka pokazuje zajęte i wolne sloty w obrębie tego miejsca.</p>
+      </div>
+    </div>
+    <div class="warehouse-grid">
+      {% for row in grid_rows %}
+        <div class="warehouse-grid-row" style="grid-template-columns: repeat({{ warehouse_location.column_count }}, minmax(0, 1fr));">
+          {% for cell in row.cells %}
+            <div class="warehouse-grid-cell{% if not cell.item %} is-empty{% endif %}">
+              <span class="warehouse-grid-slot">R{{ row.row_number }} / K{{ cell.column_number }}</span>
+              {% if cell.item %}
+                <a class="warehouse-grid-model" href="{% url 'collections:item-update' cell.item.pk %}">{{ cell.item.model.model_name }}</a>
+                <p class="warehouse-grid-meta">{{ cell.item.get_packaging_state_display }} | {{ cell.item.quantity }} szt.</p>
+              {% else %}
+                <p class="warehouse-grid-meta">Puste miejsce</p>
+                <a class="button secondary" href="{% url 'collections:warehouse-slot-assign' warehouse_location.pk row.row_number cell.column_number %}">Przypisz wariant</a>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endif %}
 
 <section class="list">
   {% if stored_items %}
@@ -37,6 +108,7 @@
           <div>
             <h2 style="margin-bottom:6px;"><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h2>
             <p class="meta">{{ item.collection.name }} | {{ item.get_packaging_state_display }} | {{ item.get_condition_display }} | {{ item.quantity }} szt.</p>
+            {% if item.storage_slot_label %}<p class="meta">{{ item.storage_slot_label }}</p>{% endif %}
             <p class="meta">Toy: {{ item.model.toy|default:"-" }} | Nr: {{ item.model.number|default:"-" }}{% if item.model.year %} | {{ item.model.year }}{% endif %}</p>
           </div>
           <div class="actions-row">

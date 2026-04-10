@@ -114,6 +114,8 @@ class CollectionItem(models.Model):
     has_cracked_blister = models.BooleanField(default=False)
     acquired_at = models.DateField(blank=True, null=True)
     storage_location = models.CharField(max_length=255, blank=True)
+    storage_row = models.PositiveIntegerField(blank=True, null=True)
+    storage_column = models.PositiveIntegerField(blank=True, null=True)
     notes = models.TextField(blank=True)
 
     class Meta:
@@ -129,6 +131,9 @@ class CollectionItem(models.Model):
             'is_signed',
             'has_bent_hook',
             'has_cracked_blister',
+            'storage_location',
+            'storage_row',
+            'storage_column',
         )
 
     def __str__(self) -> str:
@@ -160,6 +165,12 @@ class CollectionItem(models.Model):
         if self.has_cracked_blister:
             badges.append('Pęknięty blister')
         return badges
+
+    @property
+    def storage_slot_label(self) -> str:
+        if self.storage_row and self.storage_column:
+            return f'Rząd {self.storage_row}, kolumna {self.storage_column}'
+        return ''
 
 
 class WantedItem(models.Model):

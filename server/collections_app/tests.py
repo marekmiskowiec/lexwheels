@@ -308,6 +308,87 @@ class CollectionTests(TestCase):
         item = CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj)
         self.assertEqual(item.storage_location, 'Karton A3')
 
+    def test_owner_can_add_item_with_storage_slot(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Ekspozytor 1',
+            location_type=WarehouseLocation.TYPE_DISPLAY,
+            row_count=8,
+            column_count=3,
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {
+                'model': self.model_obj.pk,
+                'enabled_short_card': 'on',
+                'quantity_short_card': 1,
+                'condition_short_card': 'mint',
+                'storage_location_short_card': 'Ekspozytor 1',
+                'storage_row_short_card': 2,
+                'storage_column_short_card': 3,
+            },
+        )
+
+        self.assertRedirects(response, self.private_collection.get_absolute_url())
+        item = CollectionItem.objects.get(collection=self.private_collection, model=self.model_obj)
+        self.assertEqual(item.storage_location, 'Ekspozytor 1')
+        self.assertEqual(item.storage_row, 2)
+        self.assertEqual(item.storage_column, 3)
+
+    def test_owner_cannot_reuse_occupied_storage_slot(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Ekspozytor 1',
+            location_type=WarehouseLocation.TYPE_DISPLAY,
+            row_count=8,
+            column_count=3,
+        )
+        CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            storage_location='Ekspozytor 1',
+            storage_row=2,
+            storage_column=3,
+        )
+        second_model = HotWheelsModel.objects.create(
+            app_id='storage-slot-other',
+            toy='HCT06',
+            number='002',
+            model_name='Custom Mustang',
+            year=2022,
+            category='Mainline',
+            series='HW Dream Garage',
+            series_number='2/5',
+            photo_url='https://example.com/mustang.jpg',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:item-create', args=[self.private_collection.pk]),
+            {
+                'model': second_model.pk,
+                'enabled_short_card': 'on',
+                'quantity_short_card': 1,
+                'condition_short_card': 'mint',
+                'storage_location_short_card': 'Ekspozytor 1',
+                'storage_row_short_card': 2,
+                'storage_column_short_card': 3,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ten slot w magazynie jest już zajęty przez inny wariant.')
+        self.assertFalse(CollectionItem.objects.filter(collection=self.private_collection, model=second_model).exists())
+
     def test_collection_detail_can_filter_by_storage_location(self):
         CollectionItem.objects.create(
             collection=self.private_collection,
@@ -413,6 +494,8 @@ class CollectionTests(TestCase):
             condition='mint',
             packaging_state='short_card',
             storage_location='Ściana nad biurkiem',
+            storage_row=2,
+            storage_column=4,
         )
         self.client.force_login(self.owner)
 
@@ -422,7 +505,46 @@ class CollectionTests(TestCase):
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertContains(response, 'Ściana nad biurkiem')
         self.assertContains(response, 'Układ: 5 x 10 | Pojemność: 50 szt.')
+        self.assertContains(response, 'Zajęte sloty')
+        self.assertContains(response, 'R2 / K4')
+        self.assertContains(response, 'Puste miejsce')
+        self.assertContains(response, reverse('collections:warehouse-slot-assign', args=[location.pk, 1, 1]))
         self.assertContains(response, '<strong>49</strong><span>Wolne miejsca</span>', html=False)
+
+    def test_staff_can_assign_variant_from_empty_slot(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        location = WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Ekspozytor 1',
+            location_type=WarehouseLocation.TYPE_DISPLAY,
+            row_count=8,
+            column_count=3,
+        )
+        item = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        self.client.force_login(self.owner)
+
+        form_response = self.client.get(reverse('collections:warehouse-slot-assign', args=[location.pk, 2, 3]))
+        self.assertEqual(form_response.status_code, 200)
+        self.assertContains(form_response, 'R2 / K3')
+        self.assertContains(form_response, '1970 Pontiac Firebird')
+
+        response = self.client.post(
+            reverse('collections:warehouse-slot-assign', args=[location.pk, 2, 3]),
+            {'item': item.pk},
+        )
+
+        self.assertRedirects(response, reverse('collections:warehouse-detail', args=[location.pk]))
+        item.refresh_from_db()
+        self.assertEqual(item.storage_location, 'Ekspozytor 1')
+        self.assertEqual(item.storage_row, 2)
+        self.assertEqual(item.storage_column, 3)
 
     def test_renaming_warehouse_location_updates_assigned_collection_items(self):
         self.owner.is_staff = True

@@ -77,6 +77,21 @@
                   {{ section.condition }}
                   {% if section.condition.errors %}<small class="meta">{{ section.condition.errors|join:', ' }}</small>{% endif %}
                 </div>
+                <div style="flex: 1 1 240px;">
+                  {{ section.storage_location.label_tag }}
+                  {{ section.storage_location }}
+                  {% if section.storage_location.errors %}<small class="meta">{{ section.storage_location.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div style="flex: 1 1 120px;">
+                  {{ section.storage_row.label_tag }}
+                  {{ section.storage_row }}
+                  {% if section.storage_row.errors %}<small class="meta">{{ section.storage_row.errors|join:', ' }}</small>{% endif %}
+                </div>
+                <div style="flex: 1 1 120px;">
+                  {{ section.storage_column.label_tag }}
+                  {{ section.storage_column }}
+                  {% if section.storage_column.errors %}<small class="meta">{{ section.storage_column.errors|join:', ' }}</small>{% endif %}
+                </div>
               </div>
               {% if section.supports_card_attributes %}
                 <div class="inline-checks" style="margin-top:10px;">
