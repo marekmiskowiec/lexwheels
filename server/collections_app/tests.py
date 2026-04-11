@@ -696,6 +696,35 @@ class CollectionTests(TestCase):
         self.assertIsNone(item.storage_row)
         self.assertIsNone(item.storage_column)
 
+    def test_staff_quick_attach_splits_one_piece_from_multi_quantity_variant_to_box(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        box = WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Karton A3',
+            location_type=WarehouseLocation.TYPE_BOX,
+        )
+        item = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=2,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(reverse('collections:warehouse-quick-attach', args=[box.pk, item.pk]))
+
+        self.assertRedirects(response, reverse('collections:warehouse-detail', args=[box.pk]))
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 1)
+        self.assertEqual(item.storage_location, '')
+        target_item = CollectionItem.objects.exclude(pk=item.pk).get(collection=self.private_collection, model=self.model_obj)
+        self.assertEqual(target_item.quantity, 1)
+        self.assertEqual(target_item.storage_location, 'Karton A3')
+        self.assertIsNone(target_item.storage_row)
+        self.assertIsNone(target_item.storage_column)
+
     def test_staff_can_quick_attach_unassigned_variant_to_display_slot_from_detail(self):
         self.owner.is_staff = True
         self.owner.save(update_fields=['is_staff'])
@@ -722,6 +751,37 @@ class CollectionTests(TestCase):
         self.assertEqual(item.storage_location, 'Ekspozytor 1')
         self.assertEqual(item.storage_row, 2)
         self.assertEqual(item.storage_column, 2)
+
+    def test_staff_quick_attach_splits_one_piece_from_multi_quantity_variant_to_display_slot(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        display = WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Ekspozytor 1',
+            location_type=WarehouseLocation.TYPE_DISPLAY,
+            row_count=2,
+            column_count=2,
+        )
+        item = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=2,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(reverse('collections:warehouse-quick-slot-attach', args=[display.pk, 2, 2, item.pk]))
+
+        self.assertRedirects(response, reverse('collections:warehouse-detail', args=[display.pk]))
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 1)
+        self.assertEqual(item.storage_location, '')
+        target_item = CollectionItem.objects.exclude(pk=item.pk).get(collection=self.private_collection, model=self.model_obj)
+        self.assertEqual(target_item.quantity, 1)
+        self.assertEqual(target_item.storage_location, 'Ekspozytor 1')
+        self.assertEqual(target_item.storage_row, 2)
+        self.assertEqual(target_item.storage_column, 2)
 
     def test_staff_can_filter_variants_on_slot_assign_page(self):
         self.owner.is_staff = True

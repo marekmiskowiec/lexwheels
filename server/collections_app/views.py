@@ -16,6 +16,7 @@ from django.views import View
 from django.views.generic.edit import FormView
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 from django.db.models import Count, F, Q, Sum
+from django.db import transaction
 
 from accounts.models import User
 from catalog.models import HotWheelsModel
@@ -67,6 +68,48 @@ def storage_location_suggestions_for_user(user):
         .values_list('name', flat=True)
         .order_by('name')
     )
+
+
+def relocate_or_split_collection_item(item, *, storage_location, storage_row=None, storage_column=None):
+    target_filters = {
+        'collection': item.collection,
+        'model': item.model,
+        'condition': item.condition,
+        'packaging_state': item.packaging_state,
+        'is_sealed': item.is_sealed,
+        'has_soft_corners': item.has_soft_corners,
+        'has_protector': item.has_protector,
+        'is_signed': item.is_signed,
+        'has_bent_hook': item.has_bent_hook,
+        'has_cracked_blister': item.has_cracked_blister,
+        'storage_location': storage_location,
+        'storage_row': storage_row,
+        'storage_column': storage_column,
+    }
+
+    with transaction.atomic():
+        if item.quantity <= 1:
+            item.storage_location = storage_location
+            item.storage_row = storage_row
+            item.storage_column = storage_column
+            item.save(update_fields=['storage_location', 'storage_row', 'storage_column'])
+            return item, False
+
+        target_item = CollectionItem.objects.filter(**target_filters).exclude(pk=item.pk).first()
+        if target_item:
+            target_item.quantity += 1
+            target_item.save(update_fields=['quantity'])
+        else:
+            target_item = CollectionItem.objects.create(
+                quantity=1,
+                acquired_at=item.acquired_at,
+                notes=item.notes,
+                **target_filters,
+            )
+
+        item.quantity -= 1
+        item.save(update_fields=['quantity'])
+        return target_item, True
 
 
 ATTRIBUTE_FILTER_FIELDS = (
@@ -1279,11 +1322,19 @@ class WarehouseQuickAttachView(StaffWarehouseRequiredMixin, View):
             pk=item_pk,
             collection__owner=request.user,
         )
-        item.storage_location = warehouse_location.name
-        item.storage_row = None
-        item.storage_column = None
-        item.save(update_fields=['storage_location', 'storage_row', 'storage_column'])
-        messages.success(request, f'Przypięto wariant "{item.model.model_name}" do miejsca {warehouse_location.name}.')
+        target_item, was_split = relocate_or_split_collection_item(
+            item,
+            storage_location=warehouse_location.name,
+            storage_row=None,
+            storage_column=None,
+        )
+        if was_split:
+            messages.success(
+                request,
+                f'Przypięto 1 szt. wariantu "{item.model.model_name}" do miejsca {warehouse_location.name}. Pozostałe sztuki zostały w poprzednim wpisie.',
+            )
+        else:
+            messages.success(request, f'Przypięto wariant "{target_item.model.model_name}" do miejsca {warehouse_location.name}.')
         return redirect(reverse('collections:warehouse-detail', args=[warehouse_location.pk]))
 
 
@@ -1309,11 +1360,19 @@ class WarehouseQuickSlotAttachView(StaffWarehouseRequiredMixin, View):
             query = urlencode({'attach_item': item.pk})
             return redirect(f"{reverse('collections:warehouse-detail', args=[warehouse_location.pk])}?{query}")
 
-        item.storage_location = warehouse_location.name
-        item.storage_row = row
-        item.storage_column = column
-        item.save(update_fields=['storage_location', 'storage_row', 'storage_column'])
-        messages.success(request, f'Przypięto wariant "{item.model.model_name}" do slotu R{row} / K{column}.')
+        target_item, was_split = relocate_or_split_collection_item(
+            item,
+            storage_location=warehouse_location.name,
+            storage_row=row,
+            storage_column=column,
+        )
+        if was_split:
+            messages.success(
+                request,
+                f'Przypięto 1 szt. wariantu "{item.model.model_name}" do slotu R{row} / K{column}. Pozostałe sztuki zostały w poprzednim wpisie.',
+            )
+        else:
+            messages.success(request, f'Przypięto wariant "{target_item.model.model_name}" do slotu R{row} / K{column}.')
         return redirect(reverse('collections:warehouse-detail', args=[warehouse_location.pk]))
 
 

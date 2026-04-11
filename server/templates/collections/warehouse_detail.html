@@ -269,7 +269,11 @@
             {% if warehouse_location.has_grid_layout %}
               {% if operational_stats.free_slots %}
                 <a class="button secondary warehouse-region-link" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?attach_item={{ item.pk }}{% if quick_query %}&quick_q={{ quick_query|urlencode }}{% endif %}{% if quick_collection_id %}&quick_collection={{ quick_collection_id|urlencode }}{% endif %}">
-                  {% if item.storage_location %}Przenieś do slotu{% else %}Wybierz slot{% endif %}
+                  {% if item.storage_location %}
+                    {% if item.quantity > 1 %}Przenieś 1 szt. do slotu{% else %}Przenieś do slotu{% endif %}
+                  {% else %}
+                    {% if item.quantity > 1 %}Wybierz slot dla 1 szt.{% else %}Wybierz slot{% endif %}
+                  {% endif %}
                 </a>
               {% else %}
                 <span class="meta">Brak wolnych slotów</span>
@@ -279,7 +283,13 @@
             {% else %}
               <form method="post" action="{% url 'collections:warehouse-quick-attach' warehouse_location.pk item.pk %}" class="warehouse-region-form">
                 {% csrf_token %}
-                <button type="submit" class="secondary">{% if item.storage_location %}Przenieś tutaj{% else %}Przypnij tutaj{% endif %}</button>
+                <button type="submit" class="secondary">
+                  {% if item.storage_location %}
+                    {% if item.quantity > 1 %}Przenieś 1 szt. tutaj{% else %}Przenieś tutaj{% endif %}
+                  {% else %}
+                    {% if item.quantity > 1 %}Przypnij 1 szt. tutaj{% else %}Przypnij tutaj{% endif %}
+                  {% endif %}
+                </button>
               </form>
             {% endif %}
           </div>
@@ -344,7 +354,13 @@
                 {% elif quick_attach_item and operational_stats.free_slots %}
                   <form method="post" action="{% url 'collections:warehouse-quick-slot-attach' warehouse_location.pk row.row_number cell.column_number quick_attach_item.pk %}" class="warehouse-region-form">
                     {% csrf_token %}
-                    <button type="submit" class="secondary">{% if quick_attach_item.storage_location %}Przenieś tutaj{% else %}Przypnij tutaj{% endif %}</button>
+                    <button type="submit" class="secondary">
+                      {% if quick_attach_item.storage_location %}
+                        {% if quick_attach_item.quantity > 1 %}Przenieś 1 szt. tutaj{% else %}Przenieś tutaj{% endif %}
+                      {% else %}
+                        {% if quick_attach_item.quantity > 1 %}Przypnij 1 szt. tutaj{% else %}Przypnij tutaj{% endif %}
+                      {% endif %}
+                    </button>
                   </form>
                 {% else %}
                   <a class="button secondary" href="{% url 'collections:warehouse-slot-assign' warehouse_location.pk row.row_number cell.column_number %}">Przypisz wariant</a>
