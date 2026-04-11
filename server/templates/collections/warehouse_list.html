@@ -142,7 +142,11 @@
             <h2 style="margin-bottom:6px;"><a href="{{ row.location.get_absolute_url }}">{{ row.location.name }}</a></h2>
             <p class="meta">{{ row.location.get_location_type_display }}{% if not row.location.is_active %} | nieaktywne{% endif %}</p>
             {% if row.location.has_grid_layout %}
-              <p class="meta">Układ: {{ row.location.row_count }} x {{ row.location.column_count }} | Pojemność: {{ row.location.slot_capacity }} szt.</p>
+              <p class="meta">Układ: {{ row.location.effective_row_count }} x {{ row.location.effective_column_count }} | Pojemność: {{ row.location.slot_capacity }} szt.</p>
+            {% elif row.location.slot_capacity %}
+              <p class="meta">Pojemność: {{ row.location.slot_capacity }} szt.</p>
+            {% elif row.location.is_marked_full %}
+              <p class="meta">To miejsce jest ręcznie oznaczone jako pełne.</p>
             {% endif %}
             {% if row.location.description %}<p>{{ row.location.description }}</p>{% endif %}
           </div>

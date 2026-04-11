@@ -47,12 +47,17 @@ class Collection(models.Model):
 
 class WarehouseLocation(models.Model):
     TYPE_BOX = 'box'
+    TYPE_HW_BOX = 'hw_box'
     TYPE_WALL = 'wall'
     TYPE_SHELF = 'shelf'
     TYPE_DISPLAY = 'display'
     TYPE_OTHER = 'other'
+    DISPLAY_ROWS = 3
+    DISPLAY_COLUMNS = 8
+    HW_BOX_CAPACITY = 72
     TYPE_CHOICES = (
         (TYPE_BOX, 'Karton'),
+        (TYPE_HW_BOX, 'Karton Hot Wheels'),
         (TYPE_WALL, 'Ściana'),
         (TYPE_SHELF, 'Półka'),
         (TYPE_DISPLAY, 'Ekspozytor'),
@@ -65,6 +70,7 @@ class WarehouseLocation(models.Model):
     row_count = models.PositiveIntegerField(blank=True, null=True)
     column_count = models.PositiveIntegerField(blank=True, null=True)
     description = models.TextField(blank=True)
+    is_marked_full = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -80,13 +86,43 @@ class WarehouseLocation(models.Model):
 
     @property
     def has_grid_layout(self) -> bool:
-        return bool(self.row_count and self.column_count)
+        return self.location_type == self.TYPE_DISPLAY
 
     @property
     def slot_capacity(self) -> int:
-        if not self.has_grid_layout:
-            return 0
-        return self.row_count * self.column_count
+        if self.location_type == self.TYPE_DISPLAY:
+            return self.DISPLAY_ROWS * self.DISPLAY_COLUMNS
+        if self.location_type == self.TYPE_HW_BOX:
+            return self.HW_BOX_CAPACITY
+        return 0
+
+    @property
+    def effective_row_count(self) -> int:
+        if self.location_type == self.TYPE_DISPLAY:
+            return self.DISPLAY_ROWS
+        return self.row_count or 0
+
+    @property
+    def effective_column_count(self) -> int:
+        if self.location_type == self.TYPE_DISPLAY:
+            return self.DISPLAY_COLUMNS
+        return self.column_count or 0
+
+    @property
+    def supports_manual_full_toggle(self) -> bool:
+        return self.location_type in {self.TYPE_BOX, self.TYPE_WALL, self.TYPE_SHELF, self.TYPE_OTHER}
+
+    def save(self, *args, **kwargs):
+        if self.location_type == self.TYPE_DISPLAY:
+            self.row_count = self.DISPLAY_ROWS
+            self.column_count = self.DISPLAY_COLUMNS
+            self.is_marked_full = False
+        else:
+            self.row_count = None
+            self.column_count = None
+            if self.location_type == self.TYPE_HW_BOX:
+                self.is_marked_full = False
+        super().save(*args, **kwargs)
 
 
 class CollectionItem(models.Model):

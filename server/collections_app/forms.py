@@ -21,9 +21,9 @@ def validate_storage_slot(owner, storage_location, row, column, *, instance=None
     if row or column:
         if not location_obj.has_grid_layout:
             return None, None
-        if row < 1 or row > location_obj.row_count or column < 1 or column > location_obj.column_count:
+        if row < 1 or row > location_obj.effective_row_count or column < 1 or column > location_obj.effective_column_count:
             raise forms.ValidationError(
-                f'Ten slot nie mieści się w układzie miejsca {location_obj.name} ({location_obj.row_count} x {location_obj.column_count}).'
+                f'Ten slot nie mieści się w układzie miejsca {location_obj.name} ({location_obj.effective_row_count} x {location_obj.effective_column_count}).'
             )
         slot_queryset = CollectionItem.objects.filter(
             collection__owner=owner,
@@ -168,28 +168,36 @@ class WarehouseItemRelocateForm(forms.Form):
 class WarehouseLocationForm(forms.ModelForm):
     class Meta:
         model = WarehouseLocation
-        fields = ('name', 'location_type', 'row_count', 'column_count', 'description', 'is_active')
+        fields = ('name', 'location_type', 'is_marked_full', 'description', 'is_active')
         labels = {
             'name': 'Nazwa miejsca',
             'location_type': 'Typ miejsca',
-            'row_count': 'Wiersze',
-            'column_count': 'Kolumny',
+            'is_marked_full': 'Oznacz jako pełne',
             'description': 'Opis',
             'is_active': 'Aktywne',
         }
         help_texts = {
             'name': 'Np. Karton A3, ściana nad biurkiem, regał 2.',
-            'row_count': 'Opcjonalnie. Np. ściana 5 w dół albo ekspozytor 8 rzędów.',
-            'column_count': 'Opcjonalnie. Np. ściana 10 w poprzek albo ekspozytor 3 kolumny.',
+            'is_marked_full': 'Tylko dla zwykłych miejsc bez określonej pojemności, np. losowego kartonu po butach.',
             'description': 'Opcjonalny opis miejsca w magazynie.',
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['location_type'].help_text = (
+            'Ekspozytor ma stały układ 3 x 8, a Karton Hot Wheels stałą pojemność 72 sztuk.'
+        )
+
     def clean(self):
         cleaned_data = super().clean()
-        row_count = cleaned_data.get('row_count')
-        column_count = cleaned_data.get('column_count')
-        if bool(row_count) != bool(column_count):
-            raise forms.ValidationError('Podaj jednocześnie liczbę wierszy i kolumn albo zostaw oba pola puste.')
+        location_type = cleaned_data.get('location_type')
+        if location_type not in {value for value, _ in WarehouseLocation.TYPE_CHOICES}:
+            return cleaned_data
+
+        if location_type in {WarehouseLocation.TYPE_DISPLAY, WarehouseLocation.TYPE_HW_BOX}:
+            cleaned_data['is_marked_full'] = False
+        elif not cleaned_data.get('is_marked_full'):
+            cleaned_data['is_marked_full'] = False
         return cleaned_data
 
 

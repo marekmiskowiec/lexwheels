@@ -1125,6 +1125,47 @@ class StaffWarehouseRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 class WarehouseLocationListView(StaffWarehouseRequiredMixin, TemplateView):
     template_name = 'collections/warehouse_list.html'
 
+    @staticmethod
+    def summarize_location_fill(location, items):
+        occupied_slots = items.exclude(storage_row__isnull=True, storage_column__isnull=True).count()
+        total_quantity = items.aggregate(total=Sum('quantity'))['total'] or 0
+
+        if location.has_grid_layout:
+            used_capacity = occupied_slots
+            remaining_capacity = max(location.slot_capacity - used_capacity, 0)
+            if used_capacity <= 0:
+                fill_state = 'empty'
+            elif remaining_capacity == 0:
+                fill_state = 'full'
+            else:
+                fill_state = 'partial'
+        elif location.slot_capacity:
+            used_capacity = total_quantity
+            remaining_capacity = max(location.slot_capacity - used_capacity, 0)
+            if used_capacity <= 0:
+                fill_state = 'empty'
+            elif remaining_capacity == 0:
+                fill_state = 'full'
+            else:
+                fill_state = 'partial'
+        else:
+            used_capacity = total_quantity
+            remaining_capacity = None
+            if location.is_marked_full:
+                fill_state = 'full'
+            elif total_quantity <= 0:
+                fill_state = 'empty'
+            else:
+                fill_state = 'assigned'
+
+        return {
+            'occupied_slots': occupied_slots,
+            'total_quantity': total_quantity,
+            'used_capacity': used_capacity,
+            'remaining_capacity': remaining_capacity,
+            'fill_state': fill_state,
+        }
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         query = self.request.GET.get('q', '').strip()
@@ -1147,19 +1188,11 @@ class WarehouseLocationListView(StaffWarehouseRequiredMixin, TemplateView):
         locations = []
         for location in location_queryset.order_by('name'):
             items = CollectionItem.objects.filter(collection__owner=self.request.user, storage_location=location.name).select_related('model')
-            occupied_slots = items.exclude(storage_row__isnull=True, storage_column__isnull=True).count()
-            total_quantity = items.aggregate(total=Sum('quantity'))['total'] or 0
-            used_capacity = occupied_slots or total_quantity
-            remaining_capacity = max(location.slot_capacity - used_capacity, 0) if location.has_grid_layout else None
-            if location.has_grid_layout:
-                if used_capacity <= 0:
-                    fill_state = 'empty'
-                elif remaining_capacity == 0:
-                    fill_state = 'full'
-                else:
-                    fill_state = 'partial'
-            else:
-                fill_state = 'assigned' if total_quantity > 0 else 'empty'
+            summary = self.summarize_location_fill(location, items)
+            occupied_slots = summary['occupied_slots']
+            total_quantity = summary['total_quantity']
+            remaining_capacity = summary['remaining_capacity']
+            fill_state = summary['fill_state']
 
             if selected_fill == 'empty' and fill_state != 'empty':
                 continue
@@ -1224,14 +1257,13 @@ class WarehouseLocationDetailView(StaffWarehouseRequiredMixin, DetailView):
         )
         occupied_slots = items.exclude(storage_row__isnull=True, storage_column__isnull=True).count()
         total_quantity = items.aggregate(total=Sum('quantity'))['total'] or 0
-        used_capacity = occupied_slots or total_quantity
         slot_map = {}
         if self.object.has_grid_layout:
             for item in items.exclude(storage_row__isnull=True).exclude(storage_column__isnull=True):
                 slot_map[(item.storage_row, item.storage_column)] = item
         grid_rows = []
         if self.object.has_grid_layout:
-            for row_number in range(1, self.object.row_count + 1):
+            for row_number in range(1, self.object.effective_row_count + 1):
                 grid_rows.append(
                     {
                         'row_number': row_number,
@@ -1240,38 +1272,16 @@ class WarehouseLocationDetailView(StaffWarehouseRequiredMixin, DetailView):
                                 'column_number': column_number,
                                 'item': slot_map.get((row_number, column_number)),
                             }
-                            for column_number in range(1, self.object.column_count + 1)
+                            for column_number in range(1, self.object.effective_column_count + 1)
                         ],
                     }
                 )
-        free_slot_count = max(self.object.slot_capacity - occupied_slots, 0) if self.object.has_grid_layout else 0
+        location_summary = WarehouseLocationListView.summarize_location_fill(self.object, items)
+        free_slot_count = location_summary['remaining_capacity'] or 0
         move_item_id = self.request.GET.get('move_item', '').strip()
         move_item = None
         if move_item_id.isdigit():
             move_item = items.filter(pk=int(move_item_id)).first()
-        quick_candidates_queryset = CollectionItem.objects.filter(
-            collection__owner=self.request.user,
-            collection__kind=Collection.KIND_OWNED,
-        ).select_related('collection', 'model')
-        if quick_collection_id.isdigit():
-            quick_candidates_queryset = quick_candidates_queryset.filter(collection_id=int(quick_collection_id))
-        if quick_query:
-            quick_candidates_queryset = quick_candidates_queryset.filter(
-                Q(model__model_name__icontains=quick_query)
-                | Q(model__toy__icontains=quick_query)
-                | Q(model__number__icontains=quick_query)
-                | Q(model__brand__icontains=quick_query)
-                | Q(model__series__icontains=quick_query)
-                | Q(storage_location__icontains=quick_query)
-            )
-        quick_candidates = list(
-            quick_candidates_queryset.order_by(
-                'collection__name', 'model__year', 'model__number', 'model__model_name', 'packaging_state'
-            )[:25]
-        )
-        attach_item = None
-        if attach_item_id.isdigit():
-            attach_item = quick_candidates_queryset.filter(pk=int(attach_item_id)).first()
         operational_stats = {
             'without_location': CollectionItem.objects.filter(
                 collection__owner=self.request.user,
@@ -1292,17 +1302,8 @@ class WarehouseLocationDetailView(StaffWarehouseRequiredMixin, DetailView):
         context['stored_items'] = items
         context['grid_rows'] = grid_rows
         context['move_item'] = move_item
-        context['quick_candidates'] = quick_candidates
-        context['quick_query'] = quick_query
-        context['quick_collection_id'] = quick_collection_id
-        context['quick_collection_options'] = (
-            Collection.objects.filter(owner=self.request.user, kind=Collection.KIND_OWNED)
-            .order_by('name')
-            .values_list('id', 'name')
-        )
-        context['quick_candidate_count'] = quick_candidates_queryset.count()
-        context['quick_attach_item'] = attach_item
         context['operational_stats'] = operational_stats
+        context['location_fill_state'] = location_summary['fill_state']
         context['location_stats'] = {
             'variant_count': items.count(),
             'total_quantity': total_quantity,
@@ -1350,7 +1351,7 @@ class WarehouseQuickSlotAttachView(StaffWarehouseRequiredMixin, View):
         column = int(column)
         if not warehouse_location.has_grid_layout:
             raise Http404
-        if not (1 <= row <= warehouse_location.row_count and 1 <= column <= warehouse_location.column_count):
+        if not (1 <= row <= warehouse_location.effective_row_count and 1 <= column <= warehouse_location.effective_column_count):
             raise Http404
         try:
             validate_storage_slot(request.user, warehouse_location.name, row, column, instance=item)
@@ -1389,7 +1390,7 @@ class WarehouseSlotAssignView(StaffWarehouseRequiredMixin, FormView):
         self.column = int(self.kwargs['column'])
         if not self.warehouse_location.has_grid_layout:
             raise Http404
-        if not (1 <= self.row <= self.warehouse_location.row_count and 1 <= self.column <= self.warehouse_location.column_count):
+        if not (1 <= self.row <= self.warehouse_location.effective_row_count and 1 <= self.column <= self.warehouse_location.effective_column_count):
             raise Http404
         return super().dispatch(request, *args, **kwargs)
 
@@ -1493,7 +1494,7 @@ class WarehouseSlotMoveView(StaffWarehouseRequiredMixin, View):
         column = int(column)
         if not warehouse_location.has_grid_layout:
             raise Http404
-        if not (1 <= row <= warehouse_location.row_count and 1 <= column <= warehouse_location.column_count):
+        if not (1 <= row <= warehouse_location.effective_row_count and 1 <= column <= warehouse_location.effective_column_count):
             raise Http404
 
         try:
@@ -1546,13 +1547,20 @@ class WarehouseLocationUpdateView(StaffWarehouseRequiredMixin, UpdateView):
         return WarehouseLocation.objects.filter(owner=self.request.user)
 
     def form_valid(self, form):
-        previous_name = self.get_object().name
+        previous_location = self.get_object()
+        previous_name = previous_location.name
+        previous_had_grid = previous_location.has_grid_layout
         new_name = (form.cleaned_data.get('name') or '').strip()
         if previous_name and new_name and previous_name != new_name:
             CollectionItem.objects.filter(
                 collection__owner=self.request.user,
                 storage_location=previous_name,
             ).update(storage_location=new_name)
+        if previous_had_grid and form.cleaned_data.get('location_type') != WarehouseLocation.TYPE_DISPLAY:
+            CollectionItem.objects.filter(
+                collection__owner=self.request.user,
+                storage_location=new_name or previous_name,
+            ).update(storage_row=None, storage_column=None)
         messages.success(self.request, 'Zapisano zmiany w magazynie.')
         return super().form_valid(form)
 

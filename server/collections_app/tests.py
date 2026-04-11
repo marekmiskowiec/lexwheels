@@ -534,10 +534,8 @@ class CollectionTests(TestCase):
         self.owner.save(update_fields=['is_staff'])
         WarehouseLocation.objects.create(
             owner=self.owner,
-            name='Karton A3',
-            location_type=WarehouseLocation.TYPE_BOX,
-            row_count=8,
-            column_count=3,
+            name='Karton Hot Wheels A',
+            location_type=WarehouseLocation.TYPE_HW_BOX,
         )
         CollectionItem.objects.create(
             collection=self.private_collection,
@@ -545,17 +543,17 @@ class CollectionTests(TestCase):
             quantity=2,
             condition='mint',
             packaging_state='short_card',
-            storage_location='Karton A3',
+            storage_location='Karton Hot Wheels A',
         )
         self.client.force_login(self.owner)
 
         response = self.client.get(reverse('collections:warehouse-list'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Karton A3')
+        self.assertContains(response, 'Karton Hot Wheels A')
         self.assertContains(response, 'Warianty: 1')
-        self.assertContains(response, 'Układ: 8 x 3 | Pojemność: 24 szt.')
-        self.assertContains(response, 'Wolne miejsca: 22')
+        self.assertContains(response, 'Pojemność: 72 szt.')
+        self.assertContains(response, 'Wolne miejsca: 70')
 
     def test_staff_can_filter_warehouse_list_by_type_and_fill(self):
         self.owner.is_staff = True
@@ -606,10 +604,8 @@ class CollectionTests(TestCase):
         self.owner.save(update_fields=['is_staff'])
         location = WarehouseLocation.objects.create(
             owner=self.owner,
-            name='Ściana nad biurkiem',
-            location_type=WarehouseLocation.TYPE_WALL,
-            row_count=5,
-            column_count=10,
+            name='Ekspozytor 1',
+            location_type=WarehouseLocation.TYPE_DISPLAY,
         )
         CollectionItem.objects.create(
             collection=self.private_collection,
@@ -617,7 +613,7 @@ class CollectionTests(TestCase):
             quantity=1,
             condition='mint',
             packaging_state='short_card',
-            storage_location='Ściana nad biurkiem',
+            storage_location='Ekspozytor 1',
             storage_row=2,
             storage_column=4,
         )
@@ -627,14 +623,13 @@ class CollectionTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '1970 Pontiac Firebird')
-        self.assertContains(response, 'Ściana nad biurkiem')
-        self.assertContains(response, 'Układ: 5 x 10 | Pojemność: 50 szt.')
+        self.assertContains(response, 'Ekspozytor 1')
+        self.assertContains(response, 'Układ: 3 x 8 | Pojemność: 24 szt.')
         self.assertContains(response, 'Wolne sloty')
         self.assertContains(response, 'R2 / K4')
         self.assertContains(response, 'Puste miejsce')
         self.assertContains(response, reverse('collections:warehouse-slot-assign', args=[location.pk, 1, 1]))
-        self.assertContains(response, '<strong>49</strong><span>Wolne sloty</span>', html=False)
-        self.assertContains(response, 'Szybko przypnij model')
+        self.assertContains(response, '<strong>23</strong><span>Wolne sloty</span>', html=False)
 
     def test_staff_can_assign_variant_from_empty_slot(self):
         self.owner.is_staff = True
@@ -829,49 +824,6 @@ class CollectionTests(TestCase):
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertNotContains(response, 'Toyota Supra')
 
-    def test_staff_can_filter_quick_attach_variants_on_warehouse_detail(self):
-        self.owner.is_staff = True
-        self.owner.save(update_fields=['is_staff'])
-        display = WarehouseLocation.objects.create(
-            owner=self.owner,
-            name='Ekspozytor 1',
-            location_type=WarehouseLocation.TYPE_DISPLAY,
-            row_count=2,
-            column_count=2,
-        )
-        CollectionItem.objects.create(
-            collection=self.private_collection,
-            model=self.model_obj,
-            quantity=1,
-            condition='mint',
-            packaging_state='short_card',
-        )
-        other_model = HotWheelsModel.objects.create(
-            app_id='quick-detail-filter-other',
-            toy='HCT89',
-            number='089',
-            model_name='Toyota Supra',
-            year=2023,
-            category='Mainline',
-            series='HW J-Imports',
-        )
-        CollectionItem.objects.create(
-            collection=self.private_collection,
-            model=other_model,
-            quantity=1,
-            condition='good',
-            packaging_state='short_card',
-            storage_location='Karton A3',
-        )
-        self.client.force_login(self.owner)
-
-        response = self.client.get(reverse('collections:warehouse-detail', args=[display.pk]), {'quick_q': 'Pontiac'})
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Znalezione warianty: 1')
-        self.assertContains(response, '1970 Pontiac Firebird')
-        self.assertNotContains(response, 'Toyota Supra')
-
     def test_staff_can_move_variant_between_slots_from_grid(self):
         self.owner.is_staff = True
         self.owner.save(update_fields=['is_staff'])
@@ -997,19 +949,28 @@ class CollectionTests(TestCase):
             owner=self.owner,
             name='Ekspozytor 1',
             location_type=WarehouseLocation.TYPE_DISPLAY,
-            row_count=1,
-            column_count=1,
         )
-        CollectionItem.objects.create(
-            collection=self.private_collection,
-            model=self.model_obj,
-            quantity=1,
-            condition='mint',
-            packaging_state='short_card',
-            storage_location='Ekspozytor 1',
-            storage_row=1,
-            storage_column=1,
-        )
+        for row in range(1, 4):
+            for column in range(1, 9):
+                model = self.model_obj if (row, column) == (1, 1) else HotWheelsModel.objects.create(
+                    app_id=f'full-grid-{row}-{column}',
+                    toy=f'HCT{row}{column}',
+                    number=f'{row}{column:02d}',
+                    model_name=f'Model {row}-{column}',
+                    year=2023,
+                    category='Mainline',
+                    series='HW Dream Garage',
+                )
+                CollectionItem.objects.create(
+                    collection=self.private_collection,
+                    model=model,
+                    quantity=1,
+                    condition='mint',
+                    packaging_state='short_card',
+                    storage_location='Ekspozytor 1',
+                    storage_row=row,
+                    storage_column=column,
+                )
         other_model = HotWheelsModel.objects.create(
             app_id='full-grid-other',
             toy='HCT91',
@@ -1030,8 +991,9 @@ class CollectionTests(TestCase):
 
         response = self.client.get(reverse('collections:warehouse-detail', args=[display.pk]))
 
-        self.assertContains(response, 'Brak wolnych slotów')
-        self.assertNotContains(response, 'Wybierz slot')
+        self.assertContains(response, '<strong>0</strong><span>Wolne sloty</span>', html=False)
+        self.assertNotContains(response, 'Puste miejsce')
+        self.assertNotContains(response, reverse('collections:warehouse-slot-assign', args=[display.pk, 1, 1]))
 
     def test_staff_can_relocate_variant_from_display_to_box_from_warehouse_view(self):
         self.owner.is_staff = True
@@ -1140,8 +1102,6 @@ class CollectionTests(TestCase):
             {
                 'name': 'Karton Ferrari',
                 'location_type': WarehouseLocation.TYPE_BOX,
-                'row_count': '',
-                'column_count': '',
                 'description': '',
                 'is_active': 'on',
             },
@@ -1153,6 +1113,42 @@ class CollectionTests(TestCase):
         self.assertEqual(location.name, 'Karton Ferrari')
         self.assertEqual(item.storage_location, 'Karton Ferrari')
 
+    def test_changing_display_to_regular_box_clears_item_slots(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        location = WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Ekspozytor 1',
+            location_type=WarehouseLocation.TYPE_DISPLAY,
+        )
+        item = CollectionItem.objects.create(
+            collection=self.private_collection,
+            model=self.model_obj,
+            quantity=1,
+            condition='mint',
+            packaging_state='short_card',
+            storage_location='Ekspozytor 1',
+            storage_row=2,
+            storage_column=4,
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:warehouse-update', args=[location.pk]),
+            {
+                'name': 'Karton A3',
+                'location_type': WarehouseLocation.TYPE_BOX,
+                'description': '',
+                'is_active': 'on',
+            },
+        )
+
+        self.assertRedirects(response, reverse('collections:warehouse-detail', args=[location.pk]))
+        item.refresh_from_db()
+        self.assertEqual(item.storage_location, 'Karton A3')
+        self.assertIsNone(item.storage_row)
+        self.assertIsNone(item.storage_column)
+
     def test_staff_can_create_display_location_with_grid_layout(self):
         self.owner.is_staff = True
         self.owner.save(update_fields=['is_staff'])
@@ -1163,8 +1159,6 @@ class CollectionTests(TestCase):
             {
                 'name': 'Ekspozytor 1',
                 'location_type': WarehouseLocation.TYPE_DISPLAY,
-                'row_count': '8',
-                'column_count': '3',
                 'description': 'Na auta na kartach.',
                 'is_active': 'on',
             },
@@ -1172,11 +1166,11 @@ class CollectionTests(TestCase):
 
         location = WarehouseLocation.objects.get(name='Ekspozytor 1')
         self.assertRedirects(response, reverse('collections:warehouse-detail', args=[location.pk]))
-        self.assertEqual(location.row_count, 8)
-        self.assertEqual(location.column_count, 3)
+        self.assertEqual(location.row_count, 3)
+        self.assertEqual(location.column_count, 8)
         self.assertEqual(location.slot_capacity, 24)
 
-    def test_warehouse_location_requires_rows_and_columns_together(self):
+    def test_staff_can_create_hot_wheels_box_with_fixed_capacity(self):
         self.owner.is_staff = True
         self.owner.save(update_fields=['is_staff'])
         self.client.force_login(self.owner)
@@ -1184,18 +1178,55 @@ class CollectionTests(TestCase):
         response = self.client.post(
             reverse('collections:warehouse-create'),
             {
-                'name': 'Ściana 1',
-                'location_type': WarehouseLocation.TYPE_WALL,
-                'row_count': '5',
-                'column_count': '',
+                'name': 'Karton HW 1',
+                'location_type': WarehouseLocation.TYPE_HW_BOX,
                 'description': '',
                 'is_active': 'on',
             },
         )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Podaj jednocześnie liczbę wierszy i kolumn albo zostaw oba pola puste.')
-        self.assertFalse(WarehouseLocation.objects.filter(name='Ściana 1').exists())
+        location = WarehouseLocation.objects.get(name='Karton HW 1')
+        self.assertRedirects(response, reverse('collections:warehouse-detail', args=[location.pk]))
+        self.assertEqual(location.slot_capacity, 72)
+        self.assertFalse(location.has_grid_layout)
+        self.assertFalse(location.is_marked_full)
+
+    def test_staff_can_mark_regular_box_as_full(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse('collections:warehouse-create'),
+            {
+                'name': 'Karton po butach',
+                'location_type': WarehouseLocation.TYPE_BOX,
+                'is_marked_full': 'on',
+                'description': '',
+                'is_active': 'on',
+            },
+        )
+
+        location = WarehouseLocation.objects.get(name='Karton po butach')
+        self.assertRedirects(response, reverse('collections:warehouse-detail', args=[location.pk]))
+        self.assertTrue(location.is_marked_full)
+        self.assertFalse(location.has_grid_layout)
+
+    def test_marked_full_regular_box_is_visible_as_full_on_warehouse_list(self):
+        self.owner.is_staff = True
+        self.owner.save(update_fields=['is_staff'])
+        WarehouseLocation.objects.create(
+            owner=self.owner,
+            name='Karton po butach',
+            location_type=WarehouseLocation.TYPE_BOX,
+            is_marked_full=True,
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse('collections:warehouse-list'))
+
+        self.assertContains(response, 'Karton po butach')
+        self.assertContains(response, 'Status: pełne')
 
     def test_semi_premium_item_form_hides_short_card_option(self):
         semi_premium_model = HotWheelsModel.objects.create(

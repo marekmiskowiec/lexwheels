@@ -5,7 +5,7 @@
   <div class="hero-copy">
     <span class="eyebrow">Magazyn</span>
     <h1>{% if object %}Edytuj miejsce{% else %}Nowe miejsce{% endif %}</h1>
-    <p class="meta">Twórz prywatne miejsca przechowywania, np. kartony, ściany albo półki.</p>
+    <p class="meta">Ekspozytor ma stały układ 3 x 8, a Karton Hot Wheels stałą pojemność 72 sztuk. Pozostałe miejsca nie używają siatki.</p>
   </div>
 </section>
 
@@ -17,7 +17,7 @@
     {% endif %}
     <div class="form-grid">
       {% for field in form.visible_fields %}
-        <div class="form-field{% if field.name == 'description' %} is-full{% endif %}">
+        <div class="form-field warehouse-form-field warehouse-form-field-{{ field.name }}{% if field.name == 'description' %} is-full{% endif %}">
           {{ field.label_tag }}
           {{ field }}
           {% if field.help_text %}<small class="meta">{{ field.help_text }}</small>{% endif %}
@@ -31,4 +31,25 @@
     </div>
   </form>
 </section>
+<script>
+  (() => {
+    const typeSelect = document.getElementById('id_location_type');
+    const markedFullField = document.querySelector('.warehouse-form-field-is_marked_full');
+    if (!typeSelect || !markedFullField) {
+      return;
+    }
+
+    const syncWarehouseFields = () => {
+      const supportsManualFull = ['box', 'wall', 'shelf', 'other'].includes(typeSelect.value);
+      markedFullField.style.display = supportsManualFull ? '' : 'none';
+      const checkbox = markedFullField.querySelector('input');
+      if (checkbox && !supportsManualFull) {
+        checkbox.checked = false;
+      }
+    };
+
+    typeSelect.addEventListener('change', syncWarehouseFields);
+    syncWarehouseFields();
+  })();
+</script>
 {% endblock %}
