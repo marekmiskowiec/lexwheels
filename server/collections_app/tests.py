@@ -1748,7 +1748,8 @@ class CollectionTests(TestCase):
 
         response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
 
-        self.assertContains(response, '2022 | Mainline | Hot Wheels')
+        self.assertContains(response, '2022 | Mainline | HW Dream Garage')
+        self.assertContains(response, 'Toy: HCT05 | Nr: 001 | Hot Wheels')
         self.assertNotContains(response, 'Statystyki i wykresy')
 
     def test_collection_item_uses_catalog_thumbnail_when_variant_image_missing(self):
@@ -1788,7 +1789,9 @@ class CollectionTests(TestCase):
 
         response = self.client.get(reverse('collections:collection-detail', args=[self.public_collection.pk]))
 
-        self.assertContains(response, 'Łącznie: 3 szt.')
+        self.assertContains(response, '3 szt.')
+        self.assertContains(response, '2 warianty')
+        self.assertContains(response, 'Pokaż warianty (2)')
         self.assertContains(response, 'Krótka karta | stan: Idealny | ilość: 1')
         self.assertContains(response, 'Luzak | stan: Dobry | ilość: 2')
         self.assertContains(response, 'Cechy: Zafoliowany')
