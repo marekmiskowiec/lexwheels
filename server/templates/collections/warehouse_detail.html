@@ -6,262 +6,439 @@
     display: grid;
     gap: 18px;
   }
+  .warehouse-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    align-items: center;
+    margin: 0 0 10px;
+  }
+  .warehouse-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.045);
+    color: var(--muted);
+    font-size: .82rem;
+    line-height: 1.2;
+  }
+  .warehouse-chip.is-active {
+    color: #d7f5e5;
+    border-color: rgba(70,196,131,0.25);
+    background: rgba(70,196,131,0.12);
+  }
+  .warehouse-chip.is-inactive {
+    color: #f3d2d2;
+    border-color: rgba(255,122,122,0.22);
+    background: rgba(255,122,122,0.1);
+  }
+  .warehouse-chip.is-empty {
+    color: #d8dee7;
+  }
+  .warehouse-chip.is-partial {
+    color: #dce8ff;
+    border-color: rgba(72,157,255,0.22);
+    background: rgba(72,157,255,0.1);
+  }
+  .warehouse-chip.is-full {
+    color: #ffe2d4;
+    border-color: rgba(255,107,44,0.28);
+    background: rgba(255,107,44,0.14);
+  }
+  .warehouse-chip.is-assigned {
+    color: #efe1ff;
+    border-color: rgba(182,130,255,0.22);
+    background: rgba(182,130,255,0.1);
+  }
+  .warehouse-note {
+    margin: 0;
+    color: rgba(255,255,255,0.74);
+    font-size: .94rem;
+    line-height: 1.5;
+  }
+  .warehouse-stats {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  .warehouse-stat-card {
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.025) 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .warehouse-stat-card strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #fff;
+    font-size: 1.65rem;
+    line-height: 1;
+    letter-spacing: -0.05em;
+  }
+  .warehouse-stat-card span {
+    color: var(--muted);
+    font-size: .9rem;
+  }
+  .warehouse-section {
+    display: grid;
+    gap: 16px;
+  }
+  .warehouse-grid-panel {
+    display: grid;
+    gap: 14px;
+  }
   .warehouse-grid {
     display: grid;
     gap: 8px;
-    margin: 18px 0;
   }
   .warehouse-grid-row {
     display: grid;
     gap: 8px;
   }
   .warehouse-grid-cell {
-    min-height: 108px;
+    min-height: 96px;
     padding: 10px;
     border: 1px solid var(--line);
     border-radius: 16px;
-    background: rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.035);
     transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
   }
   .warehouse-grid-cell.is-occupied {
-    background:
-      radial-gradient(circle at top right, rgba(72, 157, 255, 0.12), transparent 44%),
-      rgba(255,255,255,0.05);
-  }
-  .warehouse-grid-cell.is-occupied:hover {
-    transform: translateY(-2px);
-    border-color: rgba(72, 157, 255, 0.32);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+    background: linear-gradient(180deg, rgba(255,255,255,0.065) 0%, rgba(255,255,255,0.03) 100%);
   }
   .warehouse-grid-cell.is-empty {
-    background: rgba(255,255,255,0.025);
-    color: var(--muted);
-  }
-  .warehouse-grid-cell.is-empty:hover {
-    border-color: rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.02);
   }
   .warehouse-grid-cell.is-action-target {
-    border-color: rgba(255, 107, 44, 0.5);
-    background:
-      radial-gradient(circle at top left, rgba(255, 107, 44, 0.16), transparent 42%),
-      rgba(255,255,255,0.06);
-    box-shadow: inset 0 0 0 1px rgba(255, 107, 44, 0.24);
+    border-color: rgba(255, 107, 44, 0.48);
+    background: rgba(255,107,44,0.1);
+    box-shadow: inset 0 0 0 1px rgba(255, 107, 44, 0.2);
   }
   .warehouse-grid-cell.is-selected-origin {
     border-color: rgba(72, 157, 255, 0.48);
-    box-shadow: inset 0 0 0 1px rgba(72, 157, 255, 0.28);
+    box-shadow: inset 0 0 0 1px rgba(72, 157, 255, 0.22);
   }
   .warehouse-grid-slot {
-    display: block;
+    display: inline-flex;
     margin-bottom: 8px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.045);
     color: var(--muted);
-    font-size: .82rem;
-  }
-  .warehouse-grid-model {
-    display: block;
-    color: #fff;
-    font-weight: 600;
-    margin-bottom: 6px;
-    line-height: 1.2;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
   }
   .warehouse-grid-thumb {
     display: block;
     width: 100%;
-    height: 82px;
+    height: 66px;
     object-fit: contain;
     margin-bottom: 8px;
     border: 1px solid var(--line);
     border-radius: 12px;
     background: rgba(255,255,255,0.05);
-    padding: 6px;
+    padding: 5px;
+  }
+  .warehouse-grid-model {
+    display: block;
+    margin-bottom: 4px;
+    color: #fff;
+    font-weight: 600;
+    line-height: 1.2;
   }
   .warehouse-grid-meta {
     margin: 0;
-    font-size: .88rem;
+    font-size: .84rem;
     color: var(--muted);
+    line-height: 1.35;
   }
-  .warehouse-grid-state {
+  .warehouse-grid-status {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    margin: 0 0 8px;
-    padding: 5px 9px;
+    padding: 4px 8px;
+    margin-bottom: 8px;
     border-radius: 999px;
-    font-size: .76rem;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: .72rem;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
-    border: 1px solid var(--line);
-    color: var(--muted);
   }
-  .warehouse-grid-state.is-occupied {
-    color: #cfe4ff;
-    border-color: rgba(72, 157, 255, 0.24);
-    background: rgba(72, 157, 255, 0.12);
+  .warehouse-grid-status.is-occupied {
+    color: #dce8ff;
+    border-color: rgba(72,157,255,0.24);
+    background: rgba(72,157,255,0.1);
   }
-  .warehouse-grid-state.is-empty {
-    color: #d5dce7;
-    background: rgba(255,255,255,0.04);
-  }
-  .warehouse-grid-state.is-target {
+  .warehouse-grid-status.is-target {
     color: #ffe2d4;
-    border-color: rgba(255, 107, 44, 0.3);
-    background: rgba(255, 107, 44, 0.16);
+    border-color: rgba(255,107,44,0.28);
+    background: rgba(255,107,44,0.14);
+  }
+  .warehouse-grid-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .warehouse-grid-actions a,
+  .warehouse-grid-actions button {
+    min-height: 34px;
+    padding: 8px 12px;
+    font-size: .88rem;
   }
   .warehouse-operation-banner {
     display: grid;
-    gap: 10px;
-    margin-top: 14px;
+    gap: 8px;
     padding: 14px 16px;
     border: 1px solid rgba(255, 107, 44, 0.22);
     border-radius: 18px;
-    background:
-      radial-gradient(circle at top right, rgba(255, 107, 44, 0.14), transparent 44%),
-      rgba(255,255,255,0.035);
+    background: rgba(255,255,255,0.03);
   }
   .warehouse-loading {
     opacity: .65;
     pointer-events: none;
     transition: opacity .16s ease;
   }
-  .warehouse-panel-note {
+  .warehouse-item-list {
+    display: grid;
+    gap: 10px;
+  }
+  .warehouse-item-row {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 62px minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.02) 100%);
+  }
+  .warehouse-item-thumb {
+    width: 62px;
+    height: 62px;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.05);
+    padding: 5px;
+  }
+  .warehouse-item-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+  .warehouse-item-copy h2 {
     margin: 0;
-    color: var(--muted);
-    font-size: .9rem;
+    font-size: 1rem;
+  }
+  .warehouse-item-copy .meta,
+  .warehouse-item-copy p {
+    margin: 0;
+  }
+  .warehouse-item-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .warehouse-item-actions a,
+  .warehouse-item-actions button {
+    min-height: 34px;
+    padding: 8px 12px;
+    font-size: .88rem;
+  }
+  @media (max-width: 900px) {
+    .warehouse-item-row {
+      grid-template-columns: 62px minmax(0, 1fr);
+    }
+    .warehouse-item-actions {
+      grid-column: 1 / -1;
+      justify-content: flex-start;
+    }
+  }
+  @media (max-width: 720px) {
+    .warehouse-grid-cell {
+      min-height: 88px;
+      padding: 8px;
+    }
+    .warehouse-grid-thumb {
+      height: 54px;
+    }
   }
 </style>
 {% endblock %}
 {% block content %}
 <div id="warehouse-detail-root" class="warehouse-detail-shell">
-<section class="panel hero">
-  <div class="hero-copy">
-    <span class="eyebrow">Magazyn</span>
-    <h1>{{ warehouse_location.name }}</h1>
-    <p class="meta">{{ warehouse_location.get_location_type_display }}{% if not warehouse_location.is_active %} | nieaktywne{% endif %}</p>
-    {% if warehouse_location.has_grid_layout %}
-      <p class="meta">Układ: {{ warehouse_location.effective_row_count }} x {{ warehouse_location.effective_column_count }} | Pojemność: {{ warehouse_location.slot_capacity }} szt.</p>
-    {% elif warehouse_location.slot_capacity %}
-      <p class="meta">Pojemność: {{ warehouse_location.slot_capacity }} szt.</p>
-    {% elif warehouse_location.is_marked_full %}
-      <p class="meta">To miejsce jest ręcznie oznaczone jako pełne.</p>
-    {% endif %}
-    {% if warehouse_location.description %}<p>{{ warehouse_location.description }}</p>{% endif %}
-    <div class="actions-row">
-      <a class="button" href="{% url 'collections:warehouse-create' %}">Dodaj kolejne miejsce</a>
-      <a class="button secondary" href="{% url 'collections:warehouse-list' %}">Wróć do magazynu</a>
-      <a class="button secondary" href="{% url 'collections:warehouse-update' warehouse_location.pk %}">Edytuj miejsce</a>
-      <a class="button secondary" href="{% url 'collections:warehouse-delete' warehouse_location.pk %}">Usuń miejsce</a>
-    </div>
-  </div>
-</section>
-
-<section class="stats-strip">
-  <div class="stat-card"><strong>{{ location_stats.variant_count }}</strong><span>Warianty</span></div>
-  <div class="stat-card"><strong>{{ location_stats.total_quantity }}</strong><span>Sztuk</span></div>
-  <div class="stat-card"><strong>{{ location_stats.collection_count }}</strong><span>Kolekcje</span></div>
-  <div class="stat-card"><strong>{{ operational_stats.without_location }}</strong><span>Bez miejsca</span></div>
-  <div class="stat-card"><strong>{{ operational_stats.in_this_location }}</strong><span>W tym miejscu</span></div>
-  <div class="stat-card"><strong>{{ operational_stats.in_other_location }}</strong><span>W innym miejscu</span></div>
-  {% if warehouse_location.slot_capacity %}
-    <div class="stat-card"><strong>{{ operational_stats.free_slots }}</strong><span>{% if warehouse_location.has_grid_layout %}Wolne sloty{% else %}Wolne miejsca{% endif %}</span></div>
-  {% endif %}
-</section>
-
-{% if warehouse_location.has_grid_layout %}
-  <section class="panel">
-    <div class="section-head">
-      <div>
-        <h2>Układ miejsca</h2>
-        <p class="meta">Siatka pokazuje zajęte i wolne sloty w obrębie tego miejsca.</p>
+  <section class="panel hero">
+    <div class="hero-copy">
+      <span class="eyebrow">Magazyn</span>
+      <h1>{{ warehouse_location.name }}</h1>
+      <div class="warehouse-detail-meta">
+        <span class="warehouse-chip">{{ warehouse_location.get_location_type_display }}</span>
+        <span class="warehouse-chip {% if warehouse_location.is_active %}is-active{% else %}is-inactive{% endif %}">
+          {% if warehouse_location.is_active %}Aktywne{% else %}Nieaktywne{% endif %}
+        </span>
+        <span class="warehouse-chip
+          {% if location_fill_state == 'empty' %}is-empty{% endif %}
+          {% if location_fill_state == 'partial' %}is-partial{% endif %}
+          {% if location_fill_state == 'full' %}is-full{% endif %}
+          {% if location_fill_state == 'assigned' %}is-assigned{% endif %}">
+          {% if location_fill_state == 'empty' %}Puste{% endif %}
+          {% if location_fill_state == 'partial' %}Częściowo zajęte{% endif %}
+          {% if location_fill_state == 'full' %}Pełne{% endif %}
+          {% if location_fill_state == 'assigned' %}Z przypisanymi modelami{% endif %}
+        </span>
       </div>
-      {% if move_item %}
-        <a class="button secondary warehouse-region-link" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}">Anuluj przenoszenie</a>
+      {% if warehouse_location.has_grid_layout %}
+        <p class="warehouse-note">Układ: {{ warehouse_location.effective_row_count }} x {{ warehouse_location.effective_column_count }} | {{ warehouse_location.slot_capacity }} miejsc</p>
+      {% elif warehouse_location.slot_capacity %}
+        <p class="warehouse-note">{{ warehouse_location.slot_capacity }} miejsc</p>
+      {% elif warehouse_location.is_marked_full %}
+        <p class="warehouse-note">To miejsce jest ręcznie oznaczone jako pełne.</p>
+      {% else %}
+        <p class="warehouse-note">To miejsce nie ma stałego limitu pojemności.</p>
       {% endif %}
+      {% if warehouse_location.description %}
+        <p class="warehouse-note">{{ warehouse_location.description }}</p>
+      {% endif %}
+      <div class="actions-row">
+        <a class="button secondary" href="{% url 'collections:warehouse-list' %}">Wróć do magazynu</a>
+        <a class="button secondary" href="{% url 'collections:warehouse-update' warehouse_location.pk %}">Edytuj miejsce</a>
+        <a class="button secondary" href="{% url 'collections:warehouse-delete' warehouse_location.pk %}">Usuń miejsce</a>
+        <a class="button" href="{% url 'collections:warehouse-create' %}">Dodaj kolejne miejsce</a>
+      </div>
     </div>
-    {% if move_item %}
-      <div class="warehouse-operation-banner">
-        <p class="meta" style="margin:0;">Przenosisz: <strong>{{ move_item.model.model_name }}</strong>.</p>
-        <p class="warehouse-panel-note">Wybierz pusty slot docelowy. Zmiana zadziała bez pełnego przeładowania strony.</p>
+  </section>
+
+  <section class="warehouse-stats">
+    <div class="warehouse-stat-card"><strong>{{ location_stats.variant_count }}</strong><span>Warianty</span></div>
+    <div class="warehouse-stat-card"><strong>{{ location_stats.total_quantity }}</strong><span>Sztuk</span></div>
+    <div class="warehouse-stat-card"><strong>{{ operational_stats.in_this_location }}</strong><span>W tym miejscu</span></div>
+    <div class="warehouse-stat-card"><strong>{{ operational_stats.without_location }}</strong><span>Bez miejsca</span></div>
+    {% if warehouse_location.slot_capacity %}
+      <div class="warehouse-stat-card">
+        <strong>{{ operational_stats.free_slots }}</strong>
+        <span>{% if warehouse_location.has_grid_layout %}Wolne sloty{% else %}Wolne miejsca{% endif %}</span>
       </div>
     {% endif %}
-    <div class="warehouse-grid">
-      {% for row in grid_rows %}
-        <div class="warehouse-grid-row" style="grid-template-columns: repeat({{ warehouse_location.effective_column_count }}, minmax(0, 1fr));">
-          {% for cell in row.cells %}
-            <div class="warehouse-grid-cell{% if cell.item %} is-occupied{% else %} is-empty{% endif %}{% if move_item and not cell.item %} is-action-target{% endif %}{% if move_item and cell.item and cell.item.pk == move_item.pk %} is-selected-origin{% endif %}">
-              <span class="warehouse-grid-slot">R{{ row.row_number }} / K{{ cell.column_number }}</span>
-              {% if cell.item %}
-                <span class="warehouse-grid-state is-occupied">Zajęty</span>
-                {% if cell.item.image_src %}
-                  <a href="{% url 'collections:item-update' cell.item.pk %}">
-                    <img class="warehouse-grid-thumb" src="{{ cell.item.image_src }}" alt="{{ cell.item.model.model_name }}">
-                  </a>
-                {% endif %}
-                <a class="warehouse-grid-model" href="{% url 'collections:item-update' cell.item.pk %}">{{ cell.item.model.model_name }}</a>
-                <p class="warehouse-grid-meta">{{ cell.item.get_packaging_state_display }} | {{ cell.item.quantity }} szt.</p>
-                <div class="actions-row" style="margin-top:8px;">
-                  <a class="button secondary warehouse-region-link" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?move_item={{ cell.item.pk }}">Przenieś</a>
-                  <a class="button secondary" href="{% url 'collections:warehouse-item-relocate' warehouse_location.pk cell.item.pk %}">Zmień miejsce</a>
-                  <form method="post" action="{% url 'collections:warehouse-slot-clear' warehouse_location.pk cell.item.pk %}" class="warehouse-region-form">
-                    {% csrf_token %}
-                    <button type="submit" class="secondary">Wypnij</button>
-                  </form>
+  </section>
+
+  <div class="warehouse-section">
+    {% if warehouse_location.has_grid_layout %}
+      <section class="panel warehouse-grid-panel">
+        <div class="section-head">
+          <div>
+            <h2>Układ miejsca</h2>
+            <p class="meta">Kliknij pusty slot, aby przypisać wariant, albo zajęty, aby nim zarządzać.</p>
+          </div>
+          {% if move_item %}
+            <a class="button secondary warehouse-region-link" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}">Anuluj przenoszenie</a>
+          {% endif %}
+        </div>
+        {% if move_item %}
+          <div class="warehouse-operation-banner">
+            <p class="meta" style="margin:0;">Przenosisz: <strong>{{ move_item.model.model_name }}</strong></p>
+            <p class="warehouse-note">Wybierz pusty slot docelowy. Pozostałe elementy widoku zostają bez zmian.</p>
+          </div>
+        {% endif %}
+        <div class="warehouse-grid">
+          {% for row in grid_rows %}
+            <div class="warehouse-grid-row" style="grid-template-columns: repeat({{ warehouse_location.effective_column_count }}, minmax(0, 1fr));">
+              {% for cell in row.cells %}
+                <div class="warehouse-grid-cell{% if cell.item %} is-occupied{% else %} is-empty{% endif %}{% if move_item and not cell.item %} is-action-target{% endif %}{% if move_item and cell.item and cell.item.pk == move_item.pk %} is-selected-origin{% endif %}">
+                  <span class="warehouse-grid-slot">R{{ row.row_number }} / K{{ cell.column_number }}</span>
+                  {% if cell.item %}
+                    <span class="warehouse-grid-status is-occupied">Zajęty</span>
+                    {% if cell.item.image_src %}
+                      <a href="{% url 'collections:item-update' cell.item.pk %}">
+                        <img class="warehouse-grid-thumb" src="{{ cell.item.image_src }}" alt="{{ cell.item.model.model_name }}">
+                      </a>
+                    {% endif %}
+                    <a class="warehouse-grid-model" href="{% url 'collections:item-update' cell.item.pk %}">{{ cell.item.model.model_name }}</a>
+                    <p class="warehouse-grid-meta">{{ cell.item.get_packaging_state_display }} | {{ cell.item.quantity }} szt.</p>
+                    <div class="warehouse-grid-actions">
+                      <a class="button secondary warehouse-region-link" href="{% url 'collections:warehouse-detail' warehouse_location.pk %}?move_item={{ cell.item.pk }}">Przenieś</a>
+                      <a class="button secondary" href="{% url 'collections:warehouse-item-relocate' warehouse_location.pk cell.item.pk %}">Zmień miejsce</a>
+                      <form method="post" action="{% url 'collections:warehouse-slot-clear' warehouse_location.pk cell.item.pk %}" class="warehouse-region-form">
+                        {% csrf_token %}
+                        <button type="submit" class="secondary">Wypnij</button>
+                      </form>
+                    </div>
+                  {% else %}
+                    <span class="warehouse-grid-status {% if move_item %}is-target{% endif %}">
+                      {% if move_item %}Slot docelowy{% else %}Puste{% endif %}
+                    </span>
+                    <p class="warehouse-grid-meta">Wolne miejsce</p>
+                    <div class="warehouse-grid-actions">
+                      {% if move_item %}
+                        <form method="post" action="{% url 'collections:warehouse-slot-move' warehouse_location.pk row.row_number cell.column_number move_item.pk %}" class="warehouse-region-form">
+                          {% csrf_token %}
+                          <button type="submit" class="secondary">Przenieś tutaj</button>
+                        </form>
+                      {% else %}
+                        <a class="button secondary" href="{% url 'collections:warehouse-slot-assign' warehouse_location.pk row.row_number cell.column_number %}">Przypisz wariant</a>
+                      {% endif %}
+                    </div>
+                  {% endif %}
                 </div>
-              {% else %}
-                <span class="warehouse-grid-state {% if move_item %}is-target{% else %}is-empty{% endif %}">
-                  {% if move_item %}Slot docelowy{% else %}Puste{% endif %}
-                </span>
-                <p class="warehouse-grid-meta">Puste miejsce</p>
-                {% if move_item %}
-                  <form method="post" action="{% url 'collections:warehouse-slot-move' warehouse_location.pk row.row_number cell.column_number move_item.pk %}" class="warehouse-region-form">
-                    {% csrf_token %}
-                    <button type="submit" class="secondary">Przenieś tutaj</button>
-                  </form>
-                {% else %}
-                  <a class="button secondary" href="{% url 'collections:warehouse-slot-assign' warehouse_location.pk row.row_number cell.column_number %}">Przypisz wariant</a>
-                {% endif %}
-              {% endif %}
+              {% endfor %}
             </div>
           {% endfor %}
         </div>
-      {% endfor %}
-    </div>
-  </section>
-{% endif %}
+      </section>
+    {% endif %}
 
-<section class="list">
-  {% if stored_items %}
-    {% for item in stored_items %}
-      <article class="panel list-item">
-        <div class="section-head">
-          <div>
-            <h2 style="margin-bottom:6px;"><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h2>
-            <p class="meta">{{ item.collection.name }} | {{ item.get_packaging_state_display }} | {{ item.get_condition_display }} | {{ item.quantity }} szt.</p>
-            {% if item.storage_slot_label %}<p class="meta">{{ item.storage_slot_label }}</p>{% endif %}
-            <p class="meta">Toy: {{ item.model.toy|default:"-" }} | Nr: {{ item.model.number|default:"-" }}{% if item.model.year %} | {{ item.model.year }}{% endif %}</p>
-          </div>
-          <div class="actions-row">
-            <a class="button secondary" href="{% url 'collections:item-update' item.pk %}">Edytuj wariant</a>
-            <a class="button secondary" href="{% url 'collections:warehouse-item-relocate' warehouse_location.pk item.pk %}">Zmień miejsce</a>
-            {% if item.storage_slot_label %}
-              <form method="post" action="{% url 'collections:warehouse-slot-clear' warehouse_location.pk item.pk %}" class="warehouse-region-form">
-                {% csrf_token %}
-                <button type="submit" class="secondary">Wypnij ze slotu</button>
-              </form>
-            {% endif %}
-          </div>
+    <section class="panel">
+      <div class="section-head">
+        <div>
+          <h2>Modele w tym miejscu</h2>
+          <p class="meta">Zwarta lista wariantów przypisanych do tego miejsca.</p>
         </div>
-      </article>
-    {% endfor %}
-  {% else %}
-    <div class="panel empty-panel">
-      <h2>Brak modeli w tym miejscu</h2>
-      <p>To miejsce istnieje w magazynie, ale żaden wariant nie ma jeszcze przypisanego tego pola lokalizacji.</p>
-    </div>
-  {% endif %}
-</section>
- </div>
+      </div>
+      {% if stored_items %}
+        <div class="warehouse-item-list">
+          {% for item in stored_items %}
+            <article class="warehouse-item-row">
+              {% if item.image_src %}
+                <img class="warehouse-item-thumb" src="{{ item.image_src }}" alt="{{ item.model.model_name }}">
+              {% else %}
+                <div class="warehouse-item-thumb"></div>
+              {% endif %}
+              <div class="warehouse-item-copy">
+                <h2><a href="{{ item.model.get_absolute_url }}">{{ item.model.model_name }}</a></h2>
+                <p class="meta">{{ item.get_packaging_state_display }} | {{ item.get_condition_display }} | {{ item.quantity }} szt.</p>
+                {% if item.storage_slot_label %}<p class="meta">{{ item.storage_slot_label }}</p>{% endif %}
+                <p class="meta">{{ item.collection.name }} | Toy: {{ item.model.toy|default:"-" }} | Nr: {{ item.model.number|default:"-" }}{% if item.model.year %} | {{ item.model.year }}{% endif %}</p>
+              </div>
+              <div class="warehouse-item-actions">
+                <a class="button secondary" href="{% url 'collections:item-update' item.pk %}">Edytuj wariant</a>
+                <a class="button secondary" href="{% url 'collections:warehouse-item-relocate' warehouse_location.pk item.pk %}">Zmień miejsce</a>
+                {% if item.storage_slot_label %}
+                  <form method="post" action="{% url 'collections:warehouse-slot-clear' warehouse_location.pk item.pk %}" class="warehouse-region-form">
+                    {% csrf_token %}
+                    <button type="submit" class="secondary">Wypnij ze slotu</button>
+                  </form>
+                {% endif %}
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-panel">
+          <h2>Brak modeli w tym miejscu</h2>
+          <p>To miejsce istnieje w magazynie, ale żaden wariant nie ma jeszcze przypisanego tego pola lokalizacji.</p>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+</div>
 
 <script>
   (() => {

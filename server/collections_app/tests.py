@@ -552,8 +552,8 @@ class CollectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Karton Hot Wheels A')
         self.assertContains(response, 'Warianty: 1')
-        self.assertContains(response, 'Pojemność: 72 szt.')
-        self.assertContains(response, 'Wolne miejsca: 70')
+        self.assertContains(response, '72 miejsc')
+        self.assertContains(response, 'Wolne: 70')
 
     def test_staff_can_filter_warehouse_list_by_type_and_fill(self):
         self.owner.is_staff = True
@@ -590,7 +590,7 @@ class CollectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Ekspozytor 1')
         self.assertNotContains(response, 'Karton A3')
-        self.assertContains(response, 'Status: częściowo zajęte')
+        self.assertContains(response, 'Częściowo zajęte')
 
     def test_non_staff_cannot_open_warehouse_list(self):
         self.client.force_login(self.owner)
@@ -624,12 +624,13 @@ class CollectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertContains(response, 'Ekspozytor 1')
-        self.assertContains(response, 'Układ: 3 x 8 | Pojemność: 24 szt.')
+        self.assertContains(response, 'Układ: 3 x 8 | 24 miejsc')
         self.assertContains(response, 'Wolne sloty')
         self.assertContains(response, 'R2 / K4')
-        self.assertContains(response, 'Puste miejsce')
+        self.assertContains(response, 'Wolne miejsce')
         self.assertContains(response, reverse('collections:warehouse-slot-assign', args=[location.pk, 1, 1]))
-        self.assertContains(response, '<strong>23</strong><span>Wolne sloty</span>', html=False)
+        self.assertContains(response, 'Wolne sloty')
+        self.assertContains(response, '<strong>23</strong>', html=False)
 
     def test_staff_can_assign_variant_from_empty_slot(self):
         self.owner.is_staff = True
@@ -991,7 +992,8 @@ class CollectionTests(TestCase):
 
         response = self.client.get(reverse('collections:warehouse-detail', args=[display.pk]))
 
-        self.assertContains(response, '<strong>0</strong><span>Wolne sloty</span>', html=False)
+        self.assertContains(response, 'Wolne sloty')
+        self.assertContains(response, '<strong>0</strong>', html=False)
         self.assertNotContains(response, 'Puste miejsce')
         self.assertNotContains(response, reverse('collections:warehouse-slot-assign', args=[display.pk, 1, 1]))
 
@@ -1226,7 +1228,7 @@ class CollectionTests(TestCase):
         response = self.client.get(reverse('collections:warehouse-list'))
 
         self.assertContains(response, 'Karton po butach')
-        self.assertContains(response, 'Status: pełne')
+        self.assertContains(response, 'Pełne')
 
     def test_semi_premium_item_form_hides_short_card_option(self):
         semi_premium_model = HotWheelsModel.objects.create(
