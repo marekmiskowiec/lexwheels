@@ -2,11 +2,39 @@
 {% block title %}Case {{ case_code }} {{ year }} | LexWheels{% endblock %}
 {% block extra_styles %}
 <style>
-  .case-detail-layout {
+  .case-highlight-grid {
     display: grid;
-    gap: 18px;
-    grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr);
-    align-items: start;
+    gap: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 18px;
+  }
+  .case-highlight-card {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 108px minmax(0, 1fr);
+    align-items: center;
+  }
+  .case-highlight-owned {
+    border-color: rgba(70, 196, 131, 0.28);
+    background:
+      radial-gradient(circle at top right, rgba(70, 196, 131, 0.14), transparent 42%),
+      linear-gradient(180deg, rgba(18, 41, 34, 0.88) 0%, rgba(11, 26, 22, 0.82) 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .case-highlight-thumb {
+    width: 108px;
+    height: 108px;
+    object-fit: contain;
+    border-radius: 18px;
+    padding: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--line);
+  }
+  .case-highlight-empty {
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    font-size: .9rem;
   }
   .case-model-list {
     display: grid;
@@ -27,19 +55,66 @@
     background: rgba(255,255,255,0.05);
     border: 1px solid var(--line);
   }
-  .case-note-box {
-    display: grid;
-    gap: 12px;
+  .case-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    border: 1px solid var(--line);
+  }
+  .case-tag-chip.is-th {
+    color: #ffe1a6;
+    border-color: rgba(255, 189, 46, 0.28);
+    background: rgba(255, 189, 46, 0.12);
+  }
+  .case-tag-chip.is-sth {
+    color: #ffd6d6;
+    border-color: rgba(255, 107, 44, 0.3);
+    background: rgba(255, 107, 44, 0.14);
+  }
+  .case-owned-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    border: 1px solid var(--line);
+    margin-top: 10px;
+  }
+  .case-owned-chip.is-owned {
+    color: #d9ffe8;
+    border-color: rgba(70, 196, 131, 0.3);
+    background: rgba(70, 196, 131, 0.14);
+  }
+  .case-owned-chip.is-missing {
+    color: #d9e4f0;
+    background: rgba(255,255,255,0.04);
+  }
+  .case-owned-meta {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: .88rem;
   }
   @media (max-width: 860px) {
-    .case-detail-layout {
+    .case-highlight-grid {
       grid-template-columns: 1fr;
     }
   }
   @media (max-width: 560px) {
+    .case-highlight-card,
     .case-model-row {
       grid-template-columns: 1fr;
     }
+    .case-highlight-thumb,
     .case-thumb {
       width: 100%;
       height: 140px;
@@ -51,9 +126,8 @@
 <section class="panel hero">
   <div class="hero-copy">
     <span class="eyebrow">Case {{ case_code }} | {{ year }}</span>
-    <h1>Mainline {{ year }} Case {{ case_code }}</h1>
-    {% if case_meta.title %}<p class="meta">{{ case_meta.title }}</p>{% endif %}
-    {% if case_meta.description %}<p>{{ case_meta.description }}</p>{% else %}<p>Osobny widok jednego case mixu z listą modeli oraz miejscem na własny opis, TH, STH i notatki do zakupów.</p>{% endif %}
+    <h1>Case {{ case_code }}</h1>
+    <p class="meta">{{ year }}</p>
     <div class="actions-row">
       <a class="button" href="{{ catalog_url }}">Otwórz ten case w katalogu</a>
       <a class="button secondary" href="{{ back_to_list_url }}">Wróć do listy case mixów</a>
@@ -61,8 +135,87 @@
   </div>
 </section>
 
-<section class="case-detail-layout">
-  <div class="panel">
+<section class="case-highlight-grid">
+  <article class="panel{% if sth_models and user.is_authenticated and sth_models.0.catalog_is_owned %} case-highlight-owned{% endif %}">
+    <div class="section-head">
+      <div>
+        <h2>Super Treasure Hunt</h2>
+      </div>
+    </div>
+    {% if sth_models %}
+      {% with item=sth_models.0 %}
+        <div class="case-highlight-card">
+          {% if item.catalog_primary_thumb_src %}
+            <img class="case-highlight-thumb" src="{{ item.catalog_primary_thumb_src }}" alt="{{ item.model_name }}">
+          {% else %}
+            <div class="case-highlight-thumb case-highlight-empty">Brak zdjęcia</div>
+          {% endif %}
+          <div>
+            <h3 style="margin-bottom:6px;"><a href="{{ item.get_absolute_url }}">{{ item.number }} · {{ item.model_name }}</a></h3>
+            <p class="meta">Toy: {{ item.toy }}{% if item.series %} | {{ item.series }}{% endif %}</p>
+            {% if user.is_authenticated %}
+              {% if item.catalog_is_owned %}
+                <span class="case-owned-chip is-owned">Masz</span>
+                <p class="case-owned-meta">{{ item.catalog_collection_summary.total_quantity }} szt. | {{ item.catalog_collection_summary.entry_count }} {% if item.catalog_collection_summary.entry_count == 1 %}wpis{% else %}wpisy{% endif %}</p>
+              {% else %}
+                <span class="case-owned-chip is-missing">Brakuje</span>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      {% endwith %}
+    {% else %}
+      <div class="case-highlight-card">
+        <div class="case-highlight-thumb case-highlight-empty">Brak danych</div>
+        <div>
+          <h3 style="margin-bottom:6px;">Brak w danych</h3>
+          <p class="meta">Ten case nie ma jeszcze przypisanego modelu Super Treasure Hunt w bazie.</p>
+        </div>
+      </div>
+    {% endif %}
+  </article>
+
+  <article class="panel{% if th_models and user.is_authenticated and th_models.0.catalog_is_owned %} case-highlight-owned{% endif %}">
+    <div class="section-head">
+      <div>
+        <h2>Treasure Hunt</h2>
+      </div>
+    </div>
+    {% if th_models %}
+      {% with item=th_models.0 %}
+        <div class="case-highlight-card">
+          {% if item.catalog_primary_thumb_src %}
+            <img class="case-highlight-thumb" src="{{ item.catalog_primary_thumb_src }}" alt="{{ item.model_name }}">
+          {% else %}
+            <div class="case-highlight-thumb case-highlight-empty">Brak zdjęcia</div>
+          {% endif %}
+          <div>
+            <h3 style="margin-bottom:6px;"><a href="{{ item.get_absolute_url }}">{{ item.number }} · {{ item.model_name }}</a></h3>
+            <p class="meta">Toy: {{ item.toy }}{% if item.series %} | {{ item.series }}{% endif %}</p>
+            {% if user.is_authenticated %}
+              {% if item.catalog_is_owned %}
+                <span class="case-owned-chip is-owned">Masz</span>
+                <p class="case-owned-meta">{{ item.catalog_collection_summary.total_quantity }} szt. | {{ item.catalog_collection_summary.entry_count }} {% if item.catalog_collection_summary.entry_count == 1 %}wpis{% else %}wpisy{% endif %}</p>
+              {% else %}
+                <span class="case-owned-chip is-missing">Brakuje</span>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      {% endwith %}
+    {% else %}
+      <div class="case-highlight-card">
+        <div class="case-highlight-thumb case-highlight-empty">Brak danych</div>
+        <div>
+          <h3 style="margin-bottom:6px;">Brak w danych</h3>
+          <p class="meta">Ten case nie ma jeszcze przypisanego modelu Treasure Hunt w bazie.</p>
+        </div>
+      </div>
+    {% endif %}
+  </article>
+</section>
+
+<section class="panel">
     <div class="section-head">
       <div>
         <h2>Modele w case {{ case_code }}</h2>
@@ -77,64 +230,30 @@
               <img class="case-thumb" src="{{ item.catalog_primary_thumb_src }}" alt="{{ item.model_name }}">
             {% endif %}
             <div>
-              <h3 style="margin-bottom:6px;"><a href="{{ item.get_absolute_url }}">{{ item.number }} · {{ item.model_name }}</a></h3>
+              <h3 style="margin-bottom:6px;">
+                <a href="{{ item.get_absolute_url }}">{{ item.number }} · {{ item.model_name }}</a>
+                {% if item.special_tag == 'Treasure Hunt' %}
+                  <span class="case-tag-chip is-th">TH</span>
+                {% elif item.special_tag == 'Super Treasure Hunt' %}
+                  <span class="case-tag-chip is-sth">STH</span>
+                {% endif %}
+              </h3>
               <p class="meta">Toy: {{ item.toy }}{% if item.series %} | {{ item.series }}{% endif %}</p>
               {% if item.special_tag or item.exclusive_store %}
                 <p class="meta">{% if item.special_tag %}Tag: {{ item.special_tag }}{% endif %}{% if item.special_tag and item.exclusive_store %} | {% endif %}{% if item.exclusive_store %}Exclusive: {{ item.exclusive_store }}{% endif %}</p>
+              {% endif %}
+              {% if user.is_authenticated %}
+                {% if item.catalog_is_owned %}
+                  <span class="case-owned-chip is-owned">Masz</span>
+                  <p class="case-owned-meta">{{ item.catalog_collection_summary.total_quantity }} szt. | {{ item.catalog_collection_summary.entry_count }} {% if item.catalog_collection_summary.entry_count == 1 %}wpis{% else %}wpisy{% endif %}</p>
+                {% else %}
+                  <span class="case-owned-chip is-missing">Brakuje</span>
+                {% endif %}
               {% endif %}
             </div>
           </div>
         </article>
       {% endfor %}
     </div>
-  </div>
-
-  <div class="stack-lg">
-    <section class="panel case-note-box">
-      <h2>Szybki skrót</h2>
-      <div class="stats-strip">
-        <div class="stat-card"><span class="stat-label">Modele</span><strong class="stat-value">{{ case_stats.model_count }}</strong></div>
-        <div class="stat-card"><span class="stat-label">TH</span><strong class="stat-value">{{ case_stats.th_count }}</strong></div>
-        <div class="stat-card"><span class="stat-label">STH</span><strong class="stat-value">{{ case_stats.sth_count }}</strong></div>
-      </div>
-    </section>
-
-    <section class="panel case-note-box">
-      <h2>Treasure Hunt</h2>
-      {% if th_models %}
-        <div class="tag-cloud">
-          {% for item in th_models %}
-            <a class="badge" href="{{ item.get_absolute_url }}">{{ item.number }} {{ item.model_name }}</a>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="meta">Brak modelu z tagiem `Treasure Hunt` w tym case.</p>
-      {% endif %}
-      {% if case_meta.th_notes %}<p class="meta">{{ case_meta.th_notes }}</p>{% endif %}
-    </section>
-
-    <section class="panel case-note-box">
-      <h2>Super Treasure Hunt</h2>
-      {% if sth_models %}
-        <div class="tag-cloud">
-          {% for item in sth_models %}
-            <a class="badge" href="{{ item.get_absolute_url }}">{{ item.number }} {{ item.model_name }}</a>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="meta">Brak modelu z tagiem `Super Treasure Hunt` w tym case.</p>
-      {% endif %}
-      {% if case_meta.sth_notes %}<p class="meta">{{ case_meta.sth_notes }}</p>{% endif %}
-    </section>
-
-    <section class="panel case-note-box">
-      <h2>Notatki</h2>
-      {% if case_meta.notes %}
-        <p>{{ case_meta.notes }}</p>
-      {% else %}
-        <p class="meta">Tu możesz trzymać opis case, krótkie podsumowanie miksu, różnice kolorystyczne albo checklistę zakupową. Edycja odbywa się przez plik metadanych case mixów.</p>
-      {% endif %}
-    </section>
-  </div>
 </section>
 {% endblock %}

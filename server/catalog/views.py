@@ -1540,6 +1540,26 @@ class CaseMixDetailView(CatalogScopeMixin, TemplateView):
             'sth_notes': str(case_meta.get('sth_notes', '')).strip(),
             'source_url': str(case_meta.get('source_url', '')).strip(),
         }
+        if self.request.user.is_authenticated:
+            model_ids = [item.pk for item in queryset]
+            owned_rows = CollectionItem.objects.filter(
+                collection__owner=self.request.user,
+                collection__kind=Collection.KIND_OWNED,
+                model_id__in=model_ids,
+            ).values('model_id').annotate(
+                entry_count=Count('id'),
+                total_quantity=Sum('quantity'),
+            )
+            owned_summary = {
+                row['model_id']: {
+                    'entry_count': row['entry_count'] or 0,
+                    'total_quantity': row['total_quantity'] or 0,
+                }
+                for row in owned_rows
+            }
+            for item in queryset:
+                item.catalog_collection_summary = owned_summary.get(item.pk, {'entry_count': 0, 'total_quantity': 0})
+                item.catalog_is_owned = bool(owned_summary.get(item.pk))
         context['back_to_list_url'] = reverse('catalog:case-mix-list')
         context['catalog_url'] = f"{reverse('catalog:model-list')}?year={year}&category=Mainline&case_code={case_code}"
         context['selected_scope'] = self.get_scope_mode()

@@ -1243,15 +1243,36 @@ class CatalogViewTests(TestCase):
             series_number='2/5',
             photo_url='https://example.com/second.jpg',
         )
+        user = User.objects.create_user(email='collector-case@example.com', password='ComplexPass123')
+        owned_collection = Collection.objects.create(
+            owner=user,
+            name='Moja kolekcja',
+            kind=Collection.KIND_OWNED,
+        )
+        CollectionItem.objects.create(
+            collection=owned_collection,
+            model=self.model_obj,
+            quantity=2,
+            condition='mint',
+            packaging_state='short_card',
+        )
+        self.client.force_login(user)
 
         response = self.client.get(reverse('catalog:case-mix-detail', args=[2026, 'a']))
 
-        self.assertContains(response, 'Mainline 2026 Case A')
+        self.assertContains(response, '<h1>Case A</h1>', html=False)
         self.assertContains(response, 'Modele w case A')
         self.assertContains(response, '1970 Pontiac Firebird')
         self.assertContains(response, 'Second Case Car')
         self.assertContains(response, 'Treasure Hunt')
         self.assertContains(response, 'Super Treasure Hunt')
+        self.assertContains(response, 'TH')
+        self.assertContains(response, 'STH')
+        self.assertContains(response, 'Masz')
+        self.assertContains(response, '2 szt. | 1 wpis')
+        self.assertContains(response, 'Brakuje')
+        self.assertNotContains(response, 'Szybki skrót')
+        self.assertNotContains(response, 'Notatki')
         self.assertContains(response, 'Otwórz ten case w katalogu')
         self.assertContains(response, reverse('catalog:case-mix-list'))
 
@@ -1261,7 +1282,8 @@ class CatalogViewTests(TestCase):
         self.assertContains(response, reverse('catalog:case-mix-detail', args=[2025, 'q']))
 
         detail_response = self.client.get(reverse('catalog:case-mix-detail', args=[2025, 'q']))
-        self.assertContains(detail_response, 'Mainline 2025 Case Q')
+        self.assertContains(detail_response, '<h1>Case Q</h1>', html=False)
+        self.assertContains(detail_response, 'Brak w danych')
 
     def test_catalog_can_filter_by_brand(self):
         HotWheelsModel.objects.create(
