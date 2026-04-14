@@ -4,13 +4,13 @@
 <style>
   .model-detail-layout {
     display: grid;
-    gap: 22px;
-    grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+    gap: 20px;
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
     align-items: start;
   }
   .model-gallery {
     display: grid;
-    gap: 14px;
+    gap: 12px;
   }
   .model-gallery-card {
     display: grid;
@@ -18,67 +18,113 @@
     padding: 14px;
     border-radius: 20px;
     border: 1px solid var(--line);
-    background: rgba(255,255,255,0.035);
+    background: linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.02) 100%);
   }
   .model-gallery-card .thumb {
     height: 240px;
   }
+  .model-gallery-card h3,
+  .model-gallery-card p {
+    margin: 0;
+  }
   .model-summary {
     display: grid;
-    gap: 18px;
+    gap: 16px;
   }
   .model-hero-card {
     display: grid;
     gap: 14px;
   }
+  .model-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
   .model-kpis {
     display: grid;
     gap: 10px;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   }
   .model-kpi {
     display: grid;
     gap: 4px;
     padding: 14px 16px;
-    border-radius: 18px;
     border: 1px solid var(--line);
+    border-radius: 18px;
     background: rgba(255,255,255,0.035);
   }
   .model-kpi strong {
     color: var(--ink);
-    font-size: 1.3rem;
+    font-size: 1.22rem;
+    line-height: 1;
   }
-  .model-meta-grid {
+  .model-meta-list {
+    display: grid;
+    gap: 10px;
+  }
+  .model-meta-row {
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    padding: 10px 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .model-meta-row:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+  .model-meta-row:last-child {
+    padding-bottom: 0;
+  }
+  .model-meta-label {
+    color: var(--muted);
+    font-size: .9rem;
+  }
+  .model-meta-value {
+    color: var(--ink);
+    min-width: 0;
+  }
+  .model-section {
     display: grid;
     gap: 12px;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
-  .model-meta-card {
-    display: grid;
-    gap: 6px;
-  }
-  .model-actions {
+  .simple-link-list,
+  .case-entry-list,
+  .collection-link-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
   }
-  .workflow-nav {
+  .owned-item-list,
+  .wanted-item-list {
     display: grid;
     gap: 10px;
-    margin-bottom: 14px;
+  }
+  .owned-item-row,
+  .wanted-item-row {
+    display: grid;
+    gap: 8px;
     padding: 14px 16px;
     border-radius: 18px;
     border: 1px solid var(--line);
     background: rgba(255,255,255,0.03);
   }
-  .workflow-nav-links {
+  .owned-item-head,
+  .wanted-item-head {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
   }
-  .case-entry-list,
-  .collection-link-grid,
-  .related-link-grid {
+  .owned-item-head p,
+  .wanted-item-head p,
+  .owned-item-row p,
+  .wanted-item-row p {
+    margin: 0;
+  }
+  .owned-item-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
@@ -99,44 +145,30 @@
   .similar-model-card .thumb {
     height: 120px;
   }
-  .similar-model-card h4 {
+  .similar-model-card h4,
+  .similar-model-card p {
     margin: 0;
-    font-size: .98rem;
   }
-  .owned-item-list,
-  .wanted-item-list {
+  .workflow-nav {
     display: grid;
     gap: 10px;
-  }
-  .owned-item-row,
-  .wanted-item-row {
-    display: grid;
-    gap: 6px;
     padding: 14px 16px;
     border-radius: 18px;
     border: 1px solid var(--line);
     background: rgba(255,255,255,0.03);
   }
-  .owned-item-head,
-  .wanted-item-head {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 10px;
-    align-items: center;
+  .workflow-nav p {
+    margin: 0;
   }
-  .owned-item-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+  .workflow-nav-links,
+  .model-actions,
   .image-admin-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 8px;
   }
-  .image-admin-actions form {
+  .image-admin-actions form,
+  .model-actions form {
     margin: 0;
   }
   .image-import-form {
@@ -148,6 +180,12 @@
       grid-template-columns: 1fr;
     }
   }
+  @media (max-width: 640px) {
+    .model-meta-row {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+  }
 </style>
 {% endblock %}
 {% block content %}
@@ -156,10 +194,7 @@
     <div class="model-gallery">
       {% if model_obj.has_unassigned_image %}
         <div class="model-gallery-card">
-          <div class="section-copy">
-            <h3 style="margin:0;">Zdjęcie modelu</h3>
-            <p class="meta" style="margin:0;">Zdjęcie ogólne, jeszcze nieprzypisane do konkretnego wariantu.</p>
-          </div>
+          <h3>Zdjęcie modelu</h3>
           <img class="thumb" src="{{ model_obj.unassigned_image_src }}" alt="{{ model_obj.model_name }}">
           {% if user.is_authenticated and user.is_staff or user.is_superuser %}
             <div class="image-admin-actions">
@@ -167,13 +202,13 @@
                 <form method="post" action="{% url 'catalog:assign-generic-image' model_obj.pk packaging_state %}">
                   {% csrf_token %}
                   <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                  <button type="submit" class="button secondary">{% if packaging_state == 'loose' %}Przypisz jako luzak{% else %}Przypisz jako {{ label|lower }}{% endif %}</button>
+                  <button type="submit" class="button secondary">{% if packaging_state == 'loose' %}Jako luzak{% else %}Jako {{ label|lower }}{% endif %}</button>
                 </form>
               {% endfor %}
               <form method="post" action="{% url 'catalog:delete-image' model_obj.pk 'generic' %}">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="button secondary">Usuń zdjęcie</button>
+                <button type="submit" class="button secondary">Usuń</button>
               </form>
             </div>
           {% endif %}
@@ -182,10 +217,7 @@
       {% if model_obj.packaging_image_panels %}
         {% for panel in model_obj.packaging_image_panels %}
           <div class="model-gallery-card">
-            <div class="section-copy">
-              <h3 style="margin:0;">{% if panel.key == 'loose' %}Luzak{% else %}{{ panel.label }} karta{% endif %}</h3>
-              <p class="meta" style="margin:0;">Wariant zdjęcia dla tego modelu.</p>
-            </div>
+            <h3>{% if panel.key == 'loose' %}Luzak{% else %}{{ panel.label }} karta{% endif %}</h3>
             <img class="thumb" src="{{ panel.src }}" alt="{{ model_obj.model_name }} - {{ panel.label|lower }}">
             {% if user.is_authenticated and user.is_staff or user.is_superuser %}
               <div class="image-admin-actions">
@@ -194,19 +226,19 @@
                     <form method="post" action="{% url 'catalog:reassign-packaging-image' model_obj.pk panel.key packaging_state %}">
                       {% csrf_token %}
                       <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                      <button type="submit" class="button secondary">{% if packaging_state == 'loose' %}Przypisz jako luzak{% else %}Przenieś do {{ label|lower }}{% endif %}</button>
+                      <button type="submit" class="button secondary">{% if packaging_state == 'loose' %}Do luzaka{% else %}Do {{ label|lower }}{% endif %}</button>
                     </form>
                   {% endif %}
                 {% endfor %}
                 <form method="post" action="{% url 'catalog:reassign-packaging-image' model_obj.pk panel.key 'unassigned' %}">
                   {% csrf_token %}
                   <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                  <button type="submit" class="button secondary">Cofnij do nieprzypisanego</button>
+                  <button type="submit" class="button secondary">Do nieprzypisanego</button>
                 </form>
                 <form method="post" action="{% url 'catalog:delete-image' model_obj.pk panel.key %}">
                   {% csrf_token %}
                   <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                  <button type="submit" class="button secondary">Usuń zdjęcie</button>
+                  <button type="submit" class="button secondary">Usuń</button>
                 </form>
               </div>
             {% endif %}
@@ -214,56 +246,24 @@
         {% endfor %}
       {% endif %}
     </div>
+
     <div class="model-summary">
-      {% if image_workflow_nav %}
-        <div class="workflow-nav">
-          <div class="section-copy">
-            <h3 style="margin:0;">{{ image_workflow_nav.label }}</h3>
-            <p class="meta" style="margin:0;">Pozycja {{ image_workflow_nav.index }} z {{ image_workflow_nav.total }} w aktualnym zestawie roboczym.</p>
-          </div>
-          <div class="workflow-nav-links">
-            <a class="button secondary" href="{{ image_workflow_nav.list_url }}">Wróć do listy</a>
-            {% if image_workflow_nav.previous %}
-              <a class="button secondary" href="{{ image_workflow_nav.previous.url }}">Poprzedni model</a>
-            {% endif %}
-            {% if image_workflow_nav.next %}
-              <a class="button secondary" href="{{ image_workflow_nav.next.url }}">Następny model</a>
-            {% endif %}
-          </div>
-        </div>
-      {% endif %}
       <div class="card-surface model-hero-card">
         <div class="hero-copy">
-          <span class="eyebrow">Szczegóły modelu</span>
+          <span class="eyebrow">Model</span>
           <h1>{{ model_obj.model_name }}</h1>
-          <p class="meta">To jest główne miejsce do sprawdzenia wariantów zdjęć, stanu w kolekcji i szybkiego przejścia do podobnych modeli w katalogu.</p>
         </div>
-        <div class="catalog-summary">
+        <div class="model-badges">
           <span class="badge">Toy {{ model_obj.toy }}</span>
           <span class="badge">Nr {{ model_obj.number }}</span>
           <span class="badge">{{ model_obj.year|default:"-" }}</span>
           <span class="badge">{{ model_obj.category|default:"-" }}</span>
-          {% for case_code in model_obj.case_code_list %}
-            <span class="badge">Case {{ case_code }}</span>
-          {% endfor %}
         </div>
         <div class="model-kpis">
           <div class="model-kpi">
             <span class="meta">Warianty zdjęć</span>
             <strong>{% if model_obj.has_unassigned_image %}{{ model_obj.packaging_image_panels|length|add:"1" }}{% else %}{{ model_obj.packaging_image_panels|length }}{% endif %}</strong>
           </div>
-          {% if user.is_authenticated and user.is_staff or user.is_superuser %}
-            <div class="model-kpi">
-              <span class="meta">Status kompletu</span>
-              <strong>
-                {% if model_obj.has_complete_packaging_images %}
-                  {% if model_obj.images_verified %}Verified{% else %}Do weryfikacji{% endif %}
-                {% else %}
-                  Niekompletne
-                {% endif %}
-              </strong>
-            </div>
-          {% endif %}
           <div class="model-kpi">
             <span class="meta">Case'y</span>
             <strong>{{ model_obj.case_code_list|length }}</strong>
@@ -273,123 +273,50 @@
               <span class="meta">Masz w kolekcji</span>
               <strong>{{ owned_total_quantity }}</strong>
             </div>
-            <div class="model-kpi">
-              <span class="meta">Aktywne szukane</span>
-              <strong>{{ active_wanted_count }}</strong>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card-surface model-section">
+        <div class="section-copy">
+          <h3>Podstawowe dane</h3>
+        </div>
+        <div class="model-meta-list">
+          <div class="model-meta-row">
+            <div class="model-meta-label">Marka</div>
+            <div class="model-meta-value">{{ model_obj.brand|default:"-" }}</div>
+          </div>
+          <div class="model-meta-row">
+            <div class="model-meta-label">Seria</div>
+            <div class="model-meta-value">{{ model_obj.series|default:"-" }}</div>
+          </div>
+          <div class="model-meta-row">
+            <div class="model-meta-label">Numer serii</div>
+            <div class="model-meta-value">{{ model_obj.series_number|default:"-" }}</div>
+          </div>
+          {% if model_obj.case_code_list %}
+            <div class="model-meta-row">
+              <div class="model-meta-label">Case mix</div>
+              <div class="model-meta-value">{{ model_obj.case_code_list|join:", " }}</div>
+            </div>
+          {% endif %}
+          {% if model_obj.exclusive_store %}
+            <div class="model-meta-row">
+              <div class="model-meta-label">Exclusive</div>
+              <div class="model-meta-value">{{ model_obj.exclusive_store }}</div>
+            </div>
+          {% endif %}
+          {% if model_obj.special_tag %}
+            <div class="model-meta-row">
+              <div class="model-meta-label">Tag specjalny</div>
+              <div class="model-meta-value">{{ model_obj.special_tag }}</div>
             </div>
           {% endif %}
         </div>
-        {% if user.is_authenticated and user.is_staff or user.is_superuser %}
-          <div class="model-actions">
-            {% if model_obj.has_complete_packaging_images %}
-              <form method="post" action="{% url 'catalog:toggle-image-verification' model_obj.pk %}">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="button secondary">
-                  {% if model_obj.images_verified %}Cofnij verified{% else %}Oznacz jako verified{% endif %}
-                </button>
-              </form>
-              {% if model_obj.images_verified_at %}
-                <span class="meta">Potwierdzone {{ model_obj.images_verified_at|date:"Y-m-d H:i" }}{% if model_obj.images_verified_by %} przez {{ model_obj.images_verified_by.email }}{% endif %}</span>
-              {% endif %}
-            {% else %}
-              <span class="meta">Verified jest dostępne dopiero po uzupełnieniu kompletu zdjęć.</span>
-            {% endif %}
-          </div>
-        {% endif %}
       </div>
-
-      <div class="model-meta-grid">
-        <div class="card-surface model-meta-card">
-          <span class="meta">Marka</span>
-          <strong>{{ model_obj.brand|default:"-" }}</strong>
-        </div>
-        <div class="card-surface model-meta-card">
-          <span class="meta">Seria</span>
-          <strong>{{ model_obj.series|default:"-" }}</strong>
-        </div>
-        <div class="card-surface model-meta-card">
-          <span class="meta">Numer serii</span>
-          <strong>{{ model_obj.series_number|default:"-" }}</strong>
-        </div>
-        {% if model_obj.case_code_list %}
-          <div class="card-surface model-meta-card">
-            <span class="meta">Case mix</span>
-            <strong>{{ model_obj.case_code_list|join:", " }}</strong>
-          </div>
-        {% endif %}
-        {% if model_obj.exclusive_store %}
-          <div class="card-surface model-meta-card">
-            <span class="meta">Exclusive</span>
-            <strong>{{ model_obj.exclusive_store }}</strong>
-          </div>
-        {% endif %}
-        {% if model_obj.special_tag %}
-          <div class="card-surface model-meta-card">
-            <span class="meta">Tag specjalny</span>
-            <strong>{{ model_obj.special_tag }}</strong>
-          </div>
-        {% endif %}
-      </div>
-
-      {% if related_catalog_links %}
-        <div class="card-surface">
-          <div class="section-copy">
-            <h3>Powiązane widoki katalogu</h3>
-            <p class="meta">Szybkie przejścia do podobnych modeli według roku, kategorii, serii i oznaczeń.</p>
-          </div>
-          <div class="related-link-grid" style="margin-top:12px;">
-            {% for entry in related_catalog_links %}
-              <a class="button secondary" href="{{ entry.url }}">{{ entry.label }}</a>
-            {% endfor %}
-          </div>
-        </div>
-      {% endif %}
-
-      {% if image_import_form %}
-        <div class="card-surface">
-          <div class="section-copy">
-            <h3>Import zdjęcia z URL</h3>
-            <p class="meta">Staff może wkleić link do zdjęcia, a system pobierze plik lokalnie i wygeneruje warianty webowe.</p>
-          </div>
-          <form method="post" action="{% url 'catalog:import-image-from-url' model_obj.pk %}" class="image-import-form" style="margin-top:12px;">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            <div>
-              {{ image_import_form.packaging_state.label_tag }}
-              {{ image_import_form.packaging_state }}
-            </div>
-            <div>
-              {{ image_import_form.source_url.label_tag }}
-              {{ image_import_form.source_url }}
-            </div>
-            <div>
-              <button type="submit">Pobierz i zapisz lokalnie</button>
-            </div>
-          </form>
-        </div>
-      {% endif %}
-
-      {% if case_entries %}
-        <div class="card-surface">
-          <div class="section-copy">
-            <h3>Case'y modelu</h3>
-            <p class="meta">Ten model pojawiał się w poniższych case mixach.</p>
-          </div>
-          <div class="case-entry-list" style="margin-top:12px;">
-            {% for entry in case_entries %}
-              {% if entry.url %}
-                <a class="button secondary" href="{{ entry.url }}">{{ entry.label }}</a>
-              {% else %}
-                <span class="badge">{{ entry.label }}</span>
-              {% endif %}
-            {% endfor %}
-          </div>
-        </div>
-      {% endif %}
 
       {% if user.is_authenticated %}
-        <div class="card-surface">
+        <div class="card-surface model-section">
           <div class="section-copy">
             <h3>Twoja kolekcja</h3>
             <p class="meta">
@@ -401,14 +328,13 @@
               {% endif %}
             </p>
           </div>
-          <div class="model-actions" style="margin-top:12px;">
+          <div class="model-actions">
             <a class="button" href="{% url 'collections:dashboard' %}">Moje kolekcje</a>
             <a class="button secondary" href="{% url 'collections:wanted-create' %}?model={{ model_obj.pk }}">Szukam tego modelu</a>
           </div>
           {% with collections=user.collections.all %}
             {% if collections %}
-              <span class="meta" style="display:block; margin-top:14px;">Dodaj bezpośrednio do wybranej kolekcji:</span>
-              <div class="collection-link-grid" style="margin-top:8px;">
+              <div class="simple-link-list">
                 {% for collection in collections %}
                   {% if collection.kind == 'owned' %}
                     <a class="button secondary" href="{% url 'collections:item-create' collection.pk %}?model={{ model_obj.pk }}">{{ collection.name }}</a>
@@ -418,16 +344,16 @@
             {% endif %}
           {% endwith %}
           {% if owned_items %}
-            <div class="owned-item-list" style="margin-top:16px;">
+            <div class="owned-item-list">
               {% for item in owned_items %}
                 <div class="owned-item-row">
                   <div class="owned-item-head">
                     <strong><a href="{{ item.collection.get_absolute_url }}">{{ item.collection.name }}</a></strong>
-                    <span class="badge">{{ item.quantity }} {% if item.quantity == 1 %}szt.{% else %}szt.{% endif %}</span>
+                    <span class="badge">{{ item.quantity }} szt.</span>
                   </div>
-                  <p class="meta" style="margin:0;">{{ item.get_packaging_state_display }} | {{ item.get_condition_display }}</p>
+                  <p class="meta">{{ item.get_packaging_state_display }} | {{ item.get_condition_display }}</p>
                   {% if item.attribute_badges %}
-                    <p class="meta" style="margin:0;">{{ item.attribute_badges|join:", " }}</p>
+                    <p class="meta">{{ item.attribute_badges|join:", " }}</p>
                   {% endif %}
                   <div class="owned-item-actions">
                     <a class="button secondary" href="{% url 'collections:item-update' item.pk %}">Edytuj wariant</a>
@@ -439,7 +365,7 @@
           {% endif %}
         </div>
 
-        <div class="card-surface">
+        <div class="card-surface model-section">
           <div class="section-copy">
             <h3>Twoje szukane</h3>
             <p class="meta">
@@ -451,16 +377,16 @@
             </p>
           </div>
           {% if wanted_items %}
-            <div class="wanted-item-list" style="margin-top:12px;">
+            <div class="wanted-item-list">
               {% for wanted in wanted_items %}
                 <div class="wanted-item-row">
                   <div class="wanted-item-head">
                     <strong>{% if wanted.is_active %}Aktywne{% else %}Nieaktywne{% endif %}</strong>
                     <span class="badge">{{ wanted.get_packaging_state_display }}</span>
                   </div>
-                  <p class="meta" style="margin:0;">Stan min.: {{ wanted.get_condition_min_display }}{% if wanted.budget_max %} | budżet do {{ wanted.budget_max }} PLN{% endif %}</p>
+                  <p class="meta">Stan min.: {{ wanted.get_condition_min_display }}{% if wanted.budget_max %} | budżet do {{ wanted.budget_max }} PLN{% endif %}</p>
                   {% if wanted.notes %}
-                    <p style="margin:0;">{{ wanted.notes }}</p>
+                    <p>{{ wanted.notes }}</p>
                   {% endif %}
                   <div class="owned-item-actions">
                     <a class="button secondary" href="{% url 'collections:wanted-update' wanted.pk %}">Edytuj szukane</a>
@@ -472,14 +398,45 @@
           {% endif %}
         </div>
       {% endif %}
+
+      {% if case_entries %}
+        <div class="card-surface model-section">
+          <div class="section-copy">
+            <h3>Case'y modelu</h3>
+          </div>
+          <div class="case-entry-list">
+            {% for entry in case_entries %}
+              {% if entry.url %}
+                <a class="button secondary" href="{{ entry.url }}">{{ entry.label }}</a>
+              {% else %}
+                <span class="badge">{{ entry.label }}</span>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if related_catalog_links %}
+        <div class="card-surface model-section">
+          <div class="section-copy">
+            <h3>Szybkie linki katalogu</h3>
+          </div>
+          <div class="simple-link-list">
+            {% for entry in related_catalog_links %}
+              <a class="button secondary" href="{{ entry.url }}">{{ entry.label }}</a>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
     </div>
   </div>
 </section>
+
 {% if similar_models %}
   <section class="panel">
     <div class="section-copy">
       <h2>Podobne modele</h2>
-      <p class="meta">Najbliższe trafienia według tej samej serii, rocznika i kategorii.</p>
+      <p class="meta">Najbliższe trafienia według serii, rocznika i kategorii.</p>
     </div>
     <div class="similar-model-grid" style="margin-top:16px;">
       {% for similar_model in similar_models %}
@@ -491,14 +448,89 @@
           {% endif %}
           <div>
             <h4>{{ similar_model.model_name }}</h4>
-            <p class="meta" style="margin:4px 0 0;">{{ similar_model.year|default:"-" }} | {{ similar_model.category|default:"-" }}</p>
+            <p class="meta">{{ similar_model.year|default:"-" }} | {{ similar_model.category|default:"-" }}</p>
             {% if similar_model.series %}
-              <p class="meta" style="margin:2px 0 0;">{{ similar_model.series }}</p>
+              <p class="meta">{{ similar_model.series }}</p>
             {% endif %}
           </div>
         </a>
       {% endfor %}
     </div>
+  </section>
+{% endif %}
+
+{% if user.is_authenticated and user.is_staff or user.is_superuser %}
+  <section class="panel">
+    <div class="section-copy">
+      <h2>Narzędzia zdjęć</h2>
+      <p class="meta">Sekcja robocza dla staffa do porządkowania i weryfikacji zdjęć modelu.</p>
+    </div>
+
+    {% if image_workflow_nav %}
+      <div class="workflow-nav" style="margin-top:16px;">
+        <p><strong>{{ image_workflow_nav.label }}</strong></p>
+        <p class="meta">Pozycja {{ image_workflow_nav.index }} z {{ image_workflow_nav.total }} w aktualnym zestawie roboczym.</p>
+        <div class="workflow-nav-links">
+          <a class="button secondary" href="{{ image_workflow_nav.list_url }}">Wróć do listy</a>
+          {% if image_workflow_nav.previous %}
+            <a class="button secondary" href="{{ image_workflow_nav.previous.url }}">Poprzedni model</a>
+          {% endif %}
+          {% if image_workflow_nav.next %}
+            <a class="button secondary" href="{{ image_workflow_nav.next.url }}">Następny model</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="card-surface model-section" style="margin-top:16px;">
+      <div class="section-copy">
+        <h3>Weryfikacja</h3>
+        <p class="meta">
+          {% if model_obj.has_complete_packaging_images %}
+            {% if model_obj.images_verified %}Model ma już status verified.{% else %}Do weryfikacji. Model ma komplet zdjęć i czeka na potwierdzenie.{% endif %}
+          {% else %}
+            Verified jest dostępne dopiero po uzupełnieniu kompletu zdjęć.
+          {% endif %}
+        </p>
+      </div>
+      {% if model_obj.has_complete_packaging_images %}
+        <div class="model-actions">
+          <form method="post" action="{% url 'catalog:toggle-image-verification' model_obj.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button type="submit" class="button secondary">
+              {% if model_obj.images_verified %}Cofnij verified{% else %}Oznacz jako verified{% endif %}
+            </button>
+          </form>
+          {% if model_obj.images_verified_at %}
+            <span class="meta">Potwierdzone {{ model_obj.images_verified_at|date:"Y-m-d H:i" }}{% if model_obj.images_verified_by %} przez {{ model_obj.images_verified_by.email }}{% endif %}</span>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    {% if image_import_form %}
+      <div class="card-surface model-section" style="margin-top:16px;">
+        <div class="section-copy">
+          <h3>Import zdjęcia z URL</h3>
+        </div>
+        <form method="post" action="{% url 'catalog:import-image-from-url' model_obj.pk %}" class="image-import-form">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <div>
+            {{ image_import_form.packaging_state.label_tag }}
+            {{ image_import_form.packaging_state }}
+          </div>
+          <div>
+            {{ image_import_form.source_url.label_tag }}
+            {{ image_import_form.source_url }}
+          </div>
+          <div>
+            <button type="submit">Pobierz i zapisz lokalnie</button>
+          </div>
+        </form>
+      </div>
+    {% endif %}
   </section>
 {% endif %}
 {% endblock %}
